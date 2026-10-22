@@ -71,18 +71,6 @@ export default function DashboardPage() {
   };
 
   // Local Data Backup (Section 2.2)
-  const handleExportBackup = () => {
-    const backupData = { app: "StudyDesk", exportedAt: new Date().toISOString(), streak, courses };
-    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `studydesk-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast("Local backup downloaded successfully.");
-  };
-
   const handleCourseImported = (courseId?: string) => {
     refresh(true);
     if (courseId) router.push(`/course/${courseId}`);
@@ -116,9 +104,6 @@ export default function DashboardPage() {
         theme={theme}
         onToggleTheme={handleToggleTheme}
         onAddCourse={() => setIsAddCourseModalOpen(true)}
-        onShowShortcuts={() => setIsShortcutsModalOpen(true)}
-        onExportBackup={handleExportBackup}
-        onShowAppInfo={() => showToast("StudyDesk v1.0 • 20m focus interval • 5m rest break")}
         onSendFeedback={() => setIsFeedbackOpen(true)}
       />
 

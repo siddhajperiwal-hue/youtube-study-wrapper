@@ -13,9 +13,6 @@ interface DashboardHeaderProps {
   theme: Theme;
   onToggleTheme: () => void;
   onAddCourse: () => void;
-  onShowShortcuts: () => void;
-  onExportBackup: () => void;
-  onShowAppInfo: () => void;
   onSendFeedback: () => void;
 }
 
@@ -26,9 +23,6 @@ export function DashboardHeader({
   theme,
   onToggleTheme,
   onAddCourse,
-  onShowShortcuts,
-  onExportBackup,
-  onShowAppInfo,
   onSendFeedback,
 }: DashboardHeaderProps) {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -135,26 +129,7 @@ export function DashboardHeader({
                   <span className="item-label">Theme: {theme === "dark" ? "Warm Espresso" : "Warm Paper"}</span>
                 </div>
               </button>
-              <button className="dropdown-item" id="shortcutsItem" role="menuitem" onClick={menuAction(onShowShortcuts)}>
-                <div className="item-content">
-                  <span className="item-icon">⌨</span>
-                  <span className="item-label">Keyboard Shortcuts</span>
-                </div>
-                <kbd>?</kbd>
-              </button>
-              <button className="dropdown-item" id="backupItem" role="menuitem" onClick={menuAction(onExportBackup)}>
-                <div className="item-content">
-                  <span className="item-icon">💾</span>
-                  <span className="item-label">Export Local Backup</span>
-                </div>
-              </button>
               <div className="dropdown-divider"></div>
-              <button className="dropdown-item" id="appSettingsItem" role="menuitem" onClick={menuAction(onShowAppInfo)}>
-                <div className="item-content">
-                  <span className="item-icon">⚙</span>
-                  <span className="item-label">App Settings</span>
-                </div>
-              </button>
               <button className="dropdown-item" id="feedbackItem" role="menuitem" onClick={menuAction(onSendFeedback)}>
                 <div className="item-content">
                   <span className="item-icon">💬</span>

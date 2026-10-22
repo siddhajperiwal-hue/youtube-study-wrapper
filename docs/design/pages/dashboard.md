@@ -120,13 +120,14 @@ To ensure visual clarity and avoid diluting the semantic meaning of colors:
      - Dimensions: `36px × 36px` circular button (`border-radius: 50%`, border: `1px solid var(--color-border)`, background: `var(--color-surface)`).
      - Content: Minimalist user line icon (`👤`).
      - **Profile & Utilities Dropdown Menu on Click (Width: 230px, right-aligned):**
-       - **Account Header:** Displays user identity (`Student Account` / `Self-paced Learner`).
+       - **Account Header:** `Your Account` and the signed-in email.
        - **Divider line:** `1px solid var(--color-border-subtle)`.
        - **Theme Toggle (`#themeToggleItem`):** Switches between `Warm Paper (Light)` and `Warm Espresso (Dark)` with immediate `localStorage` persistence.
-       - **Keyboard Shortcuts (`#shortcutsItem`):** Summons the interactive Shortcuts Modal Sheet (`Space`, `J`, `L`, `T`, `F`, `?`, `Esc`). Can also be summoned directly by pressing <kbd>?</kbd>.
-       - **Export Local Backup (`#backupItem`):** Downloads structured JSON archive containing enrolled courses, progress, and study notes.
        - **Divider line:** `1px solid var(--color-border-subtle)`.
-       - **App Settings (`#appSettingsItem`):** Accesses study session configurations (e.g., focus intervals and local sync details).
+       - **Send Feedback (`#feedbackItem`):** Opens the feedback modal (lands in the admin page's feedback inbox).
+       - **Admin Dashboard (`#adminItem`):** Only for admins (`ADMIN_EMAILS`); links to `/admin`.
+       - **Sign out (`#signOutItem`).**
+       - The Shortcuts Modal Sheet is no longer in the menu; it still opens by pressing <kbd>?</kbd>.
      - **Dismissal:** Automatically closes on outside click or pressing <kbd>Esc</kbd>.
 
 ---
