@@ -100,6 +100,8 @@ export async function GET(
         youtubeVideoId: v.youtube_video_id,
         position: v.position,
         title: v.title,
+        // Preview for the chapter list (full descriptions can be thousands of characters)
+        description: (v.description || "").replace(/\s+/g, " ").trim().slice(0, 200),
         durationSec: v.duration_sec,
         status: p?.status || "not_started",
         lastPositionSec: p?.last_position_sec || 0,

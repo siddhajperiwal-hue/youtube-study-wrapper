@@ -97,7 +97,7 @@ describe("GET /api/courses/[id]", () => {
             title: "Playlist",
             youtube_playlist_id: "PL123",
             videos: [
-              video("v2", 2, { video_content: [{ status: "failed" }], video_resources: [] }),
+              video("v2", 2, { description: "Line one\n\nLine   two", video_content: [{ status: "failed" }], video_resources: [] }),
               video("v1", 1, {
                 video_content: { status: "ready" },
                 video_resources: [
@@ -119,6 +119,7 @@ describe("GET /api/courses/[id]", () => {
 
     expect(body.chapters.map((c: any) => c.id)).toEqual(["v1", "v2", "v3"]);
     expect(body.chapters.map((c: any) => c.quizStatus)).toEqual(["ready", "failed", "pending"]);
+    expect(body.chapters[1].description).toBe("Line one Line two");
     expect(body.chapters[0].status).toBe("completed");
     expect(body.chapters[1].notes).toEqual({ type: "doc" });
     expect(body.course.thumbnailUrl).toBe("https://img.youtube.com/vi/yt-v1/hqdefault.jpg");
