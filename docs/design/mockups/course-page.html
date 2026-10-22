@@ -1,0 +1,3415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python 3: From Scratch to Production — StudyDesk</title>
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('studydesk_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+      } catch (e) {}
+    })();
+  </script>
+  <!-- Google Fonts: Source Serif 4, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* Light Theme (The Quiet Study Desk) */
+      --color-primary: #2F5D50;
+      --color-primary-hover: #24493F;
+      --color-primary-light: #EAF2EF;
+      --color-accent: #D9962B; /* Strictly reserved for near deadlines */
+      --color-accent-hover: #BF8223;
+      --color-accent-light: #FCF4E6;
+      --color-bg-app: #FAF6EF;
+      --color-surface: #FFFFFF;
+      --color-surface-hover: #F8F5EE;
+      --color-surface-muted: #F0EBE0;
+      --color-text-primary: #26332E;
+      --color-text-secondary: #5F6B65;
+      --color-border: #DAD3C4;
+      --color-border-subtle: #E8E2D5;
+      --color-success: #2E7D4F;
+      --color-success-bg: #E8F5EE;
+      --color-watched: #6A8E7F;
+      --color-watched-bg: #E4ECE8;
+      --color-error: #B5473A;
+      --color-error-bg: #FDF0EE;
+
+      --shadow-sm: 0 1px 3px rgba(38, 51, 46, 0.08);
+      --shadow-md: 0 4px 12px rgba(38, 51, 46, 0.09);
+      --shadow-lg: 0 12px 28px rgba(38, 51, 46, 0.14);
+
+      --font-serif: 'Source Serif 4', Georgia, serif;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-pill: 9999px;
+
+      --space-xs: 8px;
+      --space-s: 16px;
+      --space-m: 24px;
+      --space-l: 32px;
+      --space-xl: 48px;
+    }
+
+    [data-theme="dark"] {
+      /* Dark Theme (Warm Espresso & Charcoal — Zero Green Cast) */
+      --color-primary: #4E917D;
+      --color-primary-hover: #5EA893;
+      --color-primary-light: #1B2924;
+      --color-accent: #E5A94E; /* Strictly reserved for near deadlines */
+      --color-accent-hover: #F0BD6B;
+      --color-accent-light: #2D2314;
+      --color-bg-app: #141312;
+      --color-surface: #1E1C1A;
+      --color-surface-hover: #272422;
+      --color-surface-muted: #292623;
+      --color-text-primary: #F3EFEA;
+      --color-text-secondary: #9E968D;
+      --color-border: #383430;
+      --color-border-subtle: #2C2825;
+      --color-success: #4CAF79;
+      --color-success-bg: #1C2D24;
+      --color-watched: #7AA392;
+      --color-watched-bg: #1F2823;
+      --color-error: #E06D5E;
+      --color-error-bg: #361E1C;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-bg-app);
+      color: var(--color-text-primary);
+      line-height: 1.6;
+      font-size: 16px;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* SVG Icon Helper */
+    .icon {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    /* 1. Global Top Navigation Bar (Option C - Universal 56px) */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      height: 56px;
+      background-color: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .top-nav-inner {
+      width: 100%;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 var(--space-m);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-logo {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .brand-logo-mark {
+      width: 28px;
+      height: 28px;
+      background-color: var(--color-primary);
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      flex-shrink: 0;
+    }
+
+    .brand-logo-mark .icon {
+      width: 16px;
+      height: 16px;
+      stroke: #FFFFFF;
+    }
+
+    .brand-title {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      color: var(--color-text-primary);
+    }
+
+    .top-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .streak-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      background-color: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      cursor: default;
+      transition: all 0.15s ease;
+    }
+
+    .streak-badge .icon {
+      color: currentColor;
+    }
+
+    .streak-badge.active-today {
+      border-color: var(--color-primary);
+      background-color: rgba(47, 93, 80, 0.1);
+      color: var(--color-primary);
+    }
+
+    [data-theme="dark"] .streak-badge.active-today {
+      background-color: rgba(78, 145, 125, 0.15);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .btn-add-course {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 38px;
+      padding: 0 16px;
+      background-color: var(--color-primary);
+      color: #FFFFFF;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.15s ease;
+    }
+
+    .btn-add-course:hover {
+      background-color: var(--color-primary-hover);
+    }
+
+    .btn-add-course:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    /* Option C Profile & Utilities Dropdown */
+    .profile-menu-container {
+      position: relative;
+    }
+
+    .avatar-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.15s ease;
+    }
+
+    .avatar-btn:hover,
+    .avatar-btn[aria-expanded="true"] {
+      border-color: var(--color-primary);
+      background-color: var(--color-surface-hover);
+      box-shadow: 0 0 0 2px rgba(47, 93, 80, 0.15);
+    }
+
+    .avatar-icon {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+
+    .profile-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 230px;
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      padding: 6px;
+      display: none;
+      flex-direction: column;
+      z-index: 1000;
+      animation: dropdownFade 0.15s ease-out;
+    }
+
+    .profile-dropdown-menu.open {
+      display: flex;
+    }
+
+    @keyframes dropdownFade {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dropdown-header {
+      padding: 8px 10px 6px;
+    }
+
+    .dropdown-header .user-name {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .dropdown-header .user-status {
+      display: block;
+      font-size: 11px;
+      color: var(--color-text-secondary);
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background-color: var(--color-border-subtle);
+      margin: 4px 0;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 8px 10px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      text-decoration: none;
+    }
+
+    .dropdown-item:hover {
+      background-color: var(--color-surface-hover);
+      color: var(--color-primary);
+    }
+
+    .dropdown-item .item-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dropdown-item .item-icon {
+      font-size: 14px;
+      width: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-secondary);
+    }
+
+    .dropdown-item kbd {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 5px;
+      background-color: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      color: var(--color-text-secondary);
+    }
+
+    /* Main Container */
+    .main-container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: var(--space-m) var(--space-m) var(--space-xl);
+    }
+
+    /* Breadcrumbs */
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-s);
+    }
+
+    .breadcrumbs a {
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .breadcrumbs a:hover {
+      color: var(--color-primary);
+      text-decoration: underline;
+    }
+
+    .breadcrumbs .separator {
+      color: var(--color-border);
+    }
+
+    .breadcrumbs .current {
+      color: var(--color-text-primary);
+      font-weight: 500;
+    }
+
+    /* Course Hero Section */
+    .course-hero {
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-m);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: var(--space-m);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: var(--space-m);
+      align-items: center;
+    }
+
+    .hero-thumb-wrapper {
+      position: relative;
+      width: 200px;
+      height: 112px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid var(--color-border);
+      background-color: var(--color-surface-muted);
+    }
+
+    .hero-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .hero-thumb-badge {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background-color: rgba(20, 19, 18, 0.85);
+      color: #F3EFEA;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      letter-spacing: 0.3px;
+    }
+
+    .hero-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hero-title-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hero-title {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      line-height: 1.25;
+    }
+
+    .hero-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      flex-wrap: wrap;
+    }
+
+    .hero-meta-row a {
+      color: var(--color-primary);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .hero-meta-row a:hover {
+      text-decoration: underline;
+    }
+
+    /* Progress Breakdown */
+    .hero-progress-group {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .progress-headline-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+
+    .progress-headline-text {
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .deadline-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .deadline-chip.amber {
+      background-color: var(--color-accent-light);
+      border: 1px solid var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    .deadline-chip.neutral {
+      background-color: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+    }
+
+    /* Dual-Fill Segmented Progress Bar */
+    .segmented-progress-bar {
+      height: 8px;
+      background-color: var(--color-surface-muted);
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+      width: 100%;
+    }
+
+    .progress-segment-mastered {
+      background-color: var(--color-primary);
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-segment-watched {
+      background-color: var(--color-watched);
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-stats-legend {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .legend-dot.mastered {
+      background-color: var(--color-primary);
+    }
+
+    .legend-dot.watched {
+      background-color: var(--color-watched);
+    }
+
+    .legend-dot.remaining {
+      background-color: transparent;
+      border: 1.5px solid var(--color-border);
+    }
+
+    /* Resume CTA Block */
+    .hero-cta-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      text-align: right;
+    }
+
+    .btn-resume-hero {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 48px;
+      padding: 0 24px;
+      background-color: var(--color-primary);
+      color: #FFFFFF;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-resume-hero:hover {
+      background-color: var(--color-primary-hover);
+    }
+
+    .hero-next-caption {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      max-width: 220px;
+    }
+
+    /* Tab Navigation Bar */
+    .tabs-bar {
+      display: flex;
+      border-bottom: 1px solid var(--color-border);
+      gap: 32px;
+      margin-bottom: var(--space-m);
+      position: sticky;
+      top: 56px;
+      background-color: var(--color-bg-app);
+      z-index: 90;
+      padding-top: 4px;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 12px 2px;
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      color: var(--color-text-primary);
+    }
+
+    .tab-btn.active {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2.5px;
+      background-color: var(--color-primary);
+      border-radius: 2px 2px 0 0;
+    }
+
+    .tab-badge {
+      display: inline-block;
+      padding: 1px 7px;
+      font-size: 12px;
+      border-radius: var(--radius-pill);
+      background-color: var(--color-surface-muted);
+      color: var(--color-text-secondary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tab-btn.active .tab-badge {
+      background-color: var(--color-primary-light);
+      color: var(--color-primary);
+    }
+
+    /* Tab Panes */
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* Controls Bar (Search + Filter Chips) */
+    .section-controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: var(--space-s);
+      flex-wrap: wrap;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .search-input-wrap .search-icon {
+      position: absolute;
+      left: 12px;
+      color: var(--color-text-secondary);
+      pointer-events: none;
+    }
+
+    .search-input {
+      height: 40px;
+      width: 280px;
+      padding: 0 34px 0 36px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background-color: var(--color-surface);
+      color: var(--color-text-primary);
+      font-size: 14px;
+      font-family: var(--font-sans);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-primary-light);
+    }
+
+    .search-clear-btn {
+      position: absolute;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      display: none;
+      padding: 2px;
+    }
+
+    .filter-pills-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-pill {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--color-border);
+      background-color: var(--color-surface);
+      color: var(--color-text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-pill:hover {
+      border-color: var(--color-primary);
+      color: var(--color-text-primary);
+    }
+
+    .filter-pill.active {
+      background-color: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #FFFFFF;
+    }
+
+    /* Chapter List */
+    .chapter-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chapter-card {
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      cursor: pointer;
+    }
+
+    .chapter-card:hover {
+      border-color: var(--color-primary);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .chapter-card.current-active {
+      border-left: 4px solid var(--color-primary);
+    }
+
+    .chapter-card-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .chapter-idx {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      font-variant-numeric: tabular-nums;
+      width: 26px;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+
+    .chapter-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .chapter-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chapter-desc {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chapter-card-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .chapter-duration {
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+      color: var(--color-text-secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-pill.mastered {
+      background-color: var(--color-success-bg);
+      color: var(--color-success);
+    }
+
+    .status-pill.watched {
+      background-color: var(--color-watched-bg);
+      color: var(--color-watched);
+    }
+
+    .status-pill.up-next {
+      background-color: var(--color-primary-light);
+      color: var(--color-primary);
+    }
+
+    .status-pill.pending {
+      background-color: var(--color-surface-muted);
+      color: var(--color-text-secondary);
+    }
+
+    .btn-chapter-action {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+    }
+
+    .btn-chapter-action.primary {
+      background-color: var(--color-primary);
+      color: #FFFFFF;
+      border: none;
+    }
+
+    .btn-chapter-action.primary:hover {
+      background-color: var(--color-primary-hover);
+    }
+
+    .btn-chapter-action.ghost {
+      background-color: transparent;
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border);
+    }
+
+    .btn-chapter-action.ghost:hover {
+      border-color: var(--color-text-primary);
+      color: var(--color-text-primary);
+    }
+
+    /* Tab 2: Resources Styles */
+    .resources-container {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .chapter-resource-group {
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .group-header {
+      padding: 14px 20px;
+      background-color: var(--color-surface-hover);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .group-count-pill {
+      font-size: 12px;
+      font-weight: normal;
+      color: var(--color-text-secondary);
+    }
+
+    .resource-items-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .resource-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--color-border-subtle);
+      text-decoration: none;
+      color: inherit;
+      transition: background-color 0.15s ease;
+    }
+
+    .resource-row:last-child {
+      border-bottom: none;
+    }
+
+    .resource-row:hover {
+      background-color: var(--color-surface-hover);
+    }
+
+    .resource-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .resource-icon-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--color-surface-muted);
+      color: var(--color-primary);
+      flex-shrink: 0;
+    }
+
+    .resource-title-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .resource-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text-primary);
+    }
+
+    .resource-category-tag {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .resource-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .domain-chip {
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background-color: var(--color-surface-muted);
+      color: var(--color-text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    .empty-group-row {
+      padding: 16px 20px;
+      font-size: 13px;
+      font-style: italic;
+      color: var(--color-text-secondary);
+    }
+
+    /* Tab 3: Review Layout (Dual Pane) */
+    .review-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-m);
+      align-items: start;
+    }
+
+    .review-card-panel {
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-m);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+      min-height: 420px;
+    }
+
+    .panel-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-tag {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--color-primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .panel-counter {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .review-question-text {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--color-text-primary);
+    }
+
+    .quiz-options-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .quiz-btn-option {
+      width: 100%;
+      text-align: left;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background-color: var(--color-surface);
+      color: var(--color-text-primary);
+      font-size: 14px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .quiz-btn-option:hover:not(:disabled) {
+      background-color: var(--color-surface-muted);
+      border-color: var(--color-primary);
+    }
+
+    .quiz-btn-option.correct {
+      background-color: var(--color-success-bg);
+      border-color: var(--color-success);
+      color: var(--color-success);
+      font-weight: 600;
+    }
+
+    .quiz-btn-option.incorrect {
+      background-color: var(--color-error-bg);
+      border-color: var(--color-error);
+      color: var(--color-error);
+      font-weight: 600;
+    }
+
+    .quiz-explanation-box {
+      background-color: var(--color-surface-muted);
+      border-left: 3px solid var(--color-primary);
+      padding: 12px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+      color: var(--color-text-primary);
+      margin-top: 6px;
+      display: none;
+    }
+
+    .quiz-footer-row {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    /* 3D Flashcard Component */
+    .flashcard-3d-wrapper {
+      perspective: 1200px;
+      width: 100%;
+      height: 270px;
+      cursor: pointer;
+      margin: 8px 0;
+    }
+
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.4s cubic-bezier(0.4, 0.2, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+
+    .flashcard-3d-wrapper.flipped .flashcard-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      padding: var(--space-m);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background-color: var(--color-surface-muted);
+    }
+
+    .flashcard-front {
+      background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-muted) 100%);
+    }
+
+    .flashcard-back {
+      transform: rotateY(180deg);
+      background-color: var(--color-surface-muted);
+      border-color: var(--color-primary);
+    }
+
+    .flashcard-topic-pill {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--color-primary);
+    }
+
+    .flashcard-question-text {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      line-height: 1.4;
+    }
+
+    .flashcard-hint {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      margin-top: 4px;
+    }
+
+    .flashcard-instruction {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .flashcard-answer-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--color-text-primary);
+    }
+
+    .flashcard-code-snip {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      padding: 6px 10px;
+      border-radius: 4px;
+      margin-top: 6px;
+      color: var(--color-primary);
+      display: block;
+    }
+
+    /* Report Question / Flashcard Modal Popover */
+    .report-btn-tag {
+      background: transparent;
+      border: none;
+      color: var(--color-text-secondary);
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+    .report-btn-tag:hover {
+      background: var(--color-surface-muted);
+      color: var(--color-text-primary);
+    }
+    .report-popover-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(20, 19, 18, 0.5);
+      backdrop-filter: blur(2px);
+      z-index: 1050;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .report-popover-backdrop.open {
+      display: flex;
+    }
+    .report-popover-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+      width: 100%;
+      max-width: 380px;
+      padding: 20px;
+      animation: reportCardFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes reportCardFadeIn {
+      from { opacity: 0; transform: scale(0.96) translateY(6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .report-header-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+    .btn-report-close {
+      background: transparent;
+      border: none;
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+    .btn-report-close:hover {
+      background: var(--color-surface-muted);
+      color: var(--color-text-primary);
+    }
+    .report-subtext {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+    .report-category-group {
+      margin-bottom: 12px;
+    }
+    .report-field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-text-secondary);
+      margin-bottom: 6px;
+    }
+    .report-chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .report-chip {
+      background: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      border-radius: var(--radius-pill);
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: var(--font-sans);
+    }
+    .report-chip:hover {
+      border-color: var(--color-primary);
+      color: var(--color-text-primary);
+    }
+    .report-chip.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+    .report-input-group {
+      margin-bottom: 16px;
+    }
+    .report-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--color-text-primary);
+      resize: vertical;
+      min-height: 72px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    .report-textarea:focus {
+      border-color: var(--color-primary);
+    }
+    .report-actions-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .flashcard-actions-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 10px;
+    }
+
+    .btn-card-eval {
+      flex: 1;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+    }
+
+    .btn-card-eval.got-it {
+      background-color: var(--color-primary);
+      color: #FFFFFF;
+      border: none;
+    }
+
+    .btn-card-eval.got-it:hover {
+      background-color: var(--color-primary-hover);
+    }
+
+    .btn-card-eval.review-later {
+      background-color: transparent;
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+    }
+
+    .btn-card-eval.review-later:hover {
+      background-color: var(--color-surface);
+    }
+
+    /* Tab 4: Notes Styles */
+    .notes-document-wrapper {
+      background-color: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .notes-toolbar {
+      padding: 14px 24px;
+      background-color: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .notes-meta-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .notes-headline {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .notes-stats-badge {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      background-color: var(--color-surface-muted);
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+    }
+
+    .notes-toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-note-action {
+      height: 34px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--color-border);
+      background-color: var(--color-surface);
+      color: var(--color-text-primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-sans);
+    }
+
+    .btn-note-action:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .save-indicator {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .save-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--color-success);
+    }
+
+    .notes-content-area {
+      padding: 40px 48px;
+      min-height: 520px;
+      outline: none;
+      font-family: var(--font-serif);
+      font-size: 16.5px;
+      line-height: 1.75;
+      color: var(--color-text-primary);
+      background-color: var(--color-surface-muted);
+    }
+
+    .notes-content-area h1 {
+      font-size: 26px;
+      margin-bottom: 24px;
+      font-weight: 600;
+      border-bottom: 2px solid var(--color-border);
+      padding-bottom: 12px;
+      color: var(--color-text-primary);
+    }
+
+    .notes-content-area h3 {
+      font-size: 20px;
+      margin: 32px 0 12px;
+      font-weight: 600;
+      color: var(--color-primary);
+    }
+
+    .notes-content-area h3:first-of-type {
+      margin-top: 16px;
+    }
+
+    .notes-content-area p {
+      margin-bottom: 14px;
+    }
+
+    .notes-content-area ul {
+      margin: 0 0 16px 24px;
+    }
+
+    .notes-content-area li {
+      margin-bottom: 8px;
+    }
+
+    .note-timestamp {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 1px 7px;
+      border-radius: var(--radius-pill);
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      color: var(--color-primary);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      vertical-align: middle;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .note-timestamp:hover {
+      background-color: var(--color-primary);
+      color: #FFFFFF;
+      border-color: var(--color-primary);
+    }
+
+    /* Tab 5: Settings Styles */
+    .settings-wrapper {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-m);
+    }
+
+    .settings-card {
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-m);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .settings-card-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      border-bottom: 1px solid var(--color-border-subtle);
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .form-input {
+      height: 42px;
+      padding: 0 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background-color: var(--color-surface);
+      color: var(--color-text-primary);
+      font-size: 14px;
+      font-family: var(--font-sans);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px var(--color-primary-light);
+    }
+
+    .form-input:read-only {
+      background-color: var(--color-surface-muted);
+      color: var(--color-text-secondary);
+      cursor: not-allowed;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .toggle-row:last-child {
+      border-bottom: none;
+    }
+
+    .toggle-text-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .toggle-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .toggle-subtitle {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+    }
+
+    /* Switch Styling */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--color-border);
+      transition: .2s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--color-primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    .deadline-input-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .danger-card {
+      border-color: var(--color-error);
+      background-color: var(--color-surface);
+    }
+
+    .danger-card .settings-card-title {
+      color: var(--color-error);
+    }
+
+    .btn-danger {
+      height: 40px;
+      padding: 0 18px;
+      background-color: var(--color-error);
+      color: #FFFFFF;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      align-self: flex-start;
+      font-family: var(--font-sans);
+    }
+
+    .btn-danger:hover {
+      opacity: 0.9;
+    }
+
+    /* Modal Backdrop & Sheets */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(20, 19, 18, 0.65);
+      backdrop-filter: blur(2px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-m);
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-sheet {
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 480px;
+      padding: var(--space-m);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-s);
+    }
+
+    .modal-sheet h3 {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .modal-sheet p {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    .modal-actions-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    /* Toast Notification */
+    .toast-pill {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-primary);
+      color: var(--color-text-primary);
+      padding: 10px 20px;
+      border-radius: var(--radius-pill);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 2000;
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+    }
+
+    .toast-pill.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1100px) {
+      .course-hero {
+        grid-template-columns: 1fr;
+      }
+      .hero-cta-block {
+        align-items: flex-start;
+        text-align: left;
+      }
+      .review-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Global Top Navigation Bar (Option C) -->
+  <header class="top-nav">
+    <div class="top-nav-inner">
+      <a href="dashboard.html" class="brand-logo" title="StudyDesk Dashboard">
+        <div class="brand-logo-mark">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path><path d="M6 6h10"></path><path d="M6 10h10"></path></svg>
+        </div>
+        <span class="brand-title">StudyDesk</span>
+      </a>
+
+      <div class="top-nav-actions">
+        <!-- Habit Streak Badge -->
+        <div class="streak-badge active-today" id="streakBadge" title="5 consecutive study days. Active today!">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 2c0 4-4 6-4 10a6 6 0 0 0 12 0c0-4-3-7-3-7s-1 2-2 3c-1-2-1-4-3-6z"></path>
+          </svg>
+          <span id="streakCountText">5 Day Streak</span>
+        </div>
+
+        <!-- Add Course Button -->
+        <button class="btn-add-course" id="btnAddCourseModal" title="Import a new YouTube playlist">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>+ Add Course</span>
+        </button>
+
+        <!-- Profile & Utilities Dropdown (Option C) -->
+        <div class="profile-menu-container" id="profileMenuContainer">
+          <button class="avatar-btn" id="profileAvatarBtn" aria-haspopup="true" aria-expanded="false" title="Account & Utilities">
+            <svg class="icon avatar-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </button>
+          <div class="profile-dropdown-menu" id="profileDropdownMenu" role="menu">
+            <div class="dropdown-header">
+              <span class="user-name">Student Account</span>
+              <span class="user-status">Self-paced Learner</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item" id="themeToggleItem" role="menuitem">
+              <div class="item-content">
+                <span class="item-icon" id="menuThemeIcon">🌙</span>
+                <span class="item-label" id="menuThemeLabel">Theme: Warm Paper</span>
+              </div>
+            </button>
+            <button class="dropdown-item" id="shortcutsItem" role="menuitem">
+              <div class="item-content">
+                <span class="item-icon">⌨</span>
+                <span class="item-label">Keyboard Shortcuts</span>
+              </div>
+              <kbd>?</kbd>
+            </button>
+            <button class="dropdown-item" id="backupItem" role="menuitem">
+              <div class="item-content">
+                <span class="item-icon">💾</span>
+                <span class="item-label">Export Local Backup</span>
+              </div>
+            </button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item" id="appSettingsItem" role="menuitem">
+              <div class="item-content">
+                <span class="item-icon">⚙</span>
+                <span class="item-label">App Settings</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+    
+    <!-- Breadcrumb Bar -->
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="dashboard.html">
+        <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        Dashboard
+      </a>
+      <span class="separator">/</span>
+      <span class="current" id="breadcrumbCourseTitle">Python 3: From Scratch to Production</span>
+    </nav>
+
+    <!-- Course Hero Section -->
+    <section class="course-hero">
+      <!-- Thumbnail -->
+      <div class="hero-thumb-wrapper">
+        <img class="hero-thumb-img" src="https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=500&auto=format&fit=crop&q=80" alt="Course Thumbnail">
+        <span class="hero-thumb-badge" id="heroTotalChaptersPill">14 Chapters</span>
+      </div>
+
+      <!-- Hero Details & Metric -->
+      <div class="hero-details">
+        <div class="hero-title-row">
+          <h1 class="hero-title" id="heroCourseTitle">Python 3: From Scratch to Production</h1>
+        </div>
+        
+        <div class="hero-meta-row">
+          <span>By Corey Schafer</span>
+          <span>•</span>
+          <span>14 Chapters</span>
+          <span>•</span>
+          <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer">
+            Playlist on YouTube
+            <svg class="icon" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          </a>
+        </div>
+
+        <!-- 4-Part Metric Progress -->
+        <div class="hero-progress-group">
+          <div class="progress-headline-row">
+            <span class="progress-headline-text" id="progressHeadlineText">8 of 14 Chapters Studied (57%)</span>
+            <!-- Amber Deadline Chip (Reserved strictly for <= 3 days) -->
+            <span class="deadline-chip amber" id="heroDeadlineChip" title="Target Deadline">
+              <svg class="icon" style="width:12px;height:12px;" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <span>3 days left (Nov 20)</span>
+            </span>
+          </div>
+
+          <!-- Dual-Fill Segmented Bar -->
+          <div class="segmented-progress-bar" title="Progress: 6 Mastered, 2 Watched, 6 Remaining">
+            <div class="progress-segment-mastered" id="barMastered" style="width: 43%;"></div>
+            <div class="progress-segment-watched" id="barWatched" style="width: 14%;"></div>
+          </div>
+
+          <!-- Detailed Legend -->
+          <div class="progress-stats-legend">
+            <span class="legend-item"><span class="legend-dot mastered"></span><strong id="statMasteredCount">6</strong> Mastered (Quiz Passed)</span>
+            <span class="legend-item"><span class="legend-dot watched"></span><strong id="statWatchedCount">2</strong> Watched (Quiz Skipped)</span>
+            <span class="legend-item"><span class="legend-dot remaining"></span><strong id="statRemainingCount">6</strong> Remaining</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action CTA -->
+      <div class="hero-cta-block">
+        <a href="learning-page.html?chapter=4" class="btn-resume-hero" id="heroResumeBtn" onclick="navigateToPage(event, 'learning', 'learning-page.html?chapter=4')">
+          <span>Resume Chapter 4</span>
+          <svg class="icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </a>
+        <span class="hero-next-caption">Next up: Functions, Closures & Decorators (31:10)</span>
+      </div>
+    </section>
+
+    <!-- Tab Navigation Bar (5 Tabs) -->
+    <nav class="tabs-bar" role="tablist">
+      <button class="tab-btn active" data-tab="tab-overview" role="tab" aria-selected="true">
+        <span>1. Overview</span>
+        <span class="tab-badge" id="tabBadgeChapters">14</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-resources" role="tab" aria-selected="false">
+        <span>2. Resources</span>
+        <span class="tab-badge" id="tabBadgeResources">28</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-review" role="tab" aria-selected="false">
+        <span>3. Review</span>
+        <span class="tab-badge" id="tabBadgeReview">8</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-notes" role="tab" aria-selected="false">
+        <span>4. Notes</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-settings" role="tab" aria-selected="false">
+        <span>5. Settings</span>
+      </button>
+    </nav>
+
+    <!-- ========================================== -->
+    <!-- TAB 1: OVERVIEW & CHAPTER SYLLABUS -->
+    <!-- ========================================== -->
+    <section class="tab-pane active" id="tab-overview" role="tabpanel">
+      <!-- Controls Bar -->
+      <div class="section-controls-bar">
+        <div class="search-input-wrap">
+          <svg class="icon search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" class="search-input" id="chapterSearchInput" placeholder="Filter chapters by title...">
+          <button class="search-clear-btn" id="chapterSearchClear" aria-label="Clear chapter search">✕</button>
+        </div>
+
+        <div class="filter-pills-group">
+          <button class="filter-pill active" data-filter="all">All (14)</button>
+          <button class="filter-pill" data-filter="completed">Completed (8)</button>
+          <button class="filter-pill" data-filter="incomplete">Incomplete (6)</button>
+        </div>
+      </div>
+
+      <!-- Chapter List -->
+      <div class="chapter-list" id="chapterListContainer">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: RESOURCES DIRECTORY -->
+    <!-- ========================================== -->
+    <section class="tab-pane" id="tab-resources" role="tabpanel">
+      <div class="section-controls-bar">
+        <div class="search-input-wrap">
+          <svg class="icon search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" class="search-input" id="resourceSearchInput" placeholder="Search resources or code across course...">
+          <button class="search-clear-btn" id="resourceSearchClear" aria-label="Clear resource search">✕</button>
+        </div>
+        <span style="font-size: 13px; color: var(--color-text-secondary);">28 external links extracted from video descriptions</span>
+      </div>
+
+      <div class="resources-container" id="resourcesContainer">
+        <!-- Chapter 1 Resources -->
+        <div class="chapter-resource-group">
+          <div class="group-header">
+            <span>Chapter 01: Installation, Virtualenv & Tooling</span>
+            <span class="group-count-pill">3 links</span>
+          </div>
+          <div class="resource-items-list">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="resource-row">
+              <div class="resource-left">
+                <div class="resource-icon-badge">
+                  <svg class="icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                </div>
+                <div class="resource-title-group">
+                  <span class="resource-title">Course Official Starter Repository</span>
+                  <span class="resource-category-tag">Code Repository</span>
+                </div>
+              </div>
+              <div class="resource-right">
+                <span class="domain-chip">github.com</span>
+                <svg class="icon" style="width:14px;height:14px;color:var(--color-text-secondary);" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              </div>
+            </a>
+            <a href="https://docs.python.org" target="_blank" rel="noopener noreferrer" class="resource-row">
+              <div class="resource-left">
+                <div class="resource-icon-badge">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+                <div class="resource-title-group">
+                  <span class="resource-title">Python 3.12 Virtual Environments Documentation</span>
+                  <span class="resource-category-tag">Documentation</span>
+                </div>
+              </div>
+              <div class="resource-right">
+                <span class="domain-chip">docs.python.org</span>
+                <svg class="icon" style="width:14px;height:14px;color:var(--color-text-secondary);" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              </div>
+            </a>
+            <a href="https://code.visualstudio.com" target="_blank" rel="noopener noreferrer" class="resource-row">
+              <div class="resource-left">
+                <div class="resource-icon-badge">
+                  <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                </div>
+                <div class="resource-title-group">
+                  <span class="resource-title">VS Code Python Extension Pack</span>
+                  <span class="resource-category-tag">Tool / Environment</span>
+                </div>
+              </div>
+              <div class="resource-right">
+                <span class="domain-chip">visualstudio.com</span>
+                <svg class="icon" style="width:14px;height:14px;color:var(--color-text-secondary);" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Chapter 4 Resources -->
+        <div class="chapter-resource-group">
+          <div class="group-header">
+            <span>Chapter 04: Functions, Closures & Decorators</span>
+            <span class="group-count-pill">2 links</span>
+          </div>
+          <div class="resource-items-list">
+            <a href="https://peps.python.org/pep-0318/" target="_blank" rel="noopener noreferrer" class="resource-row">
+              <div class="resource-left">
+                <div class="resource-icon-badge">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path></svg>
+                </div>
+                <div class="resource-title-group">
+                  <span class="resource-title">PEP 318 – Decorators for Functions and Methods</span>
+                  <span class="resource-category-tag">Documentation</span>
+                </div>
+              </div>
+              <div class="resource-right">
+                <span class="domain-chip">peps.python.org</span>
+                <svg class="icon" style="width:14px;height:14px;color:var(--color-text-secondary);" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              </div>
+            </a>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="resource-row">
+              <div class="resource-left">
+                <div class="resource-icon-badge">
+                  <svg class="icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                </div>
+                <div class="resource-title-group">
+                  <span class="resource-title">Chapter 4 Code: Decorator Timers & Wrap Boilerplate</span>
+                  <span class="resource-category-tag">Code Repository</span>
+                </div>
+              </div>
+              <div class="resource-right">
+                <span class="domain-chip">github.com</span>
+                <svg class="icon" style="width:14px;height:14px;color:var(--color-text-secondary);" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Chapter 5 Resources (Empty State demonstration) -->
+        <div class="chapter-resource-group">
+          <div class="group-header">
+            <span>Chapter 05: Object-Oriented Programming & Dunder Methods</span>
+            <span class="group-count-pill">0 links</span>
+          </div>
+          <div class="empty-group-row">
+            No external links referenced in this video description.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: REVIEW & ACTIVE RECALL -->
+    <!-- ========================================== -->
+    <section class="tab-pane" id="tab-review" role="tabpanel">
+      <div class="review-grid">
+        
+        <!-- Practice Question (MCQ) -->
+        <div class="review-card-panel">
+          <div class="panel-header-row">
+            <span class="panel-tag">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+              Practice Question
+            </span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="panel-counter" id="quizCounterText">Question 1 of 3</span>
+              <button class="report-btn-tag" type="button" onclick="openReportModal('Question', 'Report Practice Question')">⚑ Report</button>
+            </div>
+          </div>
+
+          <div class="review-question-text" id="quizQuestionText">
+            What is the primary purpose of applying <code>@functools.wraps</code> to an inner decorator function?
+          </div>
+
+          <div class="quiz-options-group" id="quizOptionsContainer">
+            <!-- Buttons injected by JS -->
+          </div>
+
+          <div class="quiz-explanation-box" id="quizExplanationBox">
+            <!-- Explanation injected by JS -->
+          </div>
+
+          <div class="quiz-footer-row">
+            <button class="btn-chapter-action ghost" id="btnNextQuizQuestion">
+              <span>Next Practice Question</span>
+              <svg class="icon" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+            <span style="font-size: 12px; color: var(--color-text-secondary);">Covers completed topics only</span>
+          </div>
+        </div>
+
+        <!-- Saved Flashcards (3D Rotating Card) -->
+        <div class="review-card-panel">
+          <div class="panel-header-row">
+            <span class="panel-tag">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+              Saved Recall Flashcard
+            </span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="panel-counter" id="flashcardCounterText">Card 1 of 3</span>
+              <button class="report-btn-tag" type="button" onclick="event.stopPropagation(); openReportModal('Flashcard', 'Report Flashcard')">⚑ Report</button>
+            </div>
+          </div>
+
+          <!-- 3D Rotating Card Container -->
+          <div class="flashcard-3d-wrapper" id="flashcard3dWrapper" title="Click or press Space to rotate card" tabindex="0" role="button" aria-label="Flashcard. Click to reveal answer.">
+            <div class="flashcard-inner">
+              
+              <!-- Front Face -->
+              <div class="flashcard-face flashcard-front">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span class="flashcard-topic-pill" id="cardTopicText" style="margin-bottom: 0;">Ch 2 • Mutability vs Immutability</span>
+                  <button class="report-btn-tag" type="button" onclick="event.stopPropagation(); openReportModal('Flashcard', 'Report Flashcard')">⚑ Report</button>
+                </div>
+                <div>
+                  <div class="flashcard-question-text" id="cardQuestionText">
+                    What happens in computer memory when you append to a Python list versus concatenating a string?
+                  </div>
+                  <div class="flashcard-hint" id="cardHintText">
+                    Think about pointer arrays versus object re-allocation and memory IDs.
+                  </div>
+                </div>
+                <div class="flashcard-instruction">
+                  <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                  <span>Click card to rotate & reveal answer</span>
+                </div>
+              </div>
+
+              <!-- Back Face -->
+              <div class="flashcard-face flashcard-back">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span class="flashcard-topic-pill" style="margin-bottom: 0;">Answer & Key Takeaway</span>
+                  <button class="report-btn-tag" type="button" onclick="event.stopPropagation(); openReportModal('Flashcard', 'Report Flashcard')">⚑ Report</button>
+                </div>
+                <div>
+                  <p class="flashcard-answer-text" id="cardAnswerText">
+                    Lists are <strong>mutable</strong>: appending modifies the array in-place without changing the list's memory address (<code>id(list)</code> remains identical). Strings are <strong>immutable</strong>: string concatenation creates a brand-new string object elsewhere in memory and updates the reference.
+                  </p>
+                  <code class="flashcard-code-snip" id="cardCodeSnippet">id(a) == id(a.append(4))  # True for lists</code>
+                </div>
+                <div class="flashcard-instruction">
+                  <svg class="icon" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                  <span>Click again to flip back</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Evaluation Actions on Back Face -->
+          <div class="flashcard-actions-row">
+            <button class="btn-card-eval got-it" id="btnCardGotIt" title="Mark card as mastered">
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>Got It (Mastered)</span>
+            </button>
+            <button class="btn-card-eval review-later" id="btnCardReviewLater" title="Keep in course review queue">
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+              <span>Keep in Review</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: COURSE NOTES DOCUMENT -->
+    <!-- ========================================== -->
+    <section class="tab-pane" id="tab-notes" role="tabpanel">
+      <div class="notes-document-wrapper">
+        <!-- Notes Toolbar -->
+        <div class="notes-toolbar">
+          <div class="notes-meta-left">
+            <span class="notes-headline">Compiled Course Notebook</span>
+            <span class="notes-stats-badge" id="notesWordCount">1,420 words • 6 chapters annotated</span>
+          </div>
+
+          <div class="notes-toolbar-actions">
+            <div class="save-indicator">
+              <span class="save-dot"></span>
+              <span>Saved locally</span>
+            </div>
+            <button class="btn-note-action" id="btnCopyNotes" title="Copy raw markdown to clipboard">
+              <svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <span>Copy Markdown</span>
+            </button>
+            <button class="btn-note-action" id="btnDownloadNotes" title="Download as .md file">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span>Download .md</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Editable Notes Canvas (Single Continuous Document) -->
+        <div class="notes-content-area" id="notesEditableCanvas" contenteditable="true" spellcheck="false">
+          <h1>Python 3: From Scratch to Production — Course Notes</h1>
+
+          <h3>Chapter 01: Installation, Virtualenv & Tooling</h3>
+          <p>
+            Always create isolated virtual environments per project to prevent polluting global pip packages. Never install third-party packages into the global system interpreter:
+          </p>
+          <ul>
+            <li><a href="learning-page.html?chapter=1&t=255" class="note-timestamp" title="Jump to timestamp in video">04:15</a> Run <code>python -m venv .venv</code> in the repository root.</li>
+            <li><a href="learning-page.html?chapter=1&t=530" class="note-timestamp" title="Jump to timestamp in video">08:50</a> Activate via <code>source .venv/bin/activate</code> on Unix or <code>.venv\Scripts\activate</code> on Windows.</li>
+          </ul>
+
+          <h3>Chapter 02: Data Types, Strings & Mutability</h3>
+          <p>
+            Understanding variable identity and memory addresses is foundational to preventing subtle bugs with default parameters:
+          </p>
+          <ul>
+            <li><a href="learning-page.html?chapter=2&t=750" class="note-timestamp" title="Jump to timestamp in video">12:30</a> Never use mutable objects (like <code>[]</code> or <code>{}</code>) as default parameter values. Python evaluates defaults once at function definition time.</li>
+            <li><a href="learning-page.html?chapter=2&t=1010" class="note-timestamp" title="Jump to timestamp in video">16:50</a> Use <code>None</code> as the default sentinel and initialize a new list inside the function body.</li>
+          </ul>
+
+          <h3>Chapter 03: Conditionals, Loops & Iterables</h3>
+          <p>
+            Python loops operate on iterator protocols rather than simple index counting:
+          </p>
+          <ul>
+            <li><a href="learning-page.html?chapter=3&t=410" class="note-timestamp" title="Jump to timestamp in video">06:50</a> Prefer <code>enumerate(iterable, start=1)</code> over manual index incrementation.</li>
+            <li><a href="learning-page.html?chapter=3&t=890" class="note-timestamp" title="Jump to timestamp in video">14:50</a> The <code>else</code> clause on a <code>for</code> loop executes only if the loop completes without hitting a <code>break</code> statement.</li>
+          </ul>
+
+          <h3>Chapter 04: Functions, Closures & Decorators</h3>
+          <p>
+            Decorators wrap functions using higher-order closures to augment behavior without modifying source code:
+          </p>
+          <ul>
+            <li><a href="learning-page.html?chapter=4&t=612" class="note-timestamp" title="Jump to timestamp in video">10:12</a> Always import <code>from functools import wraps</code> and decorate the wrapper with <code>@wraps(func)</code> to preserve docstrings and <code>__name__</code>.</li>
+            <li><a href="learning-page.html?chapter=4&t=765" class="note-timestamp" title="Jump to timestamp in video">12:45</a> Practical pattern: execution timing with <code>time.perf_counter()</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: COURSE SETTINGS -->
+    <!-- ========================================== -->
+    <section class="tab-pane" id="tab-settings" role="tabpanel">
+      <div class="settings-wrapper">
+        
+        <!-- Course Identity -->
+        <div class="settings-card">
+          <h3 class="settings-card-title">Course Identity</h3>
+          <div class="form-group">
+            <label class="form-label" for="settingCourseTitle">Course Title</label>
+            <input type="text" id="settingCourseTitle" class="form-input" value="Python 3: From Scratch to Production">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="settingPlaylistUrl">Source Playlist URL</label>
+            <input type="text" id="settingPlaylistUrl" class="form-input" value="https://www.youtube.com/playlist?list=PL-osiE80TeTt2d9bfVyMT88NdZ3wVvH_E" readonly>
+          </div>
+        </div>
+
+        <!-- Learning Preferences -->
+        <div class="settings-card">
+          <h3 class="settings-card-title">Active Learning Preferences</h3>
+          
+          <div class="toggle-row">
+            <div class="toggle-text-group">
+              <span class="toggle-title">End-of-Chapter Quizzes</span>
+              <span class="toggle-subtitle">Require answering active quiz question before marking chapter as Mastered.</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggleQuizzes" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-text-group">
+              <span class="toggle-title">Generate Recall Flashcards</span>
+              <span class="toggle-subtitle">Automatically extract core concepts into the Course Review tab deck.</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggleFlashcards" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="toggle-text-group">
+              <span class="toggle-title">20-Minute Focus Breaks</span>
+              <span class="toggle-subtitle">Auto-pause video for a 5-minute rest interval to promote memory retention.</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggleBreaks" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Target Deadline -->
+        <div class="settings-card">
+          <h3 class="settings-card-title">Target Completion Deadline</h3>
+          <p style="font-size: 13px; color: var(--color-text-secondary);">
+            Sets visual pace reminders across the dashboard and course header. Warns with warm amber badge when $\le 3$ days remain.
+          </p>
+          <div class="deadline-input-row">
+            <input type="date" id="settingDeadlineInput" class="form-input" value="2026-11-20" style="width: 220px;">
+            <button class="btn-chapter-action ghost" id="btnClearDeadline">Clear Deadline</button>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="settings-card danger-card">
+          <h3 class="settings-card-title">Danger Zone</h3>
+          <p style="font-size: 13px; color: var(--color-text-secondary);">
+            Permanently remove this course from your StudyDesk library. This action erases all local progress, quiz history, and associated notes.
+          </p>
+          <button class="btn-danger" id="btnOpenDeleteModal">
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <span>Delete Course...</span>
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Delete Confirmation Modal Sheet -->
+  <div class="modal-backdrop" id="deleteModalBackdrop">
+    <div class="modal-sheet">
+      <h3>Delete Course?</h3>
+      <p>
+        Are you sure you want to delete <strong>Python 3: From Scratch to Production</strong>? This will permanently delete 14 chapters of study history and 1,420 words of notes.
+      </p>
+      <div class="form-group">
+        <label class="form-label" for="deleteConfirmInput">Type <strong style="color:var(--color-error);">DELETE</strong> to confirm:</label>
+        <input type="text" id="deleteConfirmInput" class="form-input" placeholder="DELETE">
+      </div>
+      <div class="modal-actions-row">
+        <button class="btn-chapter-action ghost" id="btnCancelDelete">Cancel</button>
+        <button class="btn-danger" id="btnConfirmDelete" disabled style="opacity: 0.5; cursor: not-allowed;">Permanently Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Course Modal Sheet (Universal) -->
+  <div class="modal-backdrop" id="addCourseModalBackdrop">
+    <div class="modal-sheet">
+      <h3>+ Add New Course</h3>
+      <p>Paste any YouTube course playlist URL to generate an organized syllabus, timestamped notes pad, and chapter quizzes.</p>
+      <div class="form-group">
+        <label class="form-label" for="addPlaylistInput">YouTube Playlist URL</label>
+        <input type="url" id="addPlaylistInput" class="form-input" placeholder="https://www.youtube.com/playlist?list=...">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="addDeadlineInput">Target Deadline (Optional)</label>
+        <input type="date" id="addDeadlineInput" class="form-input">
+      </div>
+      <div class="modal-actions-row">
+        <button class="btn-chapter-action ghost" id="btnCancelAddCourse">Cancel</button>
+        <button class="btn-chapter-action primary" id="btnConfirmAddCourse">Import Course</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts Modal Sheet (Option C) -->
+  <div class="modal-backdrop" id="shortcutsModalBackdrop">
+    <div class="modal-sheet">
+      <h3>Keyboard Shortcuts</h3>
+      <p>Essential shortcuts for distraction-free study and video navigation.</p>
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border-subtle); font-size: 14px;">
+          <span>Play / Pause Lecture</span>
+          <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background-color: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">Space</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border-subtle); font-size: 14px;">
+          <span>Seek Backward / Forward 10s</span>
+          <div style="display: flex; gap: 4px;">
+            <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background-color: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">J</kbd>
+            <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background-color: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">L</kbd>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border-subtle); font-size: 14px;">
+          <span>Capture Timestamped Note</span>
+          <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background-color: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">T</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border-subtle); font-size: 14px;">
+          <span>Distraction-Free Mode</span>
+          <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background-color: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">F</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border-subtle); font-size: 14px;">
+          <span>Toggle Shortcuts Sheet</span>
+          <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background-color: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">?</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 14px;">
+          <span>Close Modals / Dropdowns</span>
+          <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background-color: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">Esc</kbd>
+        </div>
+      </div>
+      <div class="modal-actions-row">
+        <button class="btn-chapter-action primary" id="btnCloseShortcuts">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Question / Flashcard Modal Popover Card -->
+  <div class="report-popover-backdrop" id="reportPopoverBackdrop" onclick="if(event.target === this) closeReportPopover()">
+    <div class="report-popover-card" onclick="event.stopPropagation()">
+      <div class="report-header">
+        <div class="report-header-title">
+          <svg class="icon" viewBox="0 0 24 24" style="width: 16px; height: 16px; stroke: var(--color-primary);"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+          <span id="reportCardTitle">Report Question</span>
+        </div>
+        <button class="btn-report-close" type="button" onclick="closeReportPopover()" title="Close">✕</button>
+      </div>
+      <p class="report-subtext" id="reportCardSubtext">Help us keep study materials accurate and clear.</p>
+
+      <div class="report-category-group">
+        <label class="report-field-label">Issue Category</label>
+        <div class="report-chips-row">
+          <button type="button" class="report-chip active" onclick="selectReportCategory(this)">Incorrect Answer</button>
+          <button type="button" class="report-chip" onclick="selectReportCategory(this)">Typo / Grammar</button>
+          <button type="button" class="report-chip" onclick="selectReportCategory(this)">Unclear Phrasing</button>
+          <button type="button" class="report-chip" onclick="selectReportCategory(this)">Other</button>
+        </div>
+      </div>
+
+      <div class="report-input-group">
+        <label class="report-field-label" for="reportReasonInput">Reason / Details</label>
+        <textarea id="reportReasonInput" class="report-textarea" rows="3" placeholder="Briefly describe what needs correction..."></textarea>
+      </div>
+
+      <div class="report-actions-row">
+        <button type="button" class="btn-chapter-action ghost" style="height: 32px; padding: 0 14px; font-size: 13px;" onclick="closeReportPopover()">Cancel</button>
+        <button type="button" class="btn-chapter-action primary" style="height: 32px; padding: 0 16px; font-size: 13px;" onclick="submitReport()">Submit Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-pill" id="toastPill">
+    <svg class="icon" viewBox="0 0 24 24" style="color:var(--color-primary);"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <span id="toastMessage">Notes copied to clipboard!</span>
+  </div>
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    // Chapter Data
+    const chaptersData = [
+      { id: 1, title: "Installation, Virtualenv & Tooling", duration: "18:40", desc: "Setting up Python 3.12, virtualenv isolation, and VS Code linter.", status: "mastered" },
+      { id: 2, title: "Data Types, Strings & Mutability", duration: "22:15", desc: "Memory identity, string formatting, immutable tuples vs lists.", status: "mastered" },
+      { id: 3, title: "Conditionals, Loops & Iterables", duration: "25:04", desc: "Truthy evaluations, enumerate(), zip(), and for-else clauses.", status: "watched" },
+      { id: 4, title: "Functions, Closures & Decorators", duration: "31:10", desc: "First-class functions, inner wrappers, and @functools.wraps.", status: "up-next" },
+      { id: 5, title: "Object-Oriented Programming & Dunder Methods", duration: "42:00", desc: "Class vs instance variables, __repr__, __str__, and inheritance.", status: "pending" },
+      { id: 6, title: "Error Handling & Custom Exceptions", duration: "19:30", desc: "Try/except/else/finally blocks and inheriting from Exception.", status: "pending" },
+      { id: 7, title: "File I/O and Context Managers", duration: "24:12", desc: "The with statement protocol, __enter__, and __exit__ methods.", status: "pending" },
+      { id: 8, title: "Iterators, Generators & Yield", duration: "28:45", desc: "Memory efficient streams, generator expressions, and next().", status: "mastered" },
+      { id: 9, title: "List & Dict Comprehensions", duration: "16:20", desc: "Syntactic sugar for declarative mapping, filtering, and sets.", status: "mastered" },
+      { id: 10, title: "Standard Library Tour: Datetime, OS & Pathlib", duration: "27:50", desc: "Modern cross-platform path manipulation and timezones.", status: "mastered" },
+      { id: 11, title: "Unit Testing with PyTest", duration: "34:10", desc: "Writing test fixtures, parametrization, and test discovery.", status: "watched" },
+      { id: 12, title: "Concurrency: Threading vs Multiprocessing", duration: "39:15", desc: "The Global Interpreter Lock (GIL) and CPU-bound versus I/O-bound tasks.", status: "mastered" },
+      { id: 13, title: "AsyncIO and Coroutines", duration: "36:00", desc: "Async/await syntax, event loops, and non-blocking network requests.", status: "pending" },
+      { id: 14, title: "Packaging and Publishing to PyPI", duration: "29:40", desc: "pyproject.toml, building wheels, and deploying with Twine.", status: "pending" }
+    ];
+
+    // Quiz Questions Data (For Completed Topics)
+    const quizQuestions = [
+      {
+        id: 1,
+        topic: "Chapter 4 • Decorators",
+        question: "What is the primary purpose of applying @functools.wraps to an inner decorator function?",
+        options: [
+          { text: "A. To optimize execution speed via C-level byte caching", correct: false },
+          { text: "B. To preserve original function metadata (__name__, __doc__)", correct: true },
+          { text: "C. To prevent recursive call stack overflow", correct: false }
+        ],
+        explanation: "Correct! Without @functools.wraps, decorated functions lose their original name and docstring, reflecting the inner wrapper function name instead."
+      },
+      {
+        id: 2,
+        topic: "Chapter 2 • Mutability",
+        question: "Why should you never use a mutable object (like a list) as a default parameter in Python?",
+        options: [
+          { text: "A. Default parameters are evaluated only once at function definition time", correct: true },
+          { text: "B. Python disallows syntax containing brackets in function headers", correct: false },
+          { text: "C. It triggers an unhandled TypeError upon function invocation", correct: false }
+        ],
+        explanation: "Correct! Python evaluates default arguments once when the function is defined. If modified, that same mutated list persists across all subsequent invocations."
+      },
+      {
+        id: 3,
+        topic: "Chapter 8 • Generators",
+        question: "What is the main performance benefit of using a generator function with 'yield' instead of returning a list?",
+        options: [
+          { text: "A. It utilizes multiple CPU cores automatically", correct: false },
+          { text: "B. It produces values lazily on-demand, reducing memory consumption to O(1)", correct: true },
+          { text: "C. It guarantees compile-time type safety", correct: false }
+        ],
+        explanation: "Correct! Generators yield items one at a time on demand, avoiding loading huge datasets entirely into RAM."
+      }
+    ];
+
+    // Flashcards Data
+    const flashcardsData = [
+      {
+        id: 1,
+        topic: "Ch 2 • Mutability vs Immutability",
+        question: "What happens in computer memory when you append to a Python list versus concatenating a string?",
+        hint: "Think about pointer arrays versus object re-allocation and memory IDs.",
+        answer: "Lists are <strong>mutable</strong>: appending modifies the array in-place without changing the list's memory address (<code>id(list)</code> remains identical). Strings are <strong>immutable</strong>: concatenation creates a brand-new string object elsewhere in memory and updates the reference.",
+        code: "id(a) == id(a.append(4))  # True for lists"
+      },
+      {
+        id: 2,
+        topic: "Ch 3 • The for-else Construct",
+        question: "When does the 'else' block of a Python 'for' loop actually execute?",
+        hint: "It behaves differently than an if-else statement.",
+        answer: "The <code>else</code> block executes <strong>only if the loop finishes normally without encountering a <code>break</code> statement</strong>. If a <code>break</code> is triggered, the else block is skipped entirely.",
+        code: "for x in items:\n    if x == target: break\nelse: print('Not found')"
+      },
+      {
+        id: 3,
+        topic: "Ch 12 • Python GIL",
+        question: "What is the Global Interpreter Lock (GIL) and how does it affect CPU-bound threading?",
+        hint: "Why doesn't multi-threading speed up mathematical calculations in standard CPython?",
+        answer: "The GIL is a mutex that allows only <strong>one native thread to execute Python bytecode at a time</strong>. Therefore, CPU-bound tasks in standard threads cannot run in true parallel. To achieve multi-core parallelism for CPU-bound tasks, use <code>multiprocessing</code> instead.",
+        code: "from multiprocessing import Pool # Bypasses GIL"
+      }
+    ];
+
+    // State Variables
+    let currentQuizIndex = 0;
+    let currentFlashcardIndex = 0;
+    let currentFilter = 'all';
+
+    // DOM Elements
+    const chapterListContainer = document.getElementById('chapterListContainer');
+    const chapterSearchInput = document.getElementById('chapterSearchInput');
+    const chapterSearchClear = document.getElementById('chapterSearchClear');
+    const filterPills = document.querySelectorAll('.filter-pill');
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    const toastPill = document.getElementById('toastPill');
+    const toastMessage = document.getElementById('toastMessage');
+
+    // Option C Profile & Utilities DOM
+    const profileAvatarBtn = document.getElementById('profileAvatarBtn');
+    const profileDropdownMenu = document.getElementById('profileDropdownMenu');
+    const profileMenuContainer = document.getElementById('profileMenuContainer');
+    const themeToggleItem = document.getElementById('themeToggleItem');
+    const menuThemeIcon = document.getElementById('menuThemeIcon');
+    const menuThemeLabel = document.getElementById('menuThemeLabel');
+    const shortcutsItem = document.getElementById('shortcutsItem');
+    const backupItem = document.getElementById('backupItem');
+    const appSettingsItem = document.getElementById('appSettingsItem');
+    const shortcutsModalBackdrop = document.getElementById('shortcutsModalBackdrop');
+    const btnCloseShortcuts = document.getElementById('btnCloseShortcuts');
+
+    // Quiz DOM
+    const quizCounterText = document.getElementById('quizCounterText');
+    const quizQuestionText = document.getElementById('quizQuestionText');
+    const quizOptionsContainer = document.getElementById('quizOptionsContainer');
+    const quizExplanationBox = document.getElementById('quizExplanationBox');
+    const btnNextQuizQuestion = document.getElementById('btnNextQuizQuestion');
+
+    // Flashcard DOM
+    const flashcard3dWrapper = document.getElementById('flashcard3dWrapper');
+    const flashcardCounterText = document.getElementById('flashcardCounterText');
+    const cardTopicText = document.getElementById('cardTopicText');
+    const cardQuestionText = document.getElementById('cardQuestionText');
+    const cardHintText = document.getElementById('cardHintText');
+    const cardAnswerText = document.getElementById('cardAnswerText');
+    const cardCodeSnippet = document.getElementById('cardCodeSnippet');
+    const btnCardGotIt = document.getElementById('btnCardGotIt');
+    const btnCardReviewLater = document.getElementById('btnCardReviewLater');
+
+    // Notes DOM
+    const btnCopyNotes = document.getElementById('btnCopyNotes');
+    const btnDownloadNotes = document.getElementById('btnDownloadNotes');
+    const notesEditableCanvas = document.getElementById('notesEditableCanvas');
+
+    // Modals DOM
+    const btnAddCourseModal = document.getElementById('btnAddCourseModal');
+    const addCourseModalBackdrop = document.getElementById('addCourseModalBackdrop');
+    const btnCancelAddCourse = document.getElementById('btnCancelAddCourse');
+    const btnConfirmAddCourse = document.getElementById('btnConfirmAddCourse');
+
+    const btnOpenDeleteModal = document.getElementById('btnOpenDeleteModal');
+    const deleteModalBackdrop = document.getElementById('deleteModalBackdrop');
+    const btnCancelDelete = document.getElementById('btnCancelDelete');
+    const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+    const deleteConfirmInput = document.getElementById('deleteConfirmInput');
+
+    // Initialize Page
+    function init() {
+      setupTheme();
+      setupProfileDropdown();
+      renderChapters();
+      setupTabs();
+      setupSearchAndFilters();
+      renderQuiz();
+      renderFlashcard();
+      setupNotesActions();
+      setupModals();
+    }
+
+        // Theme Management (Option C) - Bulletproof Multi-Channel Engine
+    let themeBroadcastChannel = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        themeBroadcastChannel = new BroadcastChannel('studydesk_theme_sync');
+      }
+    } catch (e) {}
+
+    function getStoredTheme() {
+      if (window.parent && window.parent !== window) {
+        try {
+          if (window.parent.document && window.parent.document.documentElement) {
+            const pTheme = window.parent.document.documentElement.getAttribute('data-theme');
+            if (pTheme === 'dark' || pTheme === 'light') return pTheme;
+          }
+        } catch (e) {}
+        try {
+          if (typeof window.parent.globalTheme === 'string' && (window.parent.globalTheme === 'dark' || window.parent.globalTheme === 'light')) {
+            return window.parent.globalTheme;
+          }
+        } catch (e) {}
+      }
+
+      try {
+        const ls = localStorage.getItem('studydesk_theme');
+        if (ls === 'dark' || ls === 'light') return ls;
+      } catch (e) {}
+
+      if (window.parent && window.parent !== window) {
+        try {
+          const pls = window.parent.localStorage.getItem('studydesk_theme');
+          if (pls === 'dark' || pls === 'light') return pls;
+        } catch (e) {}
+      }
+
+      try {
+        const dom = document.documentElement.getAttribute('data-theme');
+        if (dom === 'dark' || dom === 'light') return dom;
+      } catch (e) {}
+
+      try {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          return 'dark';
+        }
+      } catch (e) {}
+
+      return 'light';
+    }
+
+    function setStoredTheme(theme) {
+      try {
+        localStorage.setItem('studydesk_theme', theme);
+      } catch (e) {}
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.localStorage.setItem('studydesk_theme', theme);
+        } catch (e) {}
+        try {
+          window.parent.globalTheme = theme;
+          window.parent.document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      }
+    }
+
+    function applyTheme(theme, broadcast = true) {
+      const validTheme = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', validTheme);
+      setStoredTheme(validTheme);
+      updateThemeDropdownUI(validTheme);
+
+      if (broadcast) {
+        if (themeBroadcastChannel) {
+          try {
+            themeBroadcastChannel.postMessage({ type: 'SD_THEME_CHANGE', theme: validTheme });
+          } catch (e) {}
+        }
+        if (window.parent && window.parent !== window) {
+          try {
+            window.parent.postMessage({ type: 'SD_THEME_CHANGE', theme: validTheme }, '*');
+          } catch (e) {}
+        }
+      }
+    }
+
+    function syncWithStoredTheme() {
+      const savedTheme = getStoredTheme();
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      if (savedTheme && savedTheme !== currentTheme) {
+        applyTheme(savedTheme, false);
+      }
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(nextTheme, true);
+      closeProfileDropdown();
+      showToast(`Switched to ${nextTheme === 'dark' ? 'Warm Espresso Dark Mode' : 'Warm Paper Light Mode'}`);
+    }
+
+    function setupTheme() {
+      const currentDomTheme = document.documentElement.getAttribute('data-theme');
+      const preferred = currentDomTheme || getStoredTheme();
+      applyTheme(preferred, false);
+
+      if (themeToggleItem && !themeToggleItem.dataset.bound) {
+        themeToggleItem.dataset.bound = 'true';
+        themeToggleItem.addEventListener('click', toggleTheme);
+      }
+    }
+
+    function updateThemeDropdownUI(theme) {
+      if (menuThemeIcon && menuThemeLabel) {
+        if (theme === 'dark') {
+          menuThemeIcon.textContent = '☀️';
+          menuThemeLabel.textContent = 'Theme: Warm Espresso (Switch to Paper)';
+        } else {
+          menuThemeIcon.textContent = '🌙';
+          menuThemeLabel.textContent = 'Theme: Warm Paper (Switch to Dark)';
+        }
+      }
+    }
+
+    // 5-Way Redundant Cross-frame and Cross-tab Synchronization:
+    // 1. BroadcastChannel (Modern cross-tab)
+    if (themeBroadcastChannel) {
+      themeBroadcastChannel.onmessage = (e) => {
+        if (e.data && e.data.theme) {
+          applyTheme(e.data.theme, false);
+        }
+      };
+    }
+
+    // 2. Storage event (Standard cross-tab)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'studydesk_theme' && e.newValue) {
+        applyTheme(e.newValue, false);
+      }
+    });
+
+    // 3. postMessage (Parent-child iframe)
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'SD_THEME_CHANGE' && e.data.theme) {
+        applyTheme(e.data.theme, false);
+      }
+    });
+
+    // 4. Focus, visibilitychange, and pageshow events
+    window.addEventListener('focus', syncWithStoredTheme);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') syncWithStoredTheme();
+    });
+    window.addEventListener('pageshow', syncWithStoredTheme);
+
+    // 5. Active polling interval
+    setInterval(syncWithStoredTheme, 300);
+
+    // Bulletproof Navigation Helper for Parent Shell vs Standalone
+    function navigateToPage(event, target, url) {
+      if (event) {
+        try { event.preventDefault(); } catch(e) {}
+        try { event.stopPropagation(); } catch(e) {}
+      }
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.postMessage({ type: 'SD_NAVIGATE', target: target, url: url }, '*');
+          return;
+        } catch(err) {}
+      }
+      window.location.href = url;
+    }
+
+    // Capture-phase navigation interceptor for seamless parent shell integration
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a');
+      if (link && link.getAttribute('href')) {
+        const href = link.getAttribute('href');
+        if (href.startsWith('dashboard.html')) {
+          navigateToPage(e, 'dashboard', href);
+        } else if (href.startsWith('learning-page.html')) {
+          navigateToPage(e, 'learning', href);
+        }
+      }
+    }, true);
+
+    // Profile & Utilities Dropdown (Option C)
+    function setupProfileDropdown() {
+      if (!profileAvatarBtn || !profileDropdownMenu) return;
+
+      // Toggle dropdown
+      profileAvatarBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = profileDropdownMenu.classList.contains('open');
+        if (isOpen) {
+          closeProfileDropdown();
+        } else {
+          profileDropdownMenu.classList.add('open');
+          profileAvatarBtn.setAttribute('aria-expanded', 'true');
+        }
+      });
+
+      // Keyboard shortcuts trigger
+      if (shortcutsItem && shortcutsModalBackdrop) {
+        shortcutsItem.addEventListener('click', () => {
+          closeProfileDropdown();
+          shortcutsModalBackdrop.classList.add('open');
+        });
+      }
+
+      if (btnCloseShortcuts && shortcutsModalBackdrop) {
+        btnCloseShortcuts.addEventListener('click', () => {
+          shortcutsModalBackdrop.classList.remove('open');
+        });
+      }
+
+      // Backup trigger
+      if (backupItem) {
+        backupItem.addEventListener('click', () => {
+          closeProfileDropdown();
+          exportDataBackup();
+        });
+      }
+
+      // App Settings trigger -> switches to settings tab
+      if (appSettingsItem) {
+        appSettingsItem.addEventListener('click', () => {
+          closeProfileDropdown();
+          const settingsTabBtn = document.querySelector('.tab-btn[data-tab="tab-settings"]');
+          if (settingsTabBtn) {
+            settingsTabBtn.click();
+            const settingsPane = document.getElementById('tab-settings');
+            if (settingsPane) settingsPane.scrollIntoView({ behavior: 'smooth' });
+            showToast("Switched to Course Settings tab");
+          }
+        });
+      }
+
+      // Outside click listener
+      document.addEventListener('click', (e) => {
+        if (profileMenuContainer && !profileMenuContainer.contains(e.target)) {
+          closeProfileDropdown();
+        }
+        if (shortcutsModalBackdrop && e.target === shortcutsModalBackdrop) {
+          shortcutsModalBackdrop.classList.remove('open');
+        }
+      });
+
+      // Keyboard listener
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeProfileDropdown();
+          closeReportPopover();
+          if (shortcutsModalBackdrop) shortcutsModalBackdrop.classList.remove('open');
+          if (addCourseModalBackdrop) addCourseModalBackdrop.classList.remove('open');
+          if (deleteModalBackdrop) deleteModalBackdrop.classList.remove('open');
+        }
+        if (e.key === '?' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+          e.preventDefault();
+          if (shortcutsModalBackdrop) shortcutsModalBackdrop.classList.add('open');
+        }
+      });
+    }
+
+    // Report Question / Flashcard Modal Functions
+    let currentReportItemType = 'Question';
+    function openReportModal(type, title) {
+      currentReportItemType = type || 'Question';
+      const backdrop = document.getElementById('reportPopoverBackdrop');
+      const titleEl = document.getElementById('reportCardTitle');
+      const subtextEl = document.getElementById('reportCardSubtext');
+      const textarea = document.getElementById('reportReasonInput');
+      
+      if (titleEl) titleEl.textContent = title || `Report ${currentReportItemType}`;
+      if (subtextEl) subtextEl.textContent = `Help us keep this ${currentReportItemType.toLowerCase()} accurate and clear.`;
+      if (textarea) textarea.value = '';
+      
+      document.querySelectorAll('.report-chip').forEach((c, idx) => {
+        c.classList.toggle('active', idx === 0);
+      });
+      
+      if (backdrop) backdrop.classList.add('open');
+      if (textarea) textarea.focus();
+    }
+
+    function closeReportPopover() {
+      const backdrop = document.getElementById('reportPopoverBackdrop');
+      if (backdrop) backdrop.classList.remove('open');
+    }
+
+    function selectReportCategory(chip) {
+      document.querySelectorAll('.report-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    }
+
+    function submitReport() {
+      const textarea = document.getElementById('reportReasonInput');
+      const activeChip = document.querySelector('.report-chip.active');
+      const category = activeChip ? activeChip.textContent : 'General';
+      const reason = textarea ? textarea.value.trim() : '';
+      
+      closeReportPopover();
+      showToast(`Report submitted (${category}). Thank you for your feedback!`);
+    }
+
+    function closeProfileDropdown() {
+      if (profileDropdownMenu) profileDropdownMenu.classList.remove('open');
+      if (profileAvatarBtn) profileAvatarBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    function exportDataBackup() {
+      const backupData = {
+        app: "StudyDesk",
+        version: "1.0-mvp",
+        courseId: "python-3",
+        courseTitle: "Python 3: From Scratch to Production",
+        exportedAt: new Date().toISOString(),
+        theme: document.documentElement.getAttribute('data-theme') || 'light',
+        progress: { completed: 8, total: 14, percent: 57 },
+        notes: notesEditableCanvas ? notesEditableCanvas.innerText : ""
+      };
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `studydesk-python3-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("Course data & notes backup exported! ✓");
+    }
+
+    // Render Chapters List
+    function renderChapters() {
+      const searchQuery = chapterSearchInput.value.toLowerCase().trim();
+      
+      const filtered = chaptersData.filter(ch => {
+        // Filter by tab pill
+        if (currentFilter === 'completed') {
+          if (ch.status !== 'mastered' && ch.status !== 'watched') return false;
+        } else if (currentFilter === 'incomplete') {
+          if (ch.status === 'mastered' || ch.status === 'watched') return false;
+        }
+
+        // Filter by search query
+        if (searchQuery) {
+          const matchTitle = ch.title.toLowerCase().includes(searchQuery);
+          const matchDesc = ch.desc.toLowerCase().includes(searchQuery);
+          return matchTitle || matchDesc;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        chapterListContainer.innerHTML = `
+          <div style="background:var(--color-surface); padding: 32px; text-align: center; border-radius: var(--radius-sm); border: 1px solid var(--color-border); color: var(--color-text-secondary);">
+            No chapters match your search query.
+          </div>
+        `;
+        return;
+      }
+
+      chapterListContainer.innerHTML = filtered.map(ch => {
+        let statusBadge = '';
+        let actionBtn = '';
+        const isCurrent = ch.status === 'up-next';
+
+        if (ch.status === 'mastered') {
+          statusBadge = `<span class="status-pill mastered">✓ Mastered</span>`;
+          actionBtn = `<a href="learning-page.html?chapter=${ch.id}" class="btn-chapter-action ghost" onclick="navigateToPage(event, 'learning', 'learning-page.html?chapter=${ch.id}')">Rewatch ↺</a>`;
+        } else if (ch.status === 'watched') {
+          statusBadge = `<span class="status-pill watched">👁 Watched</span>`;
+          actionBtn = `<a href="learning-page.html?chapter=${ch.id}" class="btn-chapter-action ghost" onclick="navigateToPage(event, 'learning', 'learning-page.html?chapter=${ch.id}')">Rewatch ↺</a>`;
+        } else if (ch.status === 'up-next') {
+          statusBadge = `<span class="status-pill up-next">● Up Next</span>`;
+          actionBtn = `<a href="learning-page.html?chapter=${ch.id}" class="btn-chapter-action primary" onclick="navigateToPage(event, 'learning', 'learning-page.html?chapter=${ch.id}')">Continue Chapter →</a>`;
+        } else {
+          statusBadge = `<span class="status-pill pending">○ Pending</span>`;
+          actionBtn = `<a href="learning-page.html?chapter=${ch.id}" class="btn-chapter-action ghost" onclick="navigateToPage(event, 'learning', 'learning-page.html?chapter=${ch.id}')">Start Chapter →</a>`;
+        }
+
+        const paddedIdx = ch.id < 10 ? `0${ch.id}` : `${ch.id}`;
+
+        return `
+          <article class="chapter-card ${isCurrent ? 'current-active' : ''}" onclick="navigateToPage(event, 'learning', 'learning-page.html?chapter=${ch.id}')">
+            <div class="chapter-card-left">
+              <span class="chapter-idx">${paddedIdx}</span>
+              <div class="chapter-info">
+                <span class="chapter-title">${ch.title}</span>
+                <span class="chapter-desc">${ch.desc}</span>
+              </div>
+            </div>
+            <div class="chapter-card-right">
+              <span class="chapter-duration" title="Video duration">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                ${ch.duration}
+              </span>
+              ${statusBadge}
+              ${actionBtn}
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // Tabs Switching
+    function setupTabs() {
+      tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetTabId = btn.getAttribute('data-tab');
+          
+          tabButtons.forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+          });
+          tabPanes.forEach(p => p.classList.remove('active'));
+
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
+          const activePane = document.getElementById(targetTabId);
+          if (activePane) activePane.classList.add('active');
+        });
+      });
+    }
+
+    // Search and Filters
+    function setupSearchAndFilters() {
+      chapterSearchInput.addEventListener('input', () => {
+        if (chapterSearchInput.value.trim().length > 0) {
+          chapterSearchClear.style.display = 'block';
+        } else {
+          chapterSearchClear.style.display = 'none';
+        }
+        renderChapters();
+      });
+
+      chapterSearchClear.addEventListener('click', () => {
+        chapterSearchInput.value = '';
+        chapterSearchClear.style.display = 'none';
+        renderChapters();
+      });
+
+      filterPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          filterPills.forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          currentFilter = pill.getAttribute('data-filter');
+          renderChapters();
+        });
+      });
+
+      // Resource filter
+      const resSearch = document.getElementById('resourceSearchInput');
+      const resClear = document.getElementById('resourceSearchClear');
+      resSearch.addEventListener('input', () => {
+        const query = resSearch.value.toLowerCase().trim();
+        resClear.style.display = query ? 'block' : 'none';
+        
+        const groups = document.querySelectorAll('.chapter-resource-group');
+        groups.forEach(g => {
+          const text = g.textContent.toLowerCase();
+          g.style.display = text.includes(query) ? 'block' : 'none';
+        });
+      });
+
+      resClear.addEventListener('click', () => {
+        resSearch.value = '';
+        resClear.style.display = 'none';
+        document.querySelectorAll('.chapter-resource-group').forEach(g => g.style.display = 'block');
+      });
+    }
+
+    // Practice Quiz (Active Recall)
+    function renderQuiz() {
+      const q = quizQuestions[currentQuizIndex];
+      quizCounterText.textContent = `Question ${currentQuizIndex + 1} of ${quizQuestions.length}`;
+      quizQuestionText.innerHTML = q.question;
+      quizExplanationBox.style.display = 'none';
+      quizExplanationBox.textContent = '';
+
+      quizOptionsContainer.innerHTML = q.options.map((opt, idx) => `
+        <button class="quiz-btn-option" data-idx="${idx}">
+          <span>${opt.text}</span>
+          <span class="icon-indicator"></span>
+        </button>
+      `).join('');
+
+      quizOptionsContainer.querySelectorAll('.quiz-btn-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const optIdx = parseInt(btn.getAttribute('data-idx'));
+          const selected = q.options[optIdx];
+
+          // Disable buttons
+          quizOptionsContainer.querySelectorAll('.quiz-btn-option').forEach(b => b.disabled = true);
+
+          if (selected.correct) {
+            btn.classList.add('correct');
+            btn.querySelector('.icon-indicator').innerHTML = `
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            `;
+          } else {
+            btn.classList.add('incorrect');
+            btn.querySelector('.icon-indicator').innerHTML = `
+              <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            `;
+            // Highlight correct answer
+            const correctIdx = q.options.findIndex(o => o.correct);
+            const correctBtn = quizOptionsContainer.querySelector(`[data-idx="${correctIdx}"]`);
+            if (correctBtn) {
+              correctBtn.classList.add('correct');
+              correctBtn.querySelector('.icon-indicator').innerHTML = `
+                <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              `;
+            }
+          }
+
+          quizExplanationBox.textContent = q.explanation;
+          quizExplanationBox.style.display = 'block';
+        });
+      });
+    }
+
+    btnNextQuizQuestion.addEventListener('click', () => {
+      currentQuizIndex = (currentQuizIndex + 1) % quizQuestions.length;
+      renderQuiz();
+    });
+
+    // 3D Rotating Flashcard
+    function renderFlashcard() {
+      const card = flashcardsData[currentFlashcardIndex];
+      flashcardCounterText.textContent = `Card ${currentFlashcardIndex + 1} of ${flashcardsData.length}`;
+      cardTopicText.textContent = card.topic;
+      cardQuestionText.textContent = card.question;
+      cardHintText.textContent = card.hint;
+      cardAnswerText.innerHTML = card.answer;
+      cardCodeSnippet.textContent = card.code;
+      flashcard3dWrapper.classList.remove('flipped');
+    }
+
+    flashcard3dWrapper.addEventListener('click', () => {
+      flashcard3dWrapper.classList.toggle('flipped');
+    });
+
+    flashcard3dWrapper.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        flashcard3dWrapper.classList.toggle('flipped');
+      }
+    });
+
+    btnCardGotIt.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showToast("Topic marked Mastered! Moving to next card ✓");
+      currentFlashcardIndex = (currentFlashcardIndex + 1) % flashcardsData.length;
+      renderFlashcard();
+    });
+
+    btnCardReviewLater.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showToast("Card saved to Review queue ⟳");
+      currentFlashcardIndex = (currentFlashcardIndex + 1) % flashcardsData.length;
+      renderFlashcard();
+    });
+
+    // Notes Actions (Copy & Download)
+    function setupNotesActions() {
+      btnCopyNotes.addEventListener('click', () => {
+        const text = notesEditableCanvas.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+          showToast("Course notes copied to clipboard! ✓");
+        }).catch(() => {
+          showToast("Copied notes!");
+        });
+      });
+
+      btnDownloadNotes.addEventListener('click', () => {
+        const text = notesEditableCanvas.innerText;
+        const blob = new Blob([text], { type: 'text/markdown;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'python-3-from-scratch-notes.md';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("Downloaded python-3-from-scratch-notes.md ✓");
+      });
+    }
+
+    // Modal Sheet Handlers
+    function setupModals() {
+      // Add Course Modal
+      btnAddCourseModal.addEventListener('click', () => addCourseModalBackdrop.classList.add('open'));
+      btnCancelAddCourse.addEventListener('click', () => addCourseModalBackdrop.classList.remove('open'));
+      btnConfirmAddCourse.addEventListener('click', () => {
+        const url = document.getElementById('addPlaylistInput').value;
+        if (!url) {
+          alert("Please enter a valid playlist URL.");
+          return;
+        }
+        addCourseModalBackdrop.classList.remove('open');
+        showToast("Course imported successfully! ✓");
+      });
+
+      // Delete Modal
+      btnOpenDeleteModal.addEventListener('click', () => {
+        deleteModalBackdrop.classList.add('open');
+        deleteConfirmInput.value = '';
+        btnConfirmDelete.disabled = true;
+        btnConfirmDelete.style.opacity = '0.5';
+        btnConfirmDelete.style.cursor = 'not-allowed';
+      });
+
+      btnCancelDelete.addEventListener('click', () => deleteModalBackdrop.classList.remove('open'));
+
+      deleteConfirmInput.addEventListener('input', () => {
+        if (deleteConfirmInput.value.trim().toUpperCase() === 'DELETE') {
+          btnConfirmDelete.disabled = false;
+          btnConfirmDelete.style.opacity = '1';
+          btnConfirmDelete.style.cursor = 'pointer';
+        } else {
+          btnConfirmDelete.disabled = true;
+          btnConfirmDelete.style.opacity = '0.5';
+          btnConfirmDelete.style.cursor = 'not-allowed';
+        }
+      });
+
+      btnConfirmDelete.addEventListener('click', () => {
+        deleteModalBackdrop.classList.remove('open');
+        showToast("Course deleted. Redirecting to Dashboard...");
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 1200);
+      });
+
+      // Settings deadline clear
+      document.getElementById('btnClearDeadline').addEventListener('click', () => {
+        document.getElementById('settingDeadlineInput').value = '';
+        document.getElementById('heroDeadlineChip').style.display = 'none';
+        showToast("Deadline cleared");
+      });
+    }
+
+    // Toast Helper
+    let toastTimeout;
+    function showToast(msg) {
+      toastMessage.textContent = msg;
+      toastPill.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toastPill.classList.remove('show');
+      }, 2500);
+    }
+
+    // Initialize when DOM is ready (supports both immediate and event-driven load)
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>

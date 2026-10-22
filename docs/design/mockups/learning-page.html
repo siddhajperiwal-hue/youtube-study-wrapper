@@ -1,0 +1,3490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Python 3: Ch 4 — Functions & Decorators — StudyDesk</title>
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('studydesk_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+      } catch (e) {}
+    })();
+  </script>
+  <!-- Google Fonts: Source Serif 4, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Light Theme (The Quiet Study Desk) */
+      --color-primary: #2F5D50;
+      --color-primary-hover: #24493F;
+      --color-primary-light: #EAF2EF;
+      --color-accent: #D9962B; /* Strictly reserved for near deadlines */
+      --color-accent-hover: #BF8223;
+      --color-accent-light: #FCF4E6;
+      --color-bg-app: #FAF6EF;
+      --color-surface: #FFFFFF;
+      --color-surface-hover: #F8F5EE;
+      --color-surface-muted: #F0EBE0;
+      --color-text-primary: #26332E;
+      --color-text-secondary: #5F6B65;
+      --color-border: #DAD3C4;
+      --color-border-subtle: #E8E2D5;
+      --color-success: #2E7D4F;
+      --color-success-bg: #E8F5EE;
+      --color-error: #B5473A;
+      --color-error-bg: #FDF0EE;
+
+      --shadow-sm: 0 1px 3px rgba(38, 51, 46, 0.08);
+      --shadow-md: 0 4px 12px rgba(38, 51, 46, 0.09);
+      --shadow-lg: 0 12px 28px rgba(38, 51, 46, 0.14);
+
+      --font-serif: 'Source Serif 4', Georgia, serif;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-pill: 9999px;
+
+      --space-xs: 8px;
+      --space-s: 16px;
+      --space-m: 24px;
+      --space-l: 32px;
+    }
+
+    [data-theme="dark"] {
+      /* Dark Theme (Warm Espresso & Charcoal — Zero Green Cast) */
+      --color-primary: #4E917D;
+      --color-primary-hover: #5EA893;
+      --color-primary-light: #1B2924;
+      --color-accent: #E5A94E; /* Strictly reserved for near deadlines */
+      --color-accent-hover: #F0BD6B;
+      --color-accent-light: #2D2314;
+      --color-bg-app: #141312;
+      --color-surface: #1E1C1A;
+      --color-surface-hover: #272422;
+      --color-surface-muted: #292623;
+      --color-text-primary: #F3EFEA;
+      --color-text-secondary: #9E968D;
+      --color-border: #383430;
+      --color-border-subtle: #2C2825;
+      --color-success: #4CAF79;
+      --color-success-bg: #1C2D24;
+      --color-watched: #7AA392;
+      --color-watched-bg: #1F2823;
+      --color-error: #E06D5E;
+      --color-error-bg: #361E1C;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-bg-app);
+      color: var(--color-text-primary);
+      line-height: 1.6;
+      font-size: 15px;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* SVG Icons */
+    .icon {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    /* Top Navigation Bar (56px) - State B */
+    .study-top-bar {
+      height: 56px;
+      background-color: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--space-m);
+      z-index: 100;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+
+    .study-top-bar.hidden {
+      transform: translateY(-100%);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .top-left-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .btn-back-course {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+    }
+
+    .btn-back-course:hover {
+      background-color: var(--color-surface-hover);
+      color: var(--color-primary);
+    }
+
+    .top-center-title {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      max-width: 520px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .top-right-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Scientific Focus Timer Widget & Controller Popover */
+    .timer-widget-anchor {
+      position: relative;
+    }
+
+    .focus-timer-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background-color: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-primary);
+      font-variant-numeric: tabular-nums;
+      cursor: pointer;
+      user-select: none;
+      font-family: var(--font-sans);
+      transition: all 0.15s ease;
+    }
+
+    .focus-timer-pill:hover,
+    .focus-timer-pill.active {
+      border-color: var(--color-primary);
+      background-color: var(--color-surface-hover);
+    }
+
+    .timer-config-popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 310px;
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 16px;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 125;
+      text-align: left;
+    }
+
+    .timer-config-popover.open {
+      display: flex;
+      animation: popoverFadeIn 0.18s ease-out;
+    }
+
+    @keyframes popoverFadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .timer-popover-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--color-border-subtle);
+      padding-bottom: 8px;
+    }
+
+    .timer-popover-title {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .timer-popover-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      background-color: var(--color-surface-muted);
+      color: var(--color-primary);
+      border: 1px solid var(--color-border);
+    }
+
+    .timer-config-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .timer-config-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .timer-config-val {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    .timer-presets-row {
+      display: flex;
+      gap: 5px;
+    }
+
+    .btn-timer-preset {
+      flex: 1;
+      padding: 5px 6px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background-color: var(--color-surface-muted);
+      color: var(--color-text-primary);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      font-family: var(--font-sans);
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-timer-preset:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .btn-timer-preset.active {
+      background-color: var(--color-primary);
+      color: #FFFFFF;
+      border-color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    .timer-stepper-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      padding: 2px 0;
+    }
+
+    .stepper-ctrls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-stepper {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      border: 1px solid var(--color-border);
+      background-color: var(--color-surface);
+      color: var(--color-text-primary);
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .btn-stepper:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .stepper-input {
+      width: 44px;
+      height: 24px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      background-color: var(--color-surface);
+      color: var(--color-text-primary);
+    }
+
+    .stepper-input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    .timer-popover-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--color-border-subtle);
+      padding-top: 10px;
+      margin-top: 2px;
+    }
+
+    .btn-timer-action {
+      height: 30px;
+      padding: 0 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      border: 1px solid var(--color-border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .btn-timer-action.ghost {
+      background: none;
+      border: none;
+      color: var(--color-text-secondary);
+      padding: 0 4px;
+      font-size: 11px;
+      text-decoration: underline;
+    }
+
+    .btn-timer-action.ghost:hover {
+      color: var(--color-primary);
+    }
+
+    .btn-timer-action.secondary {
+      background-color: var(--color-surface-muted);
+      color: var(--color-text-primary);
+    }
+
+    .btn-timer-action.secondary:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .btn-timer-action.primary {
+      background-color: var(--color-primary);
+      color: #FFFFFF;
+      border-color: var(--color-primary);
+    }
+
+    .btn-timer-action.primary:hover {
+      background-color: var(--color-primary-hover);
+    }
+
+    body.focus-mode .study-top-bar.has-open-popover {
+      transform: translateY(0) !important;
+    }
+
+    .btn-focus-mode {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background-color: var(--color-surface);
+      color: var(--color-text-primary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-sans);
+    }
+
+    .btn-focus-mode:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    /* Main Viewport Container (60% / 40% Split) */
+    .study-theater-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 56px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Left Column: Video & Controls (60%) */
+    .video-column {
+      width: 60%;
+      height: 100%;
+      overflow-y: auto;
+      padding: var(--space-m);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background-color: var(--color-bg-app);
+      transition: width 0.3s ease;
+    }
+
+    /* 16:9 Video Player Container */
+    .video-player-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background-color: #0c0b0a;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Video Canvas / Mock Player Stream */
+    .video-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: linear-gradient(135deg, #1b2820 0%, #111a15 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .canvas-play-indicator {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.6);
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+      z-index: 5;
+    }
+
+    .canvas-play-indicator.flash {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .video-canvas-content {
+      text-align: center;
+      padding: 24px;
+      max-width: 80%;
+    }
+
+    .video-canvas-title {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .video-canvas-subtitle {
+      font-size: 14px;
+      color: #9EAEA6;
+      font-family: var(--font-mono);
+    }
+
+    /* Simulated Video Player Controls */
+    .player-controls-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 16px;
+      background: linear-gradient(transparent, rgba(12, 11, 10, 0.9));
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 10;
+      transition: opacity 0.2s ease;
+    }
+
+    /* Progress Scrubber with Generous Hit Area */
+    .scrubber-track {
+      width: 100%;
+      height: 6px;
+      background-color: rgba(255, 255, 255, 0.28);
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+      touch-action: none;
+      transition: height 0.15s ease, background-color 0.15s ease;
+    }
+
+    /* Generous invisible hit target extending 10px above and below track */
+    .scrubber-track::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      bottom: -10px;
+      left: 0;
+      right: 0;
+      cursor: pointer;
+      z-index: 1;
+    }
+
+    .scrubber-track:hover,
+    .scrubber-track.scrubbing {
+      height: 8px;
+      background-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .scrubber-fill {
+      height: 100%;
+      width: 0%;
+      background-color: var(--color-primary);
+      background: linear-gradient(90deg, #3DA485 0%, var(--color-primary) 100%);
+      border-radius: 4px;
+      position: relative;
+      pointer-events: none;
+      box-shadow: 0 0 8px rgba(47, 93, 80, 0.5);
+    }
+
+    .scrubber-thumb {
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      transform: translateY(-50%) scale(0.85);
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      transition: transform 0.15s ease;
+      pointer-events: none;
+    }
+
+    .scrubber-track:hover .scrubber-thumb,
+    .scrubber-track.scrubbing .scrubber-thumb {
+      transform: translateY(-50%) scale(1.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+
+    /* Scrubber Hover Preview Tooltip */
+    .scrubber-tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      transform: translateX(-50%);
+      background: rgba(20, 19, 18, 0.95);
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.15);
+      z-index: 25;
+    }
+
+    .scrubber-tooltip.visible {
+      opacity: 1;
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #FFFFFF;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .controls-left, .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-player-control {
+      background: none;
+      border: none;
+      color: #FFFFFF;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .btn-player-control:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-player-control:active {
+      transform: scale(0.93);
+    }
+
+    /* =================================================== */
+    /* THE 3 VIDEO PLAYER OVERLAYS (Paused & Hidden Video) */
+    /* =================================================== */
+    .video-overlay-scrim {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(18, 17, 16, 0.94);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-m);
+      color: #F3EFEA;
+      text-align: center;
+    }
+
+    .video-overlay-scrim.active {
+      display: flex;
+    }
+
+    .overlay-card {
+      max-width: 520px;
+      width: 100%;
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-m);
+      color: var(--color-text-primary);
+      text-align: left;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .overlay-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .overlay-title {
+      font-family: var(--font-serif);
+      font-size: 19px;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+
+    .overlay-body {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    .overlay-options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .overlay-opt-btn {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background-color: var(--color-surface);
+      color: var(--color-text-primary);
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .overlay-opt-btn:hover:not(:disabled) {
+      background-color: var(--color-surface-muted);
+      border-color: var(--color-primary);
+    }
+
+    .overlay-opt-btn.correct {
+      background-color: var(--color-success-bg);
+      border-color: var(--color-success);
+      color: var(--color-success);
+      font-weight: 600;
+    }
+
+    .overlay-opt-btn.incorrect {
+      background-color: var(--color-error-bg);
+      border-color: var(--color-error);
+      color: var(--color-error);
+      font-weight: 600;
+    }
+
+    .overlay-explanation {
+      background-color: var(--color-surface-muted);
+      border-left: 3px solid var(--color-primary);
+      padding: 10px 12px;
+      border-radius: 0 4px 4px 0;
+      font-size: 13px;
+      color: var(--color-text-primary);
+      display: none;
+    }
+
+    .overlay-actions-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 6px;
+      padding-top: 10px;
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    /* Scientific Break Specific */
+    .break-timer-display {
+      font-family: var(--font-mono);
+      font-size: 38px;
+      font-weight: 600;
+      color: var(--color-primary);
+      text-align: center;
+      margin: 8px 0;
+    }
+
+    /* Chapter Controls Bar */
+    .chapter-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 4px 0;
+    }
+
+    .btn-ch-nav {
+      height: 38px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background-color: var(--color-surface);
+      color: var(--color-text-primary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-ch-nav:hover:not(:disabled) {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .btn-ch-nav:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-ch-nav.primary {
+      background-color: var(--color-primary);
+      color: #FFFFFF;
+      border: none;
+    }
+
+    .btn-ch-nav.primary:hover {
+      background-color: var(--color-primary-hover);
+    }
+
+    .chapter-select-menu {
+      height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background-color: var(--color-surface);
+      color: var(--color-text-primary);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      flex: 1;
+      max-width: 380px;
+      cursor: pointer;
+    }
+
+    .chapter-select-menu:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    /* Collapsible Video Description */
+    .description-collapsible {
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .desc-header-toggle {
+      width: 100%;
+      padding: 12px 18px;
+      background: none;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .desc-header-toggle:hover {
+      background-color: var(--color-surface-hover);
+    }
+
+    .desc-body-content {
+      padding: 0 18px 16px;
+      display: none;
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    .desc-body-content.open {
+      display: block;
+      padding-top: 14px;
+    }
+
+    .desc-resource-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .resource-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      background-color: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      color: var(--color-primary);
+      font-size: 12px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .resource-chip:hover {
+      border-color: var(--color-primary);
+    }
+
+    /* Right Column: Tactile Notes Pad (40%) */
+    .notes-column {
+      width: 40%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid var(--color-border);
+      background-color: var(--color-surface-muted);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    /* Notes Toolbar */
+    .notes-fixed-toolbar {
+      height: 46px;
+      background-color: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .notes-tools-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-insert-timestamp {
+      height: 30px;
+      padding: 0 10px;
+      border-radius: var(--radius-pill);
+      background-color: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      color: var(--color-primary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .btn-insert-timestamp:hover {
+      background-color: var(--color-primary);
+      color: #FFFFFF;
+      border-color: var(--color-primary);
+    }
+
+    .tool-divider {
+      width: 1px;
+      height: 18px;
+      background-color: var(--color-border);
+      margin: 0 4px;
+    }
+
+    .btn-format-tool {
+      background: none;
+      border: none;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .btn-format-tool:hover {
+      background-color: var(--color-surface-muted);
+      color: var(--color-text-primary);
+    }
+
+    .notes-save-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+
+    .save-indicator-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--color-success);
+    }
+    /* Dedicated Chapter Note Sheets */
+    .notes-scroll-canvas {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+      scroll-behavior: smooth;
+      background-color: var(--color-surface-muted);
+    }
+
+    .chapter-note-page {
+      min-height: calc(100vh - 104px);
+      padding: 28px 32px 40px;
+      display: flex;
+      flex-direction: column;
+      border-bottom: 2px dashed var(--color-border);
+      background-color: var(--color-surface-muted);
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .chapter-note-page:last-child {
+      border-bottom: none;
+    }
+
+    .page-sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--color-text-secondary);
+      margin-bottom: 10px;
+      user-select: none;
+    }
+
+    .page-sheet-badge {
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      color: var(--color-primary);
+    }
+
+    .page-sheet-title {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--color-primary);
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 6px;
+    }
+
+    .page-sheet-body {
+      flex: 1;
+      font-family: var(--font-serif);
+      font-size: 16px;
+      line-height: 1.75;
+      color: var(--color-text-primary);
+      outline: none;
+    }
+
+    .page-sheet-body p {
+      margin-bottom: 12px;
+    }
+
+    .page-sheet-body ul {
+      margin: 0 0 14px 20px;
+    }
+
+    .page-sheet-body li {
+      margin-bottom: 6px;
+    }
+
+    /* Timestamp Clickable Badges */
+    .note-ts-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 1px 7px;
+      border-radius: var(--radius-pill);
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      color: var(--color-primary);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      vertical-align: middle;
+      font-variant-numeric: tabular-nums;
+      user-select: none;
+    }
+
+    .note-ts-badge:hover {
+      background-color: var(--color-primary);
+      color: #FFFFFF;
+      border-color: var(--color-primary);
+    }
+
+    .note-ts-badge.other-chapter {
+      border-color: var(--color-text-secondary);
+      color: var(--color-text-secondary);
+    }
+
+    .note-ts-badge.other-chapter:hover {
+      background-color: var(--color-text-secondary);
+      color: #FFFFFF;
+    }
+
+    /* Simulation Bar for Testing (Subtle floating pills in corner) */
+    .test-simulation-strip {
+      position: fixed;
+      bottom: 12px;
+      left: 16px;
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      z-index: 80;
+    }
+
+    .btn-test-trigger {
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--color-border);
+      background-color: var(--color-surface-muted);
+      color: var(--color-text-primary);
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .btn-test-trigger:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    /* Focus Mode Overlay Drawer (State C) */
+    body.focus-mode .study-top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      transform: translateY(-100%);
+      transition: transform 0.25s ease;
+      z-index: 115;
+    }
+
+    body.focus-mode .study-top-bar:hover,
+    body.focus-mode .top-hover-trigger:hover + .study-top-bar {
+      transform: translateY(0);
+    }
+
+    .top-hover-trigger {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 12px;
+      z-index: 114;
+      display: none;
+    }
+
+    body.focus-mode .top-hover-trigger {
+      display: block;
+    }
+
+    body.focus-mode .study-theater-container {
+      height: 100vh;
+      width: 100vw;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body.focus-mode .video-column {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      padding: 0;
+      margin: 0;
+      gap: 0;
+      overflow: hidden;
+      justify-content: stretch;
+      align-items: stretch;
+      background-color: #0c0b0a;
+    }
+
+    body.focus-mode .video-player-wrapper {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
+      aspect-ratio: auto;
+      border-radius: 0;
+      box-shadow: none;
+      flex: 1;
+    }
+
+    body.focus-mode .video-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    body.focus-mode .chapter-nav-bar,
+    body.focus-mode .description-collapsible {
+      display: none;
+    }
+
+    /* Notes Drawer Toggle Button in Collapsible Top Bar */
+    .btn-top-notes-drawer {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background-color: var(--color-surface);
+      color: var(--color-text-primary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: all 0.15s ease;
+    }
+
+    .btn-top-notes-drawer:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background-color: var(--color-surface-hover);
+    }
+
+    .btn-top-notes-drawer.active {
+      background-color: var(--color-primary-light);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    body.focus-mode .btn-top-notes-drawer {
+      display: inline-flex;
+    }
+
+    /* Floating Stretchable Notes Drawer in Focus Mode */
+    body.focus-mode .notes-column {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: var(--focus-notes-width, 440px);
+      min-width: 320px;
+      max-width: 75vw;
+      z-index: 105;
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.45);
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-left: 1px solid var(--color-border);
+    }
+
+    body.focus-mode .notes-column.open {
+      transform: translateX(0);
+    }
+
+    /* Push Back Notes Button in Focus Toolbar */
+    .btn-push-back-notes {
+      display: none;
+      align-items: center;
+      gap: 5px;
+      height: 30px;
+      padding: 0 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background-color: var(--color-surface);
+      color: var(--color-text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: all 0.15s ease;
+    }
+
+    .btn-push-back-notes:hover {
+      background-color: var(--color-surface-hover);
+      color: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+
+    body.focus-mode .btn-push-back-notes {
+      display: inline-flex;
+    }
+
+    /* Stretchable Resize Handle on left border of notes drawer */
+    .notes-resize-handle {
+      display: none;
+    }
+
+    body.focus-mode .notes-resize-handle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 0;
+      left: -8px;
+      width: 16px;
+      height: 100%;
+      cursor: ew-resize;
+      z-index: 120;
+      user-select: none;
+    }
+
+    body.focus-mode .resize-handle-bar {
+      width: 4px;
+      height: 54px;
+      border-radius: 2px;
+      background-color: var(--color-border);
+      transition: background-color 0.15s ease, height 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    body.focus-mode .notes-resize-handle:hover .resize-handle-bar,
+    body.focus-mode .notes-resize-handle.dragging .resize-handle-bar {
+      background-color: var(--color-primary);
+      height: 84px;
+      box-shadow: 0 0 10px rgba(47, 93, 80, 0.5);
+    }
+
+    /* Modal Sheet for Guarded Timestamp Confirmation */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(20, 19, 18, 0.65);
+      backdrop-filter: blur(2px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-m);
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-sheet {
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 460px;
+      padding: var(--space-m);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-sheet h3 {
+      font-family: var(--font-serif);
+      font-size: 19px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .modal-sheet p {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    .modal-actions-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    /* Report Question Modal Popover */
+    .report-btn-tag {
+      background: transparent;
+      border: none;
+      color: var(--color-text-secondary);
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+    .report-btn-tag:hover {
+      background: var(--color-surface-muted);
+      color: var(--color-text-primary);
+    }
+    .report-popover-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(20, 19, 18, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 2500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .report-popover-backdrop.open {
+      display: flex;
+    }
+    .report-popover-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+      width: 100%;
+      max-width: 380px;
+      padding: 20px;
+      animation: reportCardFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes reportCardFadeIn {
+      from { opacity: 0; transform: scale(0.96) translateY(6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .report-header-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-family: 'Source Serif 4', serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+    .btn-report-close {
+      background: transparent;
+      border: none;
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+    .btn-report-close:hover {
+      background: var(--color-surface-muted);
+      color: var(--color-text-primary);
+    }
+    .report-subtext {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+    .report-category-group {
+      margin-bottom: 12px;
+    }
+    .report-field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-text-secondary);
+      margin-bottom: 6px;
+    }
+    .report-chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .report-chip {
+      background: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      border-radius: var(--radius-pill);
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    .report-chip:hover {
+      border-color: var(--color-primary);
+      color: var(--color-text-primary);
+    }
+    .report-chip.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+    .report-input-group {
+      margin-bottom: 16px;
+    }
+    .report-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: var(--color-text-primary);
+      resize: vertical;
+      min-height: 72px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    .report-textarea:focus {
+      border-color: var(--color-primary);
+    }
+    .report-actions-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* Toast Notification */
+    .toast-pill {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-primary);
+      color: var(--color-text-primary);
+      padding: 10px 20px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 2000;
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+    }
+
+    .toast-pill.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Invisible hover trigger for auto-revealing top bar in Focus Mode -->
+  <div class="top-hover-trigger"></div>
+
+  <!-- Adaptive Top Navigation Bar (56px) - State B -->
+  <header class="study-top-bar" id="studyTopBar">
+    <div class="top-left-group">
+      <a href="course-page.html" class="btn-back-course" title="Return to Course Syllabus" onclick="navigateToPage(event, 'course', 'course-page.html')">
+        <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        <span>← Back to Course</span>
+      </a>
+    </div>
+
+    <div class="top-center-title" id="topCourseBreadcrumb">
+      Python 3: From Scratch to Production • Chapter 04: Functions & Decorators
+    </div>
+
+    <div class="top-right-group">
+      <!-- Scientific Focus Timer Widget with Anchor Wrapper -->
+      <div class="timer-widget-anchor" id="timerWidgetAnchor">
+        <button class="focus-timer-pill" id="focusTimerWidget" title="Click to configure study & break intervals" aria-expanded="false" aria-haspopup="true">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span id="focusTimerText">20:00</span>
+          <svg class="icon" style="width:11px;height:11px;margin-left:1px;opacity:0.6;" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+
+        <!-- Timer Configuration Popover -->
+        <div class="timer-config-popover" id="timerConfigPopover" role="dialog" aria-label="Timer Configuration">
+          <div class="timer-popover-header">
+            <span class="timer-popover-title">Focus & Break Intervals</span>
+            <span class="timer-popover-badge">20:5 Default</span>
+          </div>
+
+          <!-- Focus Interval Setting -->
+          <div class="timer-config-group">
+            <div class="timer-config-label-row">
+              <span class="timer-config-label">Focus Session</span>
+              <span class="timer-config-val" id="displayFocusVal">20 mins</span>
+            </div>
+            <div class="timer-presets-row" id="focusPresetsRow">
+              <button class="btn-timer-preset active" data-focus="20">20m (Default)</button>
+              <button class="btn-timer-preset" data-focus="25">25m</button>
+              <button class="btn-timer-preset" data-focus="30">30m</button>
+              <button class="btn-timer-preset" data-focus="45">45m</button>
+            </div>
+            <div class="timer-stepper-row">
+              <span class="stepper-label">Custom Focus Minutes:</span>
+              <div class="stepper-ctrls">
+                <button class="btn-stepper" id="btnFocusMinus" title="Decrease 1 min">−</button>
+                <input type="number" id="inputFocusCustom" min="5" max="90" value="20" class="stepper-input">
+                <button class="btn-stepper" id="btnFocusPlus" title="Increase 1 min">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Break Interval Setting -->
+          <div class="timer-config-group">
+            <div class="timer-config-label-row">
+              <span class="timer-config-label">Rest Break</span>
+              <span class="timer-config-val" id="displayBreakVal">5 mins</span>
+            </div>
+            <div class="timer-presets-row" id="breakPresetsRow">
+              <button class="btn-timer-preset active" data-break="5">5m (Default)</button>
+              <button class="btn-timer-preset" data-break="8">8m</button>
+              <button class="btn-timer-preset" data-break="10">10m</button>
+              <button class="btn-timer-preset" data-break="15">15m</button>
+            </div>
+            <div class="timer-stepper-row">
+              <span class="stepper-label">Custom Break Minutes:</span>
+              <div class="stepper-ctrls">
+                <button class="btn-stepper" id="btnBreakMinus" title="Decrease 1 min">−</button>
+                <input type="number" id="inputBreakCustom" min="1" max="30" value="5" class="stepper-input">
+                <button class="btn-stepper" id="btnBreakPlus" title="Increase 1 min">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions Row -->
+          <div class="timer-popover-actions">
+            <button class="btn-timer-action ghost" id="btnResetTimerDefaults" title="Restore 20m focus / 5m break ratio">
+              Reset 20:5
+            </button>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-timer-action secondary" id="btnTimerTogglePause">
+                <span id="timerPauseBtnText">Pause</span>
+              </button>
+              <button class="btn-timer-action primary" id="btnApplyTimerConfig">
+                Apply & Start
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme Toggle Button -->
+      <button class="btn-focus-mode" id="btnToggleTheme" title="Toggle Theme: Warm Paper / Warm Espresso" style="min-width: 38px; padding: 0 10px;">
+        <span id="themeToggleIcon" style="font-size: 14px;">🌙</span>
+      </button>
+
+      <!-- Notes Drawer Toggle Button (Visible in Focus Mode / Collapsible Top Bar) -->
+      <button class="btn-top-notes-drawer" id="btnTopNotesDrawer" title="Toggle Notes Drawer (Key: N)">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <span>Notes</span>
+      </button>
+
+      <!-- Focus Mode Toggle Button -->
+      <button class="btn-focus-mode" id="btnToggleFocusMode" title="Enter Distraction-Free Focus Mode (Key: F)">
+        <svg class="icon" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+        <span id="focusModeBtnLabel">Focus Mode</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Viewport (60% Video / 40% Notes) -->
+  <main class="study-theater-container">
+    
+    <!-- LEFT COLUMN: Video Player & Description (60%) -->
+    <section class="video-column" id="videoColumn">
+      
+      <!-- 16:9 Video Player Container -->
+      <div class="video-player-wrapper" id="videoPlayerWrapper">
+        
+        <!-- Video Stream Canvas -->
+        <div class="video-canvas" id="videoCanvas" title="Click to Play / Pause">
+          <div class="video-canvas-content">
+            <div class="video-canvas-title" id="canvasVideoTitle">Chapter 04: Functions, Closures & Decorators</div>
+            <div class="video-canvas-subtitle" id="canvasVideoSubtitle">Corey Schafer • Python 3 Tutorial Series (31:10)</div>
+            <div style="margin-top: 16px; font-size: 13px; opacity: 0.85;">
+              <kbd style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 4px;">Space</kbd> Play/Pause &nbsp;•&nbsp; 
+              <kbd style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 4px;">0</kbd> Restart &nbsp;•&nbsp;
+              <kbd style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 4px;">J</kbd> / <kbd style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 4px;">L</kbd> Seek 5s &nbsp;•&nbsp;
+              <kbd style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 4px;">T</kbd> Timestamp
+            </div>
+          </div>
+          <div class="canvas-play-indicator" id="canvasPlayIndicator">
+            <svg class="icon" id="indicatorIcon" style="width:28px;height:28px;" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- OVERLAY 1: RESUME RECALL (24H INACTIVITY TEST) -->
+        <!-- ============================================== -->
+        <div class="video-overlay-scrim" id="overlayResumeRecall">
+          <div class="overlay-card">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+              <span class="overlay-eyebrow" style="margin-bottom: 0;">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 2c0 4-4 6-4 10a6 6 0 0 0 12 0c0-6-6-8-6-10Z"></path></svg>
+                Welcome Back • Quick Recall Refresher
+              </span>
+              <button class="report-btn-tag" type="button" onclick="openReportModal('Recall Question', 'Report Refresher Question')">⚑ Report</button>
+            </div>
+            <h2 class="overlay-title">It's been over 24 hours since your last session. Can you recall Chapter 3?</h2>
+            <p class="overlay-body">
+              "In Python, what is the key difference between using a generator function with <code>yield</code> versus returning a standard list?"
+            </p>
+            <div class="overlay-options-list" id="recallOptionsList">
+              <button class="overlay-opt-btn" data-correct="true">
+                <span>A. Generators compute items lazily on demand, maintaining O(1) memory</span>
+                <span class="check-slot"></span>
+              </button>
+              <button class="overlay-opt-btn" data-correct="false">
+                <span>B. Generators run bytecode across multiple CPU cores automatically</span>
+                <span class="check-slot"></span>
+              </button>
+              <button class="overlay-opt-btn" data-correct="false">
+                <span>C. Generators create strictly immutable tuples in heap storage</span>
+                <span class="check-slot"></span>
+              </button>
+            </div>
+            <div class="overlay-explanation" id="recallExplanation">
+              Correct! Generators yield values lazily on-the-fly, allowing you to iterate through millions of items without filling memory.
+            </div>
+            <div class="overlay-actions-row">
+              <button class="btn-ch-nav" id="btnDismissRecall" style="color:var(--color-text-secondary); border:none;">
+                Skip to Video ↗
+              </button>
+              <button class="btn-ch-nav primary" id="btnResumeVideoFromRecall" style="display:none;">
+                Start Video Playback →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- OVERLAY 2: END-OF-CHAPTER QUIZ (100% TRIGGER)  -->
+        <!-- ============================================== -->
+        <div class="video-overlay-scrim" id="overlayChapterQuiz">
+          <div class="overlay-card">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span class="overlay-eyebrow">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+                Chapter 04 Complete • Knowledge Check
+              </span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 11px; color: var(--color-text-secondary);">1 of 1 Question</span>
+                <button class="report-btn-tag" type="button" onclick="openReportModal('Quiz Question', 'Report Quiz Question')">⚑ Report</button>
+              </div>
+            </div>
+            <h2 class="overlay-title">Why should you decorate inner functions with <code>@functools.wraps(func)</code>?</h2>
+            <div class="overlay-options-list" id="quizOptionsList">
+              <button class="overlay-opt-btn" data-correct="false">
+                <span>A. To speed up function execution via C-level caching</span>
+                <span class="check-slot"></span>
+              </button>
+              <button class="overlay-opt-btn" data-correct="true">
+                <span>B. To preserve the original function's name (<code>__name__</code>) and docstring</span>
+                <span class="check-slot"></span>
+              </button>
+              <button class="overlay-opt-btn" data-correct="false">
+                <span>C. To prevent memory leaks in recursive functions</span>
+                <span class="check-slot"></span>
+              </button>
+            </div>
+            <div class="overlay-explanation" id="quizExplanation">
+              Correct! Without @wraps, the function identity is lost and introspection tools will report the inner wrapper's name instead.
+            </div>
+            <div class="overlay-actions-row">
+              <button class="btn-ch-nav" id="btnSkipChapterQuiz" style="color:var(--color-text-secondary); border:none;">
+                Skip Quiz (Mark as Watched)
+              </button>
+              <button class="btn-ch-nav primary" id="btnSubmitChapterQuiz" disabled style="opacity:0.5; cursor:not-allowed;">
+                Submit & Next Chapter →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- OVERLAY 3: SCIENTIFIC BREAK (20M TIMER TRIGGER) -->
+        <!-- ============================================== -->
+        <div class="video-overlay-scrim" id="overlayScientificBreak">
+          <div class="overlay-card" style="text-align: center; align-items: center;">
+            <span class="overlay-eyebrow">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M16 12l-4-4-4 4M12 16V9"></path></svg>
+              <span>Scientific Focus Rest • <span id="breakOverlayMinutesSpan">5 Minutes</span></span>
+            </span>
+            <h2 class="overlay-title" style="margin-top: 4px;">Rest your eyes and step away from your desk</h2>
+            <div class="break-timer-display" id="breakTimerCountdown">04:58</div>
+            <p class="overlay-body" style="text-align: center;">
+              Continuous cramming reduces synaptic consolidation. Stretch, grab water, or look out a window.
+            </p>
+            <div style="margin-top: 14px; width: 100%;">
+              <button class="btn-ch-nav primary" id="btnResumeFromBreak" style="width: 100%; justify-content: center; height: 42px;">
+                <span>Resume Video (Auto-Rewinds 5s) →</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Player Controls Bar -->
+        <div class="player-controls-bar" id="playerControlsBar">
+          <div class="scrubber-track" id="scrubberTrack" title="Seek video (Click or Drag)">
+            <div class="scrubber-tooltip" id="scrubberTooltip">00:00</div>
+            <div class="scrubber-fill" id="scrubberFill">
+              <div class="scrubber-thumb"></div>
+            </div>
+          </div>
+
+          <div class="controls-row">
+            <div class="controls-left">
+              <button class="btn-player-control" id="btnPlayPause" aria-label="Play/Pause" title="Play / Pause (Space / K)">
+                <svg class="icon" id="playIcon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <svg class="icon" id="pauseIcon" viewBox="0 0 24 24" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                <svg class="icon" id="replayIcon" viewBox="0 0 24 24" style="display:none;"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+              </button>
+              <button class="btn-player-control" id="btnRestartVideo" title="Restart Chapter from 00:00 (Home / 0)">
+                <svg class="icon" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+              </button>
+              <button class="btn-player-control" id="btnRewind5s" title="Rewind 5s (J / Left)">
+                <svg class="icon" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+              </button>
+              <button class="btn-player-control" id="btnForward5s" title="Forward 5s (L / Right)">
+                <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+              </button>
+              <button class="btn-player-control" id="btnVolumeToggle" title="Mute / Unmute (M)">
+                <svg class="icon" id="volumeHighIcon" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                <svg class="icon" id="volumeMuteIcon" viewBox="0 0 24 24" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+              </button>
+              <span id="playerTimeDisplay">12:45 / 31:10</span>
+            </div>
+
+            <div class="controls-right">
+              <button class="btn-player-control" id="btnQuickInsertTimestamp" title="Insert Timestamp into Notes (T)">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span style="font-size: 11px; margin-left: 4px; font-weight: 600;">+ [12:45]</span>
+              </button>
+              <button class="btn-player-control" id="btnSpeedControl" title="Playback Speed (Click to cycle, or < / >)">1.0x</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Chapter Navigation Controls -->
+      <div class="chapter-nav-bar">
+        <button class="btn-ch-nav" id="btnPrevChapter">
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Previous</span>
+        </button>
+
+        <select class="chapter-select-menu" id="chapterSelectMenu" aria-label="Select Chapter">
+          <option value="1">Chapter 01: Installation & Virtualenv (18:40) ✓ Mastered</option>
+          <option value="2">Chapter 02: Data Types & Mutability (22:15) ✓ Mastered</option>
+          <option value="3">Chapter 03: Conditionals & Loops (25:04) 👁 Watched</option>
+          <option value="4" selected>Chapter 04: Functions & Decorators (31:10) ● Current</option>
+          <option value="5">Chapter 05: OOP & Dunder Methods (42:00) ○ Pending</option>
+          <option value="6">Chapter 06: Error Handling & Exceptions (19:30) ○ Pending</option>
+          <option value="7">Chapter 07: File I/O & Context Managers (24:12) ○ Pending</option>
+        </select>
+
+        <button class="btn-ch-nav primary" id="btnNextChapter">
+          <span>Next Chapter</span>
+          <svg class="icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+
+      <!-- Collapsible Video Description -->
+      <div class="description-collapsible">
+        <button class="desc-header-toggle" id="descHeaderToggle" aria-expanded="false">
+          <span>▼ Video Description & Extracted Resources (2 links)</span>
+          <svg class="icon" id="descChevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="desc-body-content" id="descBodyContent">
+          <div class="desc-resource-chips">
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="resource-chip">
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+              <span>GitHub: Decorator Code Examples</span>
+              <svg class="icon" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            </a>
+            <a href="https://peps.python.org/pep-0318/" target="_blank" rel="noopener noreferrer" class="resource-chip">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path></svg>
+              <span>PEP 318 – Function Decorators Spec</span>
+              <svg class="icon" style="width:12px;height:12px;" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            </a>
+          </div>
+          <p>
+            In this chapter, Corey explains first-class functions, closures, and inner wrapper definitions. We demonstrate why decorators are essential for cross-cutting concerns like execution timing, logging, and access control.
+          </p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT COLUMN: Tactile Continuous Notes Pad (40%) -->
+    <aside class="notes-column" id="notesColumn">
+      
+      <!-- Stretchable Resize Handle on left border (Focus Mode) -->
+      <div class="notes-resize-handle" id="notesResizeHandle" title="Drag to resize notepad width">
+        <div class="resize-handle-bar"></div>
+      </div>
+
+      <!-- Notes Action Toolbar -->
+      <div class="notes-fixed-toolbar">
+        <div class="notes-tools-left">
+          <button class="btn-insert-timestamp" id="btnToolbarInsertTimestamp" title="Insert clickable timestamp badge (Alt + T)">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span id="insertTimestampLabel">Insert [12:45]</span>
+          </button>
+          <div class="tool-divider"></div>
+          <button class="btn-format-tool" id="btnBold" title="Bold">B</button>
+          <button class="btn-format-tool" id="btnItalic" title="Italic"><i>I</i></button>
+          <button class="btn-format-tool" id="btnList" title="Bulleted List">• List</button>
+        </div>
+
+        <div class="notes-tools-right" style="display: flex; align-items: center; gap: 10px;">
+          <div class="notes-save-badge">
+            <span class="save-indicator-dot"></span>
+            <span>Saved locally</span>
+          </div>
+          <!-- Push Back Notes Button in Focus Mode -->
+          <button class="btn-push-back-notes" id="btnPushBackNotes" title="Push back notes overlay">
+            <span>Push Back</span>
+            <svg class="icon" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable Continuous Notes Area (Dedicated One-Page-Per-Chapter Architecture) -->
+      <div class="notes-scroll-canvas" id="notesScrollCanvas" spellcheck="false">
+        
+        <!-- Chapter 1 Page Sheet -->
+        <article class="chapter-note-page" id="chapter-page-1">
+          <div class="page-sheet-header">
+            <span>Chapter 01 Notes</span>
+            <span class="page-sheet-badge">Page 1 of 14</span>
+          </div>
+          <h3 class="page-sheet-title">Chapter 01: Installation, Virtualenv & Tooling</h3>
+          <div class="page-sheet-body" contenteditable="true">
+            <p>Always isolate project dependencies. Never install third-party packages globally into the system Python interpreter.</p>
+            <ul>
+              <li><span class="note-ts-badge other-chapter" data-chapter="1" data-seconds="255">Ch 1 • [04:15]</span> Setup <code>.venv</code> in repo root via <code>python -m venv .venv</code>.</li>
+              <li><span class="note-ts-badge other-chapter" data-chapter="1" data-seconds="530">Ch 1 • [08:50]</span> Activate environment before running <code>pip install</code>.</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- Chapter 2 Page Sheet -->
+        <article class="chapter-note-page" id="chapter-page-2">
+          <div class="page-sheet-header">
+            <span>Chapter 02 Notes</span>
+            <span class="page-sheet-badge">Page 2 of 14</span>
+          </div>
+          <h3 class="page-sheet-title">Chapter 02: Data Types, Strings & Mutability</h3>
+          <div class="page-sheet-body" contenteditable="true">
+            <p>Memory addresses and identity checks confirm string modification generates an entirely new object in RAM.</p>
+            <ul>
+              <li><span class="note-ts-badge other-chapter" data-chapter="2" data-seconds="750">Ch 2 • [12:30]</span> Beware of mutable default arguments (like empty lists) in function definitions!</li>
+              <li><span class="note-ts-badge other-chapter" data-chapter="2" data-seconds="1010">Ch 2 • [16:50]</span> Use <code>None</code> as the default argument sentinel and initialize inside function body.</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- Chapter 3 Page Sheet -->
+        <article class="chapter-note-page" id="chapter-page-3">
+          <div class="page-sheet-header">
+            <span>Chapter 03 Notes</span>
+            <span class="page-sheet-badge">Page 3 of 14</span>
+          </div>
+          <h3 class="page-sheet-title">Chapter 03: Conditionals, Loops & Iterables</h3>
+          <div class="page-sheet-body" contenteditable="true">
+            <p>Python iteration relies on iterator protocols rather than simple indexing.</p>
+            <ul>
+              <li><span class="note-ts-badge other-chapter" data-chapter="3" data-seconds="410">Ch 3 • [06:50]</span> Use <code>enumerate(items, start=1)</code> instead of manual index counters.</li>
+              <li><span class="note-ts-badge other-chapter" data-chapter="3" data-seconds="890">Ch 3 • [14:50]</span> The <code>else</code> clause on a for loop only runs if no <code>break</code> was hit.</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- Chapter 4 Page Sheet (Current Active Chapter — Dedicated Viewport) -->
+        <article class="chapter-note-page" id="chapter-page-4">
+          <div class="page-sheet-header">
+            <span style="color:var(--color-primary); font-weight:700;">● Active Chapter 04</span>
+            <span class="page-sheet-badge" style="background:var(--color-primary-light); color:var(--color-primary); font-weight:700;">Page 4 of 14</span>
+          </div>
+          <h3 class="page-sheet-title">Chapter 04: Functions, Closures & Decorators</h3>
+          <div class="page-sheet-body" id="activeChapterNotesBody" contenteditable="true">
+            <p>A decorator is a higher-order function that takes another function as an argument, extends its behavior, and returns a new callable without altering the original source code.</p>
+            <ul>
+              <li><span class="note-ts-badge" data-chapter="4" data-seconds="612">[10:12]</span> Always use <code>@functools.wraps(func)</code> on inner wrapper functions to preserve docstrings and <code>__name__</code>.</li>
+              <li><span class="note-ts-badge" data-chapter="4" data-seconds="765">[12:45]</span> Practical pattern: building an execution timer decorator using <code>time.perf_counter()</code>.</li>
+            </ul>
+            <p style="color:var(--color-text-secondary); font-size:14px; font-style:italic; margin-top:20px;">
+              [Ready for Chapter 4 notes. Click "Insert [MM:SS]" or press "T" to add timestamped takeaways.]
+            </p>
+          </div>
+        </article>
+
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- Prototype Simulation Bar (Bottom-Left) -->
+  <div class="test-simulation-strip">
+    <span style="color:var(--color-primary);">PROTOTYPE TRIGGERS:</span>
+    <button class="btn-test-trigger" id="testBtnRecall" title="Simulate 24h absence">24h Recall</button>
+    <button class="btn-test-trigger" id="testBtnQuiz" title="Simulate video end">100% Quiz</button>
+    <button class="btn-test-trigger" id="testBtnBreak" title="Simulate 20m interval">20m Break</button>
+  </div>
+
+  <!-- Guarded Timestamp Navigation Confirmation Modal (Option C) -->
+  <div class="modal-backdrop" id="guardedModalBackdrop">
+    <div class="modal-sheet">
+      <h3>Switch Chapter Playback?</h3>
+      <p id="guardedModalBodyText">
+        You clicked a timestamp belonging to <strong>Chapter 02</strong>. Switching chapters will pause your current session in Chapter 04.
+      </p>
+      <div class="modal-actions-row">
+        <button class="btn-ch-nav" id="btnGuardedCancel">Stay on Current Chapter</button>
+        <button class="btn-ch-nav primary" id="btnGuardedConfirm">Switch to Chapter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Question Modal Popover Card -->
+  <div class="report-popover-backdrop" id="reportPopoverBackdrop" onclick="if(event.target === this) closeReportPopover()">
+    <div class="report-popover-card" onclick="event.stopPropagation()">
+      <div class="report-header">
+        <div class="report-header-title">
+          <svg class="icon" viewBox="0 0 24 24" style="width: 16px; height: 16px; stroke: var(--color-primary);"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+          <span id="reportCardTitle">Report Question</span>
+        </div>
+        <button class="btn-report-close" type="button" onclick="closeReportPopover()" title="Close">✕</button>
+      </div>
+      <p class="report-subtext" id="reportCardSubtext">Help us keep study materials accurate and clear.</p>
+
+      <div class="report-category-group">
+        <label class="report-field-label">Issue Category</label>
+        <div class="report-chips-row">
+          <button type="button" class="report-chip active" onclick="selectReportCategory(this)">Incorrect Answer</button>
+          <button type="button" class="report-chip" onclick="selectReportCategory(this)">Typo / Grammar</button>
+          <button type="button" class="report-chip" onclick="selectReportCategory(this)">Unclear Phrasing</button>
+          <button type="button" class="report-chip" onclick="selectReportCategory(this)">Other</button>
+        </div>
+      </div>
+
+      <div class="report-input-group">
+        <label class="report-field-label" for="reportReasonInput">Reason / Details</label>
+        <textarea id="reportReasonInput" class="report-textarea" rows="3" placeholder="Briefly describe what needs correction..."></textarea>
+      </div>
+
+      <div class="report-actions-row">
+        <button type="button" class="btn-ch-nav" style="height: 32px; padding: 0 14px; font-size: 13px;" onclick="closeReportPopover()">Cancel</button>
+        <button type="button" class="btn-ch-nav primary" style="height: 32px; padding: 0 16px; font-size: 13px;" onclick="submitReport()">Submit Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-pill" id="toastPill">
+    <svg class="icon" viewBox="0 0 24 24" style="color:var(--color-primary);"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <span id="toastMsgText">Notes auto-saved</span>
+  </div>
+
+  <!-- JavaScript Logic -->
+  <script>
+    // 0. Theme Management (Light vs Dark) - Bulletproof Multi-Channel Engine
+    let themeBroadcastChannel = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        themeBroadcastChannel = new BroadcastChannel('studydesk_theme_sync');
+      }
+    } catch (e) {}
+
+    function getStoredTheme() {
+      // 1. If embedded in parent shell, prioritize parent's live DOM state or globalTheme
+      if (window.parent && window.parent !== window) {
+        try {
+          if (window.parent.document && window.parent.document.documentElement) {
+            const pTheme = window.parent.document.documentElement.getAttribute('data-theme');
+            if (pTheme === 'dark' || pTheme === 'light') return pTheme;
+          }
+        } catch (e) {}
+        try {
+          if (typeof window.parent.globalTheme === 'string' && (window.parent.globalTheme === 'dark' || window.parent.globalTheme === 'light')) {
+            return window.parent.globalTheme;
+          }
+        } catch (e) {}
+      }
+
+      // 2. Read from localStorage (own window)
+      try {
+        const ls = localStorage.getItem('studydesk_theme');
+        if (ls === 'dark' || ls === 'light') return ls;
+      } catch (e) {}
+
+      // 3. If parent has localStorage accessible
+      if (window.parent && window.parent !== window) {
+        try {
+          const pls = window.parent.localStorage.getItem('studydesk_theme');
+          if (pls === 'dark' || pls === 'light') return pls;
+        } catch (e) {}
+      }
+
+      // 4. Respect currently applied DOM attribute if already set on <html>
+      try {
+        const dom = document.documentElement.getAttribute('data-theme');
+        if (dom === 'dark' || dom === 'light') return dom;
+      } catch (e) {}
+
+      // 5. System preference
+      try {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          return 'dark';
+        }
+      } catch (e) {}
+
+      return 'light';
+    }
+
+    function setStoredTheme(theme) {
+      try {
+        localStorage.setItem('studydesk_theme', theme);
+      } catch (e) {}
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.localStorage.setItem('studydesk_theme', theme);
+        } catch (e) {}
+        try {
+          window.parent.globalTheme = theme;
+          window.parent.document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      }
+    }
+
+    function applyTheme(theme, broadcast = true) {
+      const validTheme = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', validTheme);
+      setStoredTheme(validTheme);
+      updateThemeUI(validTheme);
+
+      if (broadcast) {
+        if (themeBroadcastChannel) {
+          try {
+            themeBroadcastChannel.postMessage({ type: 'SD_THEME_CHANGE', theme: validTheme });
+          } catch (e) {}
+        }
+        if (window.parent && window.parent !== window) {
+          try {
+            window.parent.postMessage({ type: 'SD_THEME_CHANGE', theme: validTheme }, '*');
+          } catch (e) {}
+        }
+      }
+    }
+
+    function syncWithStoredTheme() {
+      const savedTheme = getStoredTheme();
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      if (savedTheme && savedTheme !== currentTheme) {
+        applyTheme(savedTheme, false);
+      }
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(nextTheme, true);
+      showToast(`Switched to ${nextTheme === 'dark' ? 'Warm Espresso Dark Mode' : 'Warm Paper Light Mode'}`);
+    }
+
+    function updateThemeUI(theme) {
+      const icon = document.getElementById('themeToggleIcon');
+      if (icon) {
+        icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+      }
+    }
+
+    function setupTheme() {
+      const currentDomTheme = document.documentElement.getAttribute('data-theme');
+      const preferred = currentDomTheme || getStoredTheme();
+      applyTheme(preferred, false);
+
+      const btnToggle = document.getElementById('btnToggleTheme');
+      if (btnToggle && !btnToggle.dataset.bound) {
+        btnToggle.dataset.bound = 'true';
+        btnToggle.addEventListener('click', toggleTheme);
+      }
+    }
+
+    // 5-Way Redundant Cross-frame and Cross-tab Synchronization:
+    // 1. BroadcastChannel (Modern cross-tab)
+    if (themeBroadcastChannel) {
+      themeBroadcastChannel.onmessage = (e) => {
+        if (e.data && e.data.theme) {
+          applyTheme(e.data.theme, false);
+        }
+      };
+    }
+
+    // 2. Storage event (Standard cross-tab)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'studydesk_theme' && e.newValue) {
+        applyTheme(e.newValue, false);
+      }
+    });
+
+    // 3. postMessage (Parent-child iframe)
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'SD_THEME_CHANGE' && e.data.theme) {
+        applyTheme(e.data.theme, false);
+      }
+    });
+
+    // 4. Focus, visibilitychange, and pageshow events
+    window.addEventListener('focus', syncWithStoredTheme);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') syncWithStoredTheme();
+    });
+    window.addEventListener('pageshow', syncWithStoredTheme);
+
+    // 5. Active polling interval
+    setInterval(syncWithStoredTheme, 300);
+
+    // Bulletproof Navigation Helper for Parent Shell vs Standalone
+    function navigateToPage(event, target, url) {
+      if (event) {
+        try { event.preventDefault(); } catch(e) {}
+        try { event.stopPropagation(); } catch(e) {}
+      }
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.postMessage({ type: 'SD_NAVIGATE', target: target, url: url }, '*');
+          return;
+        } catch(err) {}
+      }
+      window.location.href = url;
+    }
+
+    // Capture-phase navigation interceptor for seamless parent shell integration
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a');
+      if (link && link.getAttribute('href')) {
+        const href = link.getAttribute('href');
+        if (href.startsWith('dashboard.html')) {
+          navigateToPage(e, 'dashboard', href);
+        } else if (href.startsWith('course-page.html')) {
+          navigateToPage(e, 'course', href);
+        }
+      }
+    }, true);
+
+    // Immediate theme execution to prevent white flash
+    applyTheme(getStoredTheme(), false);
+
+    // Chapter Catalog Data
+    const CHAPTERS_LIST = [
+      { id: 1, title: "Chapter 01: Installation & Virtualenv", duration: 1120, durationStr: "18:40" },
+      { id: 2, title: "Chapter 02: Data Types & Mutability", duration: 1335, durationStr: "22:15" },
+      { id: 3, title: "Chapter 03: Conditionals & Loops", duration: 1504, durationStr: "25:04" },
+      { id: 4, title: "Chapter 04: Functions, Closures & Decorators", duration: 1870, durationStr: "31:10" },
+      { id: 5, title: "Chapter 05: OOP & Dunder Methods", duration: 2520, durationStr: "42:00" },
+      { id: 6, title: "Chapter 06: Error Handling & Exceptions", duration: 1170, durationStr: "19:30" },
+      { id: 7, title: "Chapter 07: File I/O & Context Managers", duration: 1452, durationStr: "24:12" }
+    ];
+    let currentChapterId = 4;
+
+    // Playback State
+    let isPlaying = false;
+    let currentSeconds = 765; // 12:45 default demo
+    let totalDuration = 1870; // 31:10
+    let playbackRate = 1.0;
+    const PLAYBACK_SPEEDS = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+    let currentSpeedIndex = 1; // 1.0x
+    let isMuted = false;
+    let animationFrameId = null;
+    let lastFrameTimestamp = null;
+    let isScrubbing = false;
+    let lastRenderedFloorSecond = -1;
+
+    let focusDurationMinutes = 20; // default 20m
+    let breakDurationMinutes = 5;  // default 5m
+    let focusTimerRemaining = 1200; // 20:00 (seconds)
+    let focusTimerInterval = null;
+    let isFocusTimerPaused = false;
+    let breakTimerRemaining = 300; // 05:00 (seconds)
+    let breakTimerInterval = null;
+
+    // Elements
+    const body = document.body;
+    const studyTopBar = document.getElementById('studyTopBar');
+    const btnPlayPause = document.getElementById('btnPlayPause');
+    const playIcon = document.getElementById('playIcon');
+    const pauseIcon = document.getElementById('pauseIcon');
+    const replayIcon = document.getElementById('replayIcon');
+    const btnRestartVideo = document.getElementById('btnRestartVideo');
+    const btnRewind5s = document.getElementById('btnRewind5s');
+    const btnForward5s = document.getElementById('btnForward5s');
+    const btnVolumeToggle = document.getElementById('btnVolumeToggle');
+    const volumeHighIcon = document.getElementById('volumeHighIcon');
+    const volumeMuteIcon = document.getElementById('volumeMuteIcon');
+    const btnSpeedControl = document.getElementById('btnSpeedControl');
+    const scrubberFill = document.getElementById('scrubberFill');
+    const scrubberTrack = document.getElementById('scrubberTrack');
+    const scrubberTooltip = document.getElementById('scrubberTooltip');
+    const playerTimeDisplay = document.getElementById('playerTimeDisplay');
+    const videoCanvas = document.getElementById('videoCanvas');
+    const canvasVideoTitle = document.getElementById('canvasVideoTitle');
+    const canvasVideoSubtitle = document.getElementById('canvasVideoSubtitle');
+    const canvasPlayIndicator = document.getElementById('canvasPlayIndicator');
+    const indicatorIcon = document.getElementById('indicatorIcon');
+    const btnPrevChapter = document.getElementById('btnPrevChapter');
+    const btnNextChapter = document.getElementById('btnNextChapter');
+    const chapterSelectMenu = document.getElementById('chapterSelectMenu');
+
+    const btnToggleFocusMode = document.getElementById('btnToggleFocusMode');
+    const focusModeBtnLabel = document.getElementById('focusModeBtnLabel');
+    const btnTopNotesDrawer = document.getElementById('btnTopNotesDrawer');
+    const btnPushBackNotes = document.getElementById('btnPushBackNotes');
+    const notesResizeHandle = document.getElementById('notesResizeHandle');
+    const notesColumn = document.getElementById('notesColumn');
+    const focusTimerText = document.getElementById('focusTimerText');
+    const focusTimerWidget = document.getElementById('focusTimerWidget');
+    const timerWidgetAnchor = document.getElementById('timerWidgetAnchor');
+    const timerConfigPopover = document.getElementById('timerConfigPopover');
+    const displayFocusVal = document.getElementById('displayFocusVal');
+    const displayBreakVal = document.getElementById('displayBreakVal');
+    const inputFocusCustom = document.getElementById('inputFocusCustom');
+    const inputBreakCustom = document.getElementById('inputBreakCustom');
+    const btnFocusMinus = document.getElementById('btnFocusMinus');
+    const btnFocusPlus = document.getElementById('btnFocusPlus');
+    const btnBreakMinus = document.getElementById('btnBreakMinus');
+    const btnBreakPlus = document.getElementById('btnBreakPlus');
+    const btnResetTimerDefaults = document.getElementById('btnResetTimerDefaults');
+    const btnTimerTogglePause = document.getElementById('btnTimerTogglePause');
+    const timerPauseBtnText = document.getElementById('timerPauseBtnText');
+    const btnApplyTimerConfig = document.getElementById('btnApplyTimerConfig');
+    const breakOverlayMinutesSpan = document.getElementById('breakOverlayMinutesSpan');
+    const descHeaderToggle = document.getElementById('descHeaderToggle');
+    const descBodyContent = document.getElementById('descBodyContent');
+
+    // Overlays
+    const overlayResumeRecall = document.getElementById('overlayResumeRecall');
+    const overlayChapterQuiz = document.getElementById('overlayChapterQuiz');
+    const overlayScientificBreak = document.getElementById('overlayScientificBreak');
+    const btnDismissRecall = document.getElementById('btnDismissRecall');
+    const btnResumeVideoFromRecall = document.getElementById('btnResumeVideoFromRecall');
+    const btnSkipChapterQuiz = document.getElementById('btnSkipChapterQuiz');
+    const btnSubmitChapterQuiz = document.getElementById('btnSubmitChapterQuiz');
+    const btnResumeFromBreak = document.getElementById('btnResumeFromBreak');
+    const breakTimerCountdown = document.getElementById('breakTimerCountdown');
+
+    // Notes & Timestamps
+    const btnToolbarInsertTimestamp = document.getElementById('btnToolbarInsertTimestamp');
+    const btnQuickInsertTimestamp = document.getElementById('btnQuickInsertTimestamp');
+    const insertTimestampLabel = document.getElementById('insertTimestampLabel');
+    const notesScrollCanvas = document.getElementById('notesScrollCanvas');
+    const toastPill = document.getElementById('toastPill');
+    const toastMsgText = document.getElementById('toastMsgText');
+
+    // Guarded Modal
+    const guardedModalBackdrop = document.getElementById('guardedModalBackdrop');
+    const guardedModalBodyText = document.getElementById('guardedModalBodyText');
+    const btnGuardedCancel = document.getElementById('btnGuardedCancel');
+    const btnGuardedConfirm = document.getElementById('btnGuardedConfirm');
+    let pendingNavTarget = null;
+
+    // Format MM:SS helper
+    function formatTime(sec) {
+      const sNum = Math.max(0, Math.floor(sec));
+      const m = Math.floor(sNum / 60);
+      const s = Math.floor(sNum % 60);
+      return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    // Initialize
+    function init() {
+      setupTheme();
+      setupPlayback();
+      setupFocusTimer();
+      setupOverlays();
+      setupNotesInteractions();
+      setupStretchableNotepad();
+      setupKeyboardShortcuts();
+      setupDescriptionToggle();
+      setupTestTriggers();
+
+      // Check URL query parameters on initial page load
+      const urlParams = new URLSearchParams(window.location.search);
+      const chParam = urlParams.get('chapter');
+      const tParam = urlParams.get('t');
+      if (chParam) {
+        const chId = parseInt(chParam) || 4;
+        const startSec = tParam !== null ? parseInt(tParam) : 0;
+        loadChapter(chId, startSec, false);
+      } else {
+        loadChapter(4, 765, false);
+      }
+    }
+
+    function pinActiveChapterNotes(chId = 4) {
+      setTimeout(() => {
+        const activePage = document.getElementById(`chapter-page-${chId}`);
+        if (activePage) {
+          activePage.scrollIntoView({ behavior: 'auto', block: 'start' });
+        }
+      }, 50);
+    }
+
+    // Load and Configure Chapter
+    function loadChapter(chapterId, startSeconds, autoPlay) {
+      const ch = CHAPTERS_LIST.find(c => c.id === chapterId) || CHAPTERS_LIST[3];
+      currentChapterId = ch.id;
+      totalDuration = ch.duration;
+
+      // Determine initial timestamp
+      if (startSeconds !== undefined && startSeconds !== null && !isNaN(startSeconds)) {
+        currentSeconds = Math.max(0, Math.min(totalDuration, Number(startSeconds)));
+      } else if (ch.id === 4 && (!window.location.search || window.location.search === '')) {
+        currentSeconds = 765; // default 12:45 for initial demo of chapter 4
+      } else {
+        currentSeconds = 0; // restart from start!
+      }
+
+      // Update Titles
+      if (canvasVideoTitle) canvasVideoTitle.textContent = ch.title;
+      if (canvasVideoSubtitle) canvasVideoSubtitle.textContent = `Corey Schafer • Python 3 Tutorial Series (${ch.durationStr})`;
+
+      // Update Select Menu
+      if (chapterSelectMenu) chapterSelectMenu.value = ch.id;
+
+      // Update Nav Buttons
+      if (btnPrevChapter) {
+        btnPrevChapter.disabled = (ch.id <= 1);
+        btnPrevChapter.style.opacity = (ch.id <= 1) ? '0.45' : '1';
+        btnPrevChapter.style.cursor = (ch.id <= 1) ? 'not-allowed' : 'pointer';
+      }
+      if (btnNextChapter) {
+        btnNextChapter.disabled = (ch.id >= CHAPTERS_LIST.length);
+        btnNextChapter.style.opacity = (ch.id >= CHAPTERS_LIST.length) ? '0.45' : '1';
+        btnNextChapter.style.cursor = (ch.id >= CHAPTERS_LIST.length) ? 'not-allowed' : 'pointer';
+      }
+
+      // Pin Notes Sheet
+      pinActiveChapterNotes(ch.id);
+
+      // Force UI refresh
+      lastRenderedFloorSecond = -1;
+      updateTimeUI();
+      updatePlayPauseButtonUI();
+
+      // Close any open completion overlays
+      if (overlayChapterQuiz) overlayChapterQuiz.classList.remove('active');
+
+      // Ensure video description is collapsed at the start
+      if (descBodyContent) descBodyContent.classList.remove('open');
+      if (descHeaderToggle) {
+        descHeaderToggle.setAttribute('aria-expanded', 'false');
+        const titleSpan = descHeaderToggle.querySelector('span');
+        const chevron = document.getElementById('descChevron');
+        if (titleSpan) titleSpan.textContent = '▼ Video Description & Extracted Resources (2 links)';
+        if (chevron) {
+          const poly = chevron.querySelector('polyline');
+          if (poly) poly.setAttribute('points', '6 9 12 15 18 9');
+        }
+      }
+
+      if (autoPlay) {
+        startPlayback();
+      } else {
+        pausePlayback();
+      }
+    }
+
+    // Playback Engine
+    function setupPlayback() {
+      if (btnPlayPause) btnPlayPause.addEventListener('click', togglePlayPause);
+      if (btnRestartVideo) btnRestartVideo.addEventListener('click', restartVideo);
+      if (btnRewind5s) btnRewind5s.addEventListener('click', () => seekRelative(-5));
+      if (btnForward5s) btnForward5s.addEventListener('click', () => seekRelative(5));
+      if (btnVolumeToggle) btnVolumeToggle.addEventListener('click', toggleMute);
+      if (btnSpeedControl) btnSpeedControl.addEventListener('click', () => changePlaybackSpeed(1));
+
+      // Click video canvas to play/pause
+      if (videoCanvas) {
+        videoCanvas.addEventListener('click', (e) => {
+          if (e.target.closest('.video-overlay-scrim') || e.target.closest('.player-controls-bar')) return;
+          togglePlayPause();
+        });
+      }
+
+      // Chapter navigation controls
+      if (btnPrevChapter) {
+        btnPrevChapter.addEventListener('click', () => {
+          if (currentChapterId > 1) {
+            loadChapter(currentChapterId - 1, 0, true);
+          }
+        });
+      }
+      if (btnNextChapter) {
+        btnNextChapter.addEventListener('click', () => {
+          if (currentChapterId < CHAPTERS_LIST.length) {
+            loadChapter(currentChapterId + 1, 0, true);
+          }
+        });
+      }
+      if (chapterSelectMenu) {
+        chapterSelectMenu.addEventListener('change', (e) => {
+          loadChapter(parseInt(e.target.value), 0, true);
+        });
+      }
+
+      setupScrubber();
+
+      // Bridge communication: Listen for messages from parent (e.g. index.html SPA)
+      window.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'SD_SET_CHAPTER_TIME') {
+          const chId = parseInt(e.data.chapter) || 4;
+          const targetSec = (e.data.seconds !== null && e.data.seconds !== undefined) ? parseInt(e.data.seconds) : 0;
+          loadChapter(chId, targetSec, true);
+          showToast(`Switched to Chapter 0${chId} ↺`);
+        }
+      });
+    }
+
+    function togglePlayPause() {
+      if (isPlaying) {
+        pausePlayback();
+      } else {
+        if (currentSeconds >= totalDuration) {
+          // Restart from beginning if at or past end
+          seekTo(0);
+          if (overlayChapterQuiz) overlayChapterQuiz.classList.remove('active');
+          showToast("Replaying chapter from 00:00 ↺");
+        }
+        startPlayback();
+      }
+    }
+
+    function restartVideo() {
+      seekTo(0);
+      if (overlayChapterQuiz) overlayChapterQuiz.classList.remove('active');
+      startPlayback();
+      showToast("Restarted video from 00:00 ↺");
+    }
+
+    function startPlayback() {
+      if (currentSeconds >= totalDuration) {
+        currentSeconds = 0;
+      }
+      isPlaying = true;
+      updatePlayPauseButtonUI();
+      flashCanvasIndicator(true);
+      lastFrameTimestamp = performance.now();
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      animationFrameId = requestAnimationFrame(playbackLoop);
+    }
+
+    function pausePlayback() {
+      isPlaying = false;
+      updatePlayPauseButtonUI();
+      flashCanvasIndicator(false);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    }
+
+    // High-resolution 60fps/120fps playback loop for fluid progress bar movement
+    function playbackLoop(now) {
+      if (!isPlaying) return;
+      const deltaSeconds = (now - lastFrameTimestamp) / 1000;
+      lastFrameTimestamp = now;
+
+      if (!isScrubbing) {
+        currentSeconds += deltaSeconds * playbackRate;
+        if (currentSeconds >= totalDuration) {
+          currentSeconds = totalDuration;
+          pausePlayback();
+          updatePlayPauseButtonUI();
+          updateTimeUI();
+          triggerChapterQuizOverlay();
+          return;
+        }
+        updateTimeUI();
+      }
+
+      animationFrameId = requestAnimationFrame(playbackLoop);
+    }
+
+    function updatePlayPauseButtonUI() {
+      if (!btnPlayPause) return;
+      if (currentSeconds >= totalDuration) {
+        // Show Replay Icon when video has reached the end
+        if (playIcon) playIcon.style.display = 'none';
+        if (pauseIcon) pauseIcon.style.display = 'none';
+        if (replayIcon) replayIcon.style.display = 'inline-block';
+        btnPlayPause.setAttribute('title', 'Replay / Restart Chapter (Space / 0)');
+        btnPlayPause.setAttribute('aria-label', 'Replay video');
+      } else if (isPlaying) {
+        if (playIcon) playIcon.style.display = 'none';
+        if (pauseIcon) pauseIcon.style.display = 'inline-block';
+        if (replayIcon) replayIcon.style.display = 'none';
+        btnPlayPause.setAttribute('title', 'Pause (Space / K)');
+        btnPlayPause.setAttribute('aria-label', 'Pause video');
+      } else {
+        if (playIcon) playIcon.style.display = 'inline-block';
+        if (pauseIcon) pauseIcon.style.display = 'none';
+        if (replayIcon) replayIcon.style.display = 'none';
+        btnPlayPause.setAttribute('title', 'Play (Space / K)');
+        btnPlayPause.setAttribute('aria-label', 'Play video');
+      }
+    }
+
+    function seekTo(sec, autoPlay) {
+      currentSeconds = Math.max(0, Math.min(totalDuration, sec));
+      lastRenderedFloorSecond = -1;
+      updateTimeUI();
+      updatePlayPauseButtonUI();
+      if (autoPlay && !isPlaying) {
+        startPlayback();
+      }
+    }
+
+    function seekRelative(offset) {
+      if (currentSeconds >= totalDuration && offset < 0) {
+        if (overlayChapterQuiz) overlayChapterQuiz.classList.remove('active');
+      }
+      seekTo(currentSeconds + offset);
+      showToast(offset > 0 ? `+${offset}s ↷` : `${offset}s ↶`);
+    }
+
+    function updateTimeUI() {
+      const pct = Math.min(100, Math.max(0, (currentSeconds / totalDuration) * 100));
+      scrubberFill.style.width = `${pct}%`;
+
+      const floorSec = Math.floor(currentSeconds);
+      if (floorSec !== lastRenderedFloorSecond) {
+        lastRenderedFloorSecond = floorSec;
+        const curFormatted = formatTime(floorSec);
+        const totFormatted = formatTime(totalDuration);
+        playerTimeDisplay.textContent = `${curFormatted} / ${totFormatted}`;
+        if (insertTimestampLabel) insertTimestampLabel.textContent = `Insert [${curFormatted}]`;
+        const qSpan = btnQuickInsertTimestamp ? btnQuickInsertTimestamp.querySelector('span') : null;
+        if (qSpan) qSpan.textContent = `+ [${curFormatted}]`;
+      }
+    }
+
+    // Scrubber click-and-drag interaction and hover preview
+    function setupScrubber() {
+      if (!scrubberTrack) return;
+
+      function getPos(e) {
+        const rect = scrubberTrack.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const ratio = (clientX - rect.left) / rect.width;
+        return Math.max(0, Math.min(1, ratio));
+      }
+
+      function updateHoverTooltip(ratio) {
+        if (!scrubberTooltip) return;
+        const hoverSec = Math.floor(ratio * totalDuration);
+        scrubberTooltip.textContent = formatTime(hoverSec);
+        scrubberTooltip.style.left = `${ratio * 100}%`;
+      }
+
+      function onScrubMove(e) {
+        const ratio = getPos(e);
+        currentSeconds = ratio * totalDuration;
+        lastRenderedFloorSecond = -1;
+        updateTimeUI();
+        updateHoverTooltip(ratio);
+        updatePlayPauseButtonUI();
+      }
+
+      function onScrubStart(e) {
+        isScrubbing = true;
+        scrubberTrack.classList.add('scrubbing');
+        document.body.style.userSelect = 'none';
+        onScrubMove(e);
+
+        const onMove = (ev) => {
+          if (!isScrubbing) return;
+          onScrubMove(ev);
+        };
+
+        const onEnd = () => {
+          if (isScrubbing) {
+            isScrubbing = false;
+            scrubberTrack.classList.remove('scrubbing');
+            document.body.style.userSelect = '';
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onEnd);
+            window.removeEventListener('touchmove', onMove);
+            window.removeEventListener('touchend', onEnd);
+
+            lastFrameTimestamp = performance.now();
+            updatePlayPauseButtonUI();
+            if (currentSeconds >= totalDuration) {
+              pausePlayback();
+              triggerChapterQuizOverlay();
+            }
+          }
+        };
+
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onEnd);
+        window.addEventListener('touchmove', onMove, { passive: false });
+        window.addEventListener('touchend', onEnd);
+      }
+
+      scrubberTrack.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        onScrubStart(e);
+      });
+
+      scrubberTrack.addEventListener('touchstart', (e) => {
+        onScrubStart(e);
+      }, { passive: true });
+
+      scrubberTrack.addEventListener('mousemove', (e) => {
+        if (!isScrubbing) {
+          const ratio = getPos(e);
+          updateHoverTooltip(ratio);
+        }
+      });
+
+      scrubberTrack.addEventListener('mouseenter', () => {
+        if (scrubberTooltip) scrubberTooltip.classList.add('visible');
+      });
+
+      scrubberTrack.addEventListener('mouseleave', () => {
+        if (!isScrubbing && scrubberTooltip) {
+          scrubberTooltip.classList.remove('visible');
+        }
+      });
+    }
+
+    // Playback Speed Cycling
+    function changePlaybackSpeed(direction = 1) {
+      currentSpeedIndex = (currentSpeedIndex + direction + PLAYBACK_SPEEDS.length) % PLAYBACK_SPEEDS.length;
+      playbackRate = PLAYBACK_SPEEDS[currentSpeedIndex];
+      if (btnSpeedControl) {
+        btnSpeedControl.textContent = `${playbackRate}x`;
+      }
+      showToast(`Playback Speed: ${playbackRate}x`);
+    }
+
+    // Volume & Mute Toggle
+    function toggleMute() {
+      isMuted = !isMuted;
+      if (volumeHighIcon && volumeMuteIcon) {
+        volumeHighIcon.style.display = isMuted ? 'none' : 'inline-block';
+        volumeMuteIcon.style.display = isMuted ? 'inline-block' : 'none';
+      }
+      if (btnVolumeToggle) {
+        btnVolumeToggle.setAttribute('title', isMuted ? 'Unmute (M)' : 'Mute (M)');
+      }
+      showToast(isMuted ? 'Audio Muted' : 'Audio Unmuted (100%)');
+    }
+
+    // Play/Pause Canvas Flash Indicator
+    let indicatorTimeout;
+    function flashCanvasIndicator(isPlay) {
+      if (!canvasPlayIndicator) return;
+      if (indicatorIcon) {
+        if (isPlay) {
+          indicatorIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+        } else {
+          indicatorIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+        }
+      }
+      canvasPlayIndicator.classList.add('flash');
+      clearTimeout(indicatorTimeout);
+      indicatorTimeout = setTimeout(() => {
+        canvasPlayIndicator.classList.remove('flash');
+      }, 350);
+    }
+
+    // Focus Timer & Interval Controller Popover
+    function setupFocusTimer() {
+      // 1-second interval countdown
+      clearInterval(focusTimerInterval);
+      focusTimerInterval = setInterval(() => {
+        if (isPlaying && !isFocusTimerPaused && focusTimerRemaining > 0) {
+          focusTimerRemaining--;
+          focusTimerText.textContent = formatTime(focusTimerRemaining);
+          if (focusTimerRemaining <= 0) {
+            triggerScientificBreak();
+          }
+        }
+      }, 1000);
+
+      // Toggle popover on timer pill click
+      focusTimerWidget.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleTimerPopover();
+      });
+
+      // Prevent clicks inside popover from closing it
+      if (timerConfigPopover) {
+        timerConfigPopover.addEventListener('click', (e) => {
+          e.stopPropagation();
+        });
+      }
+
+      // Click outside to close
+      document.addEventListener('click', (e) => {
+        if (timerWidgetAnchor && !timerWidgetAnchor.contains(e.target)) {
+          closeTimerPopover();
+        }
+      });
+
+      // Focus presets selection
+      document.querySelectorAll('#focusPresetsRow .btn-timer-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = parseInt(btn.getAttribute('data-focus'));
+          setFocusSelection(val);
+        });
+      });
+
+      // Break presets selection
+      document.querySelectorAll('#breakPresetsRow .btn-timer-preset').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = parseInt(btn.getAttribute('data-break'));
+          setBreakSelection(val);
+        });
+      });
+
+      // Focus steppers & input
+      if (btnFocusMinus) {
+        btnFocusMinus.addEventListener('click', () => {
+          const cur = parseInt(inputFocusCustom.value) || 20;
+          setFocusSelection(Math.max(5, cur - 1));
+        });
+      }
+      if (btnFocusPlus) {
+        btnFocusPlus.addEventListener('click', () => {
+          const cur = parseInt(inputFocusCustom.value) || 20;
+          setFocusSelection(Math.min(90, cur + 1));
+        });
+      }
+      if (inputFocusCustom) {
+        inputFocusCustom.addEventListener('input', () => {
+          let val = parseInt(inputFocusCustom.value);
+          if (isNaN(val)) val = 20;
+          setFocusSelection(val);
+        });
+      }
+
+      // Break steppers & input
+      if (btnBreakMinus) {
+        btnBreakMinus.addEventListener('click', () => {
+          const cur = parseInt(inputBreakCustom.value) || 5;
+          setBreakSelection(Math.max(1, cur - 1));
+        });
+      }
+      if (btnBreakPlus) {
+        btnBreakPlus.addEventListener('click', () => {
+          const cur = parseInt(inputBreakCustom.value) || 5;
+          setBreakSelection(Math.min(30, cur + 1));
+        });
+      }
+      if (inputBreakCustom) {
+        inputBreakCustom.addEventListener('input', () => {
+          let val = parseInt(inputBreakCustom.value);
+          if (isNaN(val)) val = 5;
+          setBreakSelection(val);
+        });
+      }
+
+      // Reset to 20:5 Default
+      if (btnResetTimerDefaults) {
+        btnResetTimerDefaults.addEventListener('click', () => {
+          setFocusSelection(20);
+          setBreakSelection(5);
+          applyTimerSettings(20, 5);
+          closeTimerPopover();
+          showToast("Restored scientific 20m focus / 5m break ratio");
+        });
+      }
+
+      // Pause / Resume Toggle
+      if (btnTimerTogglePause) {
+        btnTimerTogglePause.addEventListener('click', () => {
+          isFocusTimerPaused = !isFocusTimerPaused;
+          timerPauseBtnText.textContent = isFocusTimerPaused ? "Resume" : "Pause";
+          focusTimerWidget.style.opacity = isFocusTimerPaused ? "0.6" : "1";
+          showToast(isFocusTimerPaused ? "Focus timer paused" : "Focus timer running");
+        });
+      }
+
+      // Apply & Start
+      if (btnApplyTimerConfig) {
+        btnApplyTimerConfig.addEventListener('click', () => {
+          const f = parseInt(inputFocusCustom.value) || 20;
+          const b = parseInt(inputBreakCustom.value) || 5;
+          applyTimerSettings(f, b);
+          closeTimerPopover();
+          showToast(`Timer set: ${f}m Focus / ${b}m Break`);
+        });
+      }
+    }
+
+    function toggleTimerPopover() {
+      if (!timerConfigPopover) return;
+      const isOpen = timerConfigPopover.classList.toggle('open');
+      focusTimerWidget.classList.toggle('active', isOpen);
+      focusTimerWidget.setAttribute('aria-expanded', isOpen);
+      if (studyTopBar) {
+        studyTopBar.classList.toggle('has-open-popover', isOpen);
+      }
+    }
+
+    function closeTimerPopover() {
+      if (timerConfigPopover && timerConfigPopover.classList.contains('open')) {
+        timerConfigPopover.classList.remove('open');
+        focusTimerWidget.classList.remove('active');
+        focusTimerWidget.setAttribute('aria-expanded', 'false');
+        if (studyTopBar) {
+          studyTopBar.classList.remove('has-open-popover');
+        }
+      }
+    }
+
+    function setFocusSelection(mins) {
+      if (inputFocusCustom) inputFocusCustom.value = mins;
+      if (displayFocusVal) displayFocusVal.textContent = `${mins} mins`;
+      document.querySelectorAll('#focusPresetsRow .btn-timer-preset').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.getAttribute('data-focus')) === mins);
+      });
+    }
+
+    function setBreakSelection(mins) {
+      if (inputBreakCustom) inputBreakCustom.value = mins;
+      if (displayBreakVal) displayBreakVal.textContent = `${mins} mins`;
+      document.querySelectorAll('#breakPresetsRow .btn-timer-preset').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.getAttribute('data-break')) === mins);
+      });
+    }
+
+    function applyTimerSettings(focusMins, breakMins) {
+      focusDurationMinutes = focusMins;
+      breakDurationMinutes = breakMins;
+      focusTimerRemaining = focusDurationMinutes * 60;
+      breakTimerRemaining = breakDurationMinutes * 60;
+      focusTimerText.textContent = formatTime(focusTimerRemaining);
+      isFocusTimerPaused = false;
+      if (timerPauseBtnText) timerPauseBtnText.textContent = "Pause";
+      focusTimerWidget.style.opacity = "1";
+      if (breakOverlayMinutesSpan) {
+        breakOverlayMinutesSpan.textContent = `${breakDurationMinutes} Minutes`;
+      }
+    }
+
+    // Scientific Break
+    function triggerScientificBreak() {
+      pausePlayback();
+      overlayScientificBreak.classList.add('active');
+      breakTimerRemaining = breakDurationMinutes * 60;
+      breakTimerCountdown.textContent = formatTime(breakTimerRemaining);
+      if (breakOverlayMinutesSpan) {
+        breakOverlayMinutesSpan.textContent = `${breakDurationMinutes} Minutes`;
+      }
+      clearInterval(breakTimerInterval);
+      breakTimerInterval = setInterval(() => {
+        if (breakTimerRemaining > 0) {
+          breakTimerRemaining--;
+          breakTimerCountdown.textContent = formatTime(breakTimerRemaining);
+        } else {
+          resumeFromBreak();
+        }
+      }, 1000);
+    }
+
+    function resumeFromBreak() {
+      clearInterval(breakTimerInterval);
+      overlayScientificBreak.classList.remove('active');
+      focusTimerRemaining = focusDurationMinutes * 60;
+      focusTimerText.textContent = formatTime(focusTimerRemaining);
+      // Auto-rewind 5 seconds to restore spoken context
+      seekRelative(-5);
+      startPlayback();
+      showToast("Resumed playback with 5s context rewind ✓");
+    }
+
+    btnResumeFromBreak.addEventListener('click', resumeFromBreak);
+
+    // Overlays Setup
+    function setupOverlays() {
+      // 1. Resume Recall
+      document.querySelectorAll('#recallOptionsList .overlay-opt-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const isCorrect = btn.getAttribute('data-correct') === 'true';
+          document.querySelectorAll('#recallOptionsList .overlay-opt-btn').forEach(b => b.disabled = true);
+          if (isCorrect) {
+            btn.classList.add('correct');
+            btn.querySelector('.check-slot').textContent = '✓';
+          } else {
+            btn.classList.add('incorrect');
+            btn.querySelector('.check-slot').textContent = '✕';
+            document.querySelector('#recallOptionsList [data-correct="true"]').classList.add('correct');
+          }
+          document.getElementById('recallExplanation').style.display = 'block';
+          btnResumeVideoFromRecall.style.display = 'inline-flex';
+        });
+      });
+
+      btnDismissRecall.addEventListener('click', () => {
+        overlayResumeRecall.classList.remove('active');
+        startPlayback();
+      });
+
+      btnResumeVideoFromRecall.addEventListener('click', () => {
+        overlayResumeRecall.classList.remove('active');
+        startPlayback();
+      });
+
+      // 2. Chapter Quiz
+      document.querySelectorAll('#quizOptionsList .overlay-opt-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const isCorrect = btn.getAttribute('data-correct') === 'true';
+          document.querySelectorAll('#quizOptionsList .overlay-opt-btn').forEach(b => b.disabled = true);
+          if (isCorrect) {
+            btn.classList.add('correct');
+            btn.querySelector('.check-slot').textContent = '✓';
+          } else {
+            btn.classList.add('incorrect');
+            btn.querySelector('.check-slot').textContent = '✕';
+            document.querySelector('#quizOptionsList [data-correct="true"]').classList.add('correct');
+          }
+          document.getElementById('quizExplanation').style.display = 'block';
+          btnSubmitChapterQuiz.disabled = false;
+          btnSubmitChapterQuiz.style.opacity = '1';
+          btnSubmitChapterQuiz.style.cursor = 'pointer';
+        });
+      });
+
+      btnSkipChapterQuiz.addEventListener('click', () => {
+        overlayChapterQuiz.classList.remove('active');
+        showToast("Chapter marked as Watched (Quiz Skipped). Advancing...");
+        setTimeout(() => advanceToNextChapter(), 1000);
+      });
+
+      btnSubmitChapterQuiz.addEventListener('click', () => {
+        overlayChapterQuiz.classList.remove('active');
+        showToast("Chapter Mastered! Moving to next lesson ✓");
+        setTimeout(() => advanceToNextChapter(), 1000);
+      });
+    }
+
+    function triggerChapterQuizOverlay() {
+      overlayChapterQuiz.classList.add('active');
+    }
+
+    function advanceToNextChapter() {
+      if (currentChapterId < CHAPTERS_LIST.length) {
+        loadChapter(currentChapterId + 1, 0, true);
+        showToast(`Advanced to Chapter 0${currentChapterId} ↷`);
+      } else {
+        showToast("Course completed! Restarting from Chapter 1 ↺");
+        loadChapter(1, 0, true);
+      }
+    }
+
+    // Notes Pad Interactions & Option C Timestamps
+    function setupNotesInteractions() {
+      // Insert timestamp from toolbar
+      btnToolbarInsertTimestamp.addEventListener('click', () => insertCurrentTimestamp());
+      btnQuickInsertTimestamp.addEventListener('click', () => insertCurrentTimestamp());
+
+      // Delegate timestamp clicks
+      notesScrollCanvas.addEventListener('click', (e) => {
+        const badge = e.target.closest('.note-ts-badge');
+        if (!badge) return;
+
+        const targetChapter = parseInt(badge.getAttribute('data-chapter')) || currentChapterId;
+        const targetSeconds = parseInt(badge.getAttribute('data-seconds')) || 0;
+
+        if (targetChapter === currentChapterId) {
+          seekTo(targetSeconds);
+          showToast(`Jumped to ${formatTime(targetSeconds)} in current chapter`);
+        } else {
+          // Option C Guarded Navigation Prompt
+          pendingNavTarget = { chapter: targetChapter, seconds: targetSeconds };
+          guardedModalBodyText.innerHTML = `You clicked a timestamp belonging to <strong>Chapter 0${targetChapter}</strong>. Switching will pause your current session in Chapter 0${currentChapterId}.`;
+          guardedModalBackdrop.classList.add('open');
+        }
+      });
+
+      // Modal confirmations
+      btnGuardedCancel.addEventListener('click', () => {
+        guardedModalBackdrop.classList.remove('open');
+        pendingNavTarget = null;
+      });
+
+      btnGuardedConfirm.addEventListener('click', () => {
+        guardedModalBackdrop.classList.remove('open');
+        if (pendingNavTarget) {
+          showToast(`Switching to Chapter 0${pendingNavTarget.chapter} at ${formatTime(pendingNavTarget.seconds)}...`);
+          loadChapter(pendingNavTarget.chapter, pendingNavTarget.seconds, true);
+          pendingNavTarget = null;
+        }
+      });
+
+      // Formatting buttons
+      document.getElementById('btnBold').addEventListener('click', () => document.execCommand('bold'));
+      document.getElementById('btnItalic').addEventListener('click', () => document.execCommand('italic'));
+      document.getElementById('btnList').addEventListener('click', () => document.execCommand('insertUnorderedList'));
+    }
+
+    function insertCurrentTimestamp() {
+      const curFloor = Math.floor(currentSeconds);
+      const curTime = formatTime(curFloor);
+      const span = document.createElement('span');
+      span.className = 'note-ts-badge';
+      span.setAttribute('data-chapter', currentChapterId);
+      span.setAttribute('data-seconds', curFloor);
+      span.textContent = `[${curTime}]`;
+      span.setAttribute('contenteditable', 'false');
+
+      const activeBody = document.getElementById('activeChapterNotesBody') || notesScrollCanvas;
+      activeBody.focus();
+      const sel = window.getSelection();
+      if (sel.getRangeAt && sel.rangeCount && activeBody.contains(sel.anchorNode)) {
+        const range = sel.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(span);
+        const space = document.createTextNode(' ');
+        range.setStartAfter(span);
+        range.insertNode(space);
+        range.setStartAfter(space);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } else {
+        const p = document.createElement('p');
+        p.appendChild(span);
+        p.appendChild(document.createTextNode(' '));
+        activeBody.appendChild(p);
+      }
+      showToast(`Inserted [${curTime}] at cursor`);
+    }
+
+    // Focus Mode Toggle & Push Back Notes
+    btnToggleFocusMode.addEventListener('click', toggleFocusMode);
+
+    if (btnTopNotesDrawer) {
+      btnTopNotesDrawer.addEventListener('click', () => {
+        const isOpen = notesColumn.classList.toggle('open');
+        btnTopNotesDrawer.classList.toggle('active', isOpen);
+        if (isOpen) {
+          showToast("Notes opened (Drag left border to stretch)");
+        } else {
+          showToast("Notes pushed back");
+        }
+      });
+    }
+
+    if (btnPushBackNotes) {
+      btnPushBackNotes.addEventListener('click', () => {
+        notesColumn.classList.remove('open');
+        if (btnTopNotesDrawer) btnTopNotesDrawer.classList.remove('active');
+        showToast("Notes pushed back");
+      });
+    }
+
+    function toggleFocusMode() {
+      const isFocus = body.classList.toggle('focus-mode');
+      if (isFocus) {
+        focusModeBtnLabel.textContent = "Exit Focus";
+        showToast("Entered Focus Mode (Full-Screen Cinema)");
+      } else {
+        focusModeBtnLabel.textContent = "Focus Mode";
+        notesColumn.classList.remove('open');
+        if (btnTopNotesDrawer) btnTopNotesDrawer.classList.remove('active');
+        notesColumn.style.width = '';
+        notesColumn.style.removeProperty('--focus-notes-width');
+        showToast("Exited Focus Mode");
+      }
+    }
+
+    // Stretchable / Resizable Notepad in Focus Mode
+    function setupStretchableNotepad() {
+      if (!notesResizeHandle) return;
+      let isResizing = false;
+      let startX = 0;
+      let startWidth = 440;
+
+      const onMouseDown = (e) => {
+        if (!body.classList.contains('focus-mode')) return;
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = notesColumn.getBoundingClientRect().width;
+        notesResizeHandle.classList.add('dragging');
+        notesColumn.style.transition = 'none';
+        document.body.style.cursor = 'ew-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      };
+
+      const onMouseMove = (e) => {
+        if (!isResizing) return;
+        // Drawer is anchored to right edge: moving handle left increases drawer width
+        const deltaX = startX - e.clientX;
+        let newWidth = startWidth + deltaX;
+        const minWidth = 320;
+        const maxWidth = Math.min(window.innerWidth * 0.75, 800);
+        if (newWidth < minWidth) newWidth = minWidth;
+        if (newWidth > maxWidth) newWidth = maxWidth;
+        notesColumn.style.setProperty('--focus-notes-width', `${newWidth}px`);
+        notesColumn.style.width = `${newWidth}px`;
+      };
+
+      const onMouseUp = () => {
+        if (isResizing) {
+          isResizing = false;
+          notesResizeHandle.classList.remove('dragging');
+          notesColumn.style.transition = '';
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+        }
+      };
+
+      notesResizeHandle.addEventListener('mousedown', onMouseDown);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+
+      // Touch events for touchscreen devices
+      notesResizeHandle.addEventListener('touchstart', (e) => {
+        if (!body.classList.contains('focus-mode')) return;
+        if (e.touches.length === 1) {
+          isResizing = true;
+          startX = e.touches[0].clientX;
+          startWidth = notesColumn.getBoundingClientRect().width;
+          notesResizeHandle.classList.add('dragging');
+          notesColumn.style.transition = 'none';
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (!isResizing || e.touches.length !== 1) return;
+        const deltaX = startX - e.touches[0].clientX;
+        let newWidth = startWidth + deltaX;
+        const minWidth = 320;
+        const maxWidth = Math.min(window.innerWidth * 0.75, 800);
+        if (newWidth < minWidth) newWidth = minWidth;
+        if (newWidth > maxWidth) newWidth = maxWidth;
+        notesColumn.style.setProperty('--focus-notes-width', `${newWidth}px`);
+        notesColumn.style.width = `${newWidth}px`;
+      }, { passive: true });
+
+      window.addEventListener('touchend', () => {
+        if (isResizing) {
+          isResizing = false;
+          notesResizeHandle.classList.remove('dragging');
+          notesColumn.style.transition = '';
+        }
+      });
+    }
+
+    // Keyboard Shortcuts
+    function setupKeyboardShortcuts() {
+      window.addEventListener('keydown', (e) => {
+        // If typing inside editable notes, inputs, or textareas, don't trigger playback shortcuts
+        if (
+          e.target.tagName === 'INPUT' ||
+          e.target.tagName === 'TEXTAREA' ||
+          e.target.isContentEditable ||
+          e.target === notesScrollCanvas ||
+          notesScrollCanvas.contains(e.target)
+        ) {
+          if (e.altKey && (e.key === 't' || e.key === 'T')) {
+            e.preventDefault();
+            insertCurrentTimestamp();
+          }
+          return;
+        }
+
+        if (e.key === ' ' || e.key === 'k' || e.key === 'K') {
+          e.preventDefault();
+          togglePlayPause();
+        } else if (e.key === '0' || e.key === 'Home') {
+          e.preventDefault();
+          restartVideo();
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          seekTo(totalDuration);
+        } else if (e.key >= '1' && e.key <= '9') {
+          e.preventDefault();
+          seekTo(totalDuration * (parseInt(e.key) / 10));
+        } else if (e.key === 'j' || e.key === 'J' || e.key === 'ArrowLeft') {
+          e.preventDefault();
+          seekRelative(-5);
+        } else if (e.key === 'l' || e.key === 'L' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          seekRelative(5);
+        } else if (e.key === 'm' || e.key === 'M') {
+          e.preventDefault();
+          toggleMute();
+        } else if (e.key === '>' || (e.shiftKey && e.key === '.')) {
+          e.preventDefault();
+          changePlaybackSpeed(1);
+        } else if (e.key === '<' || (e.shiftKey && e.key === ',')) {
+          e.preventDefault();
+          changePlaybackSpeed(-1);
+        } else if (e.key === 't' || e.key === 'T') {
+          e.preventDefault();
+          insertCurrentTimestamp();
+        } else if (e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          toggleFocusMode();
+        } else if ((e.key === 'n' || e.key === 'N') && body.classList.contains('focus-mode')) {
+          e.preventDefault();
+          const isOpen = notesColumn.classList.toggle('open');
+          if (btnTopNotesDrawer) btnTopNotesDrawer.classList.toggle('active', isOpen);
+          showToast(isOpen ? "Notes opened" : "Notes pushed back");
+        } else if (e.key === 'Escape') {
+          const reportBackdrop = document.getElementById('reportPopoverBackdrop');
+          if (reportBackdrop && reportBackdrop.classList.contains('open')) {
+            closeReportPopover();
+          } else if (timerConfigPopover && timerConfigPopover.classList.contains('open')) {
+            closeTimerPopover();
+          } else if (guardedModalBackdrop.classList.contains('open')) {
+            guardedModalBackdrop.classList.remove('open');
+          } else if (body.classList.contains('focus-mode') && notesColumn.classList.contains('open')) {
+            notesColumn.classList.remove('open');
+            if (btnTopNotesDrawer) btnTopNotesDrawer.classList.remove('active');
+            showToast("Notes pushed back");
+          } else if (body.classList.contains('focus-mode')) {
+            toggleFocusMode();
+          }
+        }
+      });
+    }
+
+    // Report Question Modal Functions
+    let currentReportItemType = 'Question';
+    function openReportModal(type, title) {
+      currentReportItemType = type || 'Question';
+      const backdrop = document.getElementById('reportPopoverBackdrop');
+      const titleEl = document.getElementById('reportCardTitle');
+      const subtextEl = document.getElementById('reportCardSubtext');
+      const textarea = document.getElementById('reportReasonInput');
+      
+      if (titleEl) titleEl.textContent = title || `Report ${currentReportItemType}`;
+      if (subtextEl) subtextEl.textContent = `Help us keep this ${currentReportItemType.toLowerCase()} accurate and clear.`;
+      if (textarea) textarea.value = '';
+      
+      document.querySelectorAll('.report-chip').forEach((c, idx) => {
+        c.classList.toggle('active', idx === 0);
+      });
+      
+      if (backdrop) backdrop.classList.add('open');
+      if (textarea) textarea.focus();
+    }
+
+    function closeReportPopover() {
+      const backdrop = document.getElementById('reportPopoverBackdrop');
+      if (backdrop) backdrop.classList.remove('open');
+    }
+
+    function selectReportCategory(chip) {
+      document.querySelectorAll('.report-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    }
+
+    function submitReport() {
+      const textarea = document.getElementById('reportReasonInput');
+      const activeChip = document.querySelector('.report-chip.active');
+      const category = activeChip ? activeChip.textContent : 'General';
+      const reason = textarea ? textarea.value.trim() : '';
+      
+      closeReportPopover();
+      showToast(`Report submitted (${category}). Thank you for your feedback!`);
+    }
+
+    // Description Collapse
+    function setupDescriptionToggle() {
+      descHeaderToggle.addEventListener('click', () => {
+        const isOpen = descBodyContent.classList.toggle('open');
+        descHeaderToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        const titleSpan = descHeaderToggle.querySelector('span');
+        const chevron = document.getElementById('descChevron');
+        if (titleSpan) {
+          titleSpan.textContent = (isOpen ? '▲' : '▼') + ' Video Description & Extracted Resources (2 links)';
+        }
+        if (chevron) {
+          const poly = chevron.querySelector('polyline');
+          if (poly) poly.setAttribute('points', isOpen ? '18 15 12 9 6 15' : '6 9 12 15 18 9');
+        }
+      });
+    }
+
+    // Test Triggers for Verification
+    function setupTestTriggers() {
+      document.getElementById('testBtnRecall').addEventListener('click', () => {
+        pausePlayback();
+        overlayResumeRecall.classList.add('active');
+      });
+      document.getElementById('testBtnQuiz').addEventListener('click', () => {
+        pausePlayback();
+        overlayChapterQuiz.classList.add('active');
+      });
+      document.getElementById('testBtnBreak').addEventListener('click', () => {
+        triggerScientificBreak();
+      });
+    }
+
+    // Toast
+    let toastTimer;
+    function showToast(msg) {
+      toastMsgText.textContent = msg;
+      toastPill.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toastPill.classList.remove('show');
+      }, 2400);
+    }
+
+    // Run on mount (handles both immediate ready and DOMContentLoaded)
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>

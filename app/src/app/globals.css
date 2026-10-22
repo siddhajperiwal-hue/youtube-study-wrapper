@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+:root {
+  /* Light Theme (The Quiet Study Desk) */
+  --color-primary: #2F5D50;
+  --color-primary-hover: #24493F;
+  --color-primary-light: #EAF2EF;
+  --color-accent: #D9962B; /* Strictly reserved for near deadlines */
+  --color-accent-hover: #BF8223;
+  --color-accent-light: #FCF4E6;
+  --color-bg-app: #FAF6EF;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F8F5EE;
+  --color-surface-muted: #F0EBE0;
+  --color-text-primary: #26332E;
+  --color-text-secondary: #5F6B65;
+  --color-border: #DAD3C4;
+  --color-border-subtle: #E8E2D5;
+  --color-success: #2E7D4F;
+  --color-success-bg: #E8F5EE;
+  --color-error: #B5473A;
+  --color-error-bg: #FDF0EE;
+  --color-watched: #6A8E7F;
+  --color-watched-bg: #E4ECE8;
+
+  --shadow-sm: 0 1px 3px rgba(38, 51, 46, 0.08);
+  --shadow-md: 0 4px 12px rgba(38, 51, 46, 0.09);
+  --shadow-lg: 0 12px 28px rgba(38, 51, 46, 0.14);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+}
+
+/* Theme colours are defined ONLY here. Page stylesheets (src/styles/*.css) must not redefine
+   --color-* / --shadow-* on :root: they load later on client navigation, and an equal-specificity
+   :root rule loaded after this one overrides [data-theme="dark"]. */
+[data-theme="dark"] {
+  /* Dark Theme (Warm Espresso & Charcoal — Zero Green Cast) */
+  --color-primary: #4E917D;
+  --color-primary-hover: #5EA893;
+  --color-primary-light: #1B2924;
+  --color-accent: #E5A94E;
+  --color-accent-hover: #F0BD6B;
+  --color-accent-light: #2D2314;
+  --color-bg-app: #141312;
+  --color-surface: #1E1C1A;
+  --color-surface-hover: #272422;
+  --color-surface-muted: #292623;
+  --color-text-primary: #F3EFEA;
+  --color-text-secondary: #9E968D;
+  --color-border: #383430;
+  --color-border-subtle: #2C2825;
+  --color-success: #4CAF79;
+  --color-success-bg: #1C2D24;
+  --color-error: #E06D5E;
+  --color-error-bg: #361E1C;
+  --color-watched: #7AA392;
+  --color-watched-bg: #1F2823;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.6);
+}
+
+html {
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-bg-app);
+  color: var(--color-text-primary);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+.font-serif {
+  font-family: var(--font-serif), Georgia, serif;
+}
+
+.font-mono {
+  font-family: var(--font-mono), monospace;
+}

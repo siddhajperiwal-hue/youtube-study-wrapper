@@ -1,0 +1,3466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Study YouTube Wrapper</title>
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('studydesk_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+      } catch (e) {}
+    })();
+  </script>
+  <!-- Google Fonts: Source Serif 4, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* Light Theme (The Quiet Study Desk) */
+      --color-primary: #2F5D50;
+      --color-primary-hover: #24493F;
+      --color-accent: #D9962B; /* Strictly reserved for near deadlines */
+      --color-accent-hover: #BF8223;
+      --color-bg-app: #FAF6EF;
+      --color-surface: #FFFFFF;
+      --color-surface-hover: #F8F5EE;
+      --color-surface-muted: #F0EBE0;
+      --color-text-primary: #26332E;
+      --color-text-secondary: #5F6B65;
+      --color-border: #DAD3C4;
+      --color-border-subtle: #E8E2D5;
+      --color-success: #2E7D4F;
+      --color-success-bg: #E8F5EE;
+      --color-error: #B5473A;
+      --color-error-bg: #FDF0EE;
+
+      --shadow-sm: 0 1px 3px rgba(38, 51, 46, 0.08);
+      --shadow-md: 0 4px 12px rgba(38, 51, 46, 0.09);
+      --shadow-lg: 0 12px 28px rgba(38, 51, 46, 0.14);
+
+      --font-serif: 'Source Serif 4', Georgia, serif;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-pill: 9999px;
+
+      --space-xs: 8px;
+      --space-s: 16px;
+      --space-m: 24px;
+      --space-l: 32px;
+      --space-xl: 48px;
+    }
+
+    [data-theme="dark"] {
+      /* Dark Theme (Warm Espresso & Charcoal — Zero Green Cast) */
+      --color-primary: #4E917D;
+      --color-primary-hover: #5EA893;
+      --color-accent: #E5A94E; /* Strictly reserved for near deadlines */
+      --color-accent-hover: #F0BD6B;
+      --color-bg-app: #141312;
+      --color-surface: #1E1C1A;
+      --color-surface-hover: #272422;
+      --color-surface-muted: #292623;
+      --color-text-primary: #F3EFEA;
+      --color-text-secondary: #9E968D;
+      --color-border: #383430;
+      --color-border-subtle: #2C2825;
+      --color-success: #4CAF79;
+      --color-success-bg: #1C2D24;
+      --color-error: #E06D5E;
+      --color-error-bg: #361E1C;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-bg-app);
+      color: var(--color-text-primary);
+      line-height: 1.6;
+      font-size: 16px;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* SVG Icon Helper */
+    .icon {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    /* 1. Global Top Navigation Bar (Option C - Universal 56px) */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      height: 56px;
+      background-color: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .top-nav-inner {
+      width: 100%;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 var(--space-m);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-logo {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .brand-logo-mark {
+      width: 28px;
+      height: 28px;
+      background-color: var(--color-primary);
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      flex-shrink: 0;
+    }
+
+    .brand-logo-mark .icon {
+      width: 16px;
+      height: 16px;
+      stroke: #FFFFFF;
+    }
+
+    .brand-title {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      color: var(--color-text-primary);
+    }
+
+    .top-nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .streak-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      background-color: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      cursor: default;
+      transition: all 0.15s ease;
+    }
+
+    .streak-badge .icon {
+      color: currentColor;
+    }
+
+    .streak-badge.active-today {
+      border-color: var(--color-primary);
+      background-color: rgba(47, 93, 80, 0.1);
+      color: var(--color-primary);
+    }
+
+    [data-theme="dark"] .streak-badge.active-today {
+      background-color: rgba(78, 145, 125, 0.15);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .btn-add-course {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 38px;
+      padding: 0 16px;
+      background-color: var(--color-primary);
+      color: #FFFFFF;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.15s ease;
+    }
+
+    .btn-add-course:hover {
+      background-color: var(--color-primary-hover);
+    }
+
+    .btn-add-course:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    /* Option C Profile & Utilities Dropdown */
+    .profile-menu-container {
+      position: relative;
+    }
+
+    .avatar-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.15s ease;
+    }
+
+    .avatar-btn:hover,
+    .avatar-btn[aria-expanded="true"] {
+      border-color: var(--color-primary);
+      background-color: var(--color-surface-hover);
+      box-shadow: 0 0 0 2px rgba(47, 93, 80, 0.15);
+    }
+
+    .avatar-icon {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+
+    .profile-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 230px;
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      padding: 6px;
+      display: none;
+      flex-direction: column;
+      z-index: 1000;
+      animation: dropdownFade 0.15s ease-out;
+    }
+
+    .profile-dropdown-menu.open {
+      display: flex;
+    }
+
+    @keyframes dropdownFade {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .dropdown-header {
+      padding: 8px 10px 6px;
+    }
+
+    .dropdown-header .user-name {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .dropdown-header .user-status {
+      display: block;
+      font-size: 11px;
+      color: var(--color-text-secondary);
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background-color: var(--color-border-subtle);
+      margin: 4px 0;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 8px 10px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      text-decoration: none;
+    }
+
+    .dropdown-item:hover {
+      background-color: var(--color-surface-hover);
+      color: var(--color-primary);
+    }
+
+    .dropdown-item .item-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dropdown-item .item-icon {
+      font-size: 14px;
+      width: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-secondary);
+    }
+
+    .dropdown-item kbd {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 5px;
+      background-color: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      color: var(--color-text-secondary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      padding: 0 18px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      gap: 8px;
+      transition: all 0.15s ease;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: #FFFFFF;
+    }
+    .btn-primary:hover {
+      background: var(--color-primary-hover);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--color-primary);
+      border: 1.5px solid var(--color-primary);
+    }
+    .btn-secondary:hover {
+      background: var(--color-surface-muted);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text-secondary);
+    }
+    .btn-ghost:hover {
+      background: var(--color-surface-muted);
+      color: var(--color-text-primary);
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: var(--radius-pill);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .btn-icon:hover {
+      background: var(--color-surface-hover);
+    }
+
+    /* 2. Page Container & Layout */
+    .dashboard-container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: var(--space-l) var(--space-m) var(--space-xl);
+    }
+
+    /* Welcome Header */
+    .greeting-header {
+      margin-bottom: var(--space-l);
+    }
+
+    .greeting-title {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    /* 3. Top-Fold 3-Card Deck (Side-by-Side Grid) - Strictly Locked Dimensions */
+    .top-deck-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr 1fr;
+      gap: var(--space-m);
+      margin-bottom: var(--space-xl);
+      align-items: stretch;
+      height: 375px;
+      transition: all 0.3s ease;
+    }
+
+    /* State when recall cards are hidden for early learner */
+    .top-deck-grid.single-hero {
+      grid-template-columns: 1fr;
+      height: auto;
+    }
+
+    .top-deck-grid.single-hero > .deck-card {
+      height: auto;
+      max-height: none;
+    }
+
+    .deck-card {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      padding: 18px 20px 16px;
+      border: 1px solid var(--color-border-subtle);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-width: 0;
+      height: 375px;
+      max-height: 375px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .eyebrow-tag {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    /* Card 1: Priority Course (Compact) */
+    .priority-card {
+      border-left: 4px solid var(--color-primary);
+    }
+
+    .priority-content-box {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .priority-split {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .priority-thumb {
+      width: 130px;
+      aspect-ratio: 16 / 9;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      flex-shrink: 0;
+      position: relative;
+      background: #242220;
+    }
+
+    .priority-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .chapter-count-pill {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #FFFFFF;
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+
+    .priority-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .priority-title {
+      font-family: var(--font-serif);
+      font-size: 16.5px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      line-height: 1.3;
+      margin-bottom: 4px;
+      height: 44px;
+      min-height: 44px;
+      max-height: 44px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: default;
+    }
+
+    .priority-lesson {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+      cursor: default;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      background: var(--color-surface-muted);
+      height: 6px;
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      margin: 4px 0;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--color-primary);
+      border-radius: var(--radius-pill);
+      transition: width 0.4s ease;
+    }
+
+    .progress-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      font-weight: 500;
+    }
+
+    .badge-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--color-surface-muted);
+      color: var(--color-text-secondary);
+      width: fit-content;
+    }
+
+    .badge-chip.urgent {
+      background: rgba(217, 150, 43, 0.15);
+      color: var(--color-accent);
+      border: 1px solid rgba(217, 150, 43, 0.35);
+    }
+
+    .priority-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid var(--color-border-subtle);
+      flex-shrink: 0;
+    }
+
+    /* Card 2: Quick Quiz (MCQ) - Strictly Locked Dimensions */
+    #quickQuizContent {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .quiz-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .quiz-eyebrow-wrapper {
+      margin-bottom: 0;
+      min-width: 0;
+      flex: 1;
+      margin-right: 8px;
+    }
+
+    #quizEyebrowText {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+      max-width: 100%;
+      cursor: default;
+    }
+
+    .quiz-question-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      line-height: 1.35;
+      height: 38px;
+      min-height: 38px;
+      max-height: 38px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 8px;
+      flex-shrink: 0;
+      cursor: default;
+    }
+
+    .quiz-options-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .quiz-choice {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      height: 38px;
+      min-height: 38px;
+      max-height: 38px;
+      padding: 0 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      text-align: left;
+      cursor: pointer;
+      outline: none;
+      box-sizing: border-box;
+      transition: all 0.15s ease;
+    }
+
+    .quiz-choice strong {
+      width: 16px;
+      text-align: center;
+      flex-shrink: 0;
+      font-size: 12px;
+    }
+
+    .quiz-choice span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .quiz-choice:hover, .quiz-choice:focus-visible {
+      background: var(--color-surface-muted);
+      border-color: var(--color-text-secondary);
+    }
+
+    .quiz-choice.correct {
+      border-color: var(--color-success);
+      background: var(--color-success-bg);
+      color: var(--color-success);
+      font-weight: 500;
+    }
+
+    .quiz-choice.incorrect {
+      border-color: var(--color-error);
+      background: var(--color-error-bg);
+      color: var(--color-error);
+    }
+
+    .quiz-feedback {
+      font-size: 11.5px;
+      line-height: 1.35;
+      height: 32px;
+      min-height: 32px;
+      max-height: 32px;
+      margin-top: 6px;
+      margin-bottom: 0;
+      font-weight: 500;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex-shrink: 0;
+      cursor: default;
+    }
+
+    .card-footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid var(--color-border-subtle);
+      flex-shrink: 0;
+    }
+
+    .report-link {
+      font-size: 11px;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .report-link:hover {
+      text-decoration: underline;
+      color: var(--color-text-primary);
+    }
+    .report-btn-tag {
+      background: transparent;
+      border: none;
+      color: var(--color-text-secondary);
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+    .report-btn-tag:hover {
+      background: var(--color-surface-muted);
+      color: var(--color-text-primary);
+    }
+
+    /* Report Question / Flashcard Popover Modal */
+    .report-popover-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(20, 19, 18, 0.5);
+      backdrop-filter: blur(2px);
+      z-index: 1050;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .report-popover-backdrop.open {
+      display: flex;
+    }
+    .report-popover-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+      width: 100%;
+      max-width: 380px;
+      padding: 20px;
+      animation: reportCardFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes reportCardFadeIn {
+      from { opacity: 0; transform: scale(0.96) translateY(6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .report-header-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+    .btn-report-close {
+      background: transparent;
+      border: none;
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+    .btn-report-close:hover {
+      background: var(--color-surface-muted);
+      color: var(--color-text-primary);
+    }
+    .report-subtext {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+    .report-category-group {
+      margin-bottom: 12px;
+    }
+    .report-field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-text-secondary);
+      margin-bottom: 6px;
+    }
+    .report-chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .report-chip {
+      background: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      border-radius: var(--radius-pill);
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: var(--font-sans);
+    }
+    .report-chip:hover {
+      border-color: var(--color-primary);
+      color: var(--color-text-primary);
+    }
+    .report-chip.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+    .report-input-group {
+      margin-bottom: 16px;
+    }
+    .report-textarea {
+      width: 100%;
+      box-sizing: border-box;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--color-text-primary);
+      resize: vertical;
+      min-height: 72px;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+    .report-textarea:focus {
+      border-color: var(--color-primary);
+    }
+    .report-actions-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* Card 3: 3D Rotating Flashcard - Strictly Locked Dimensions */
+    .flashcard-perspective {
+      perspective: 1000px;
+      width: 100%;
+      height: 375px;
+      min-height: 375px;
+      max-height: 375px;
+      cursor: pointer;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      height: 375px;
+      min-height: 375px;
+      max-height: 375px;
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+      box-sizing: border-box;
+    }
+
+    .flashcard-inner.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-face {
+      position: absolute;
+      width: 100%;
+      height: 375px;
+      min-height: 375px;
+      max-height: 375px;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      border-radius: var(--radius-sm);
+      padding: 18px 20px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .flashcard-front {
+      background: var(--color-surface-muted);
+      border: 1px solid var(--color-border);
+    }
+
+    .flashcard-back {
+      background: var(--color-surface);
+      border: 1.5px solid var(--color-primary);
+      transform: rotateY(180deg);
+    }
+
+    .flashcard-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    #fcFrontCourseText, #fcBackTopicText {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+      max-width: 100%;
+      cursor: default;
+    }
+
+    .flashcard-prompt-title {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      line-height: 1.35;
+      height: 40px;
+      min-height: 40px;
+      max-height: 40px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 6px;
+      flex-shrink: 0;
+      cursor: default;
+    }
+
+    .flashcard-prompt-sub {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 5;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-height: 95px;
+      margin-bottom: 8px;
+      cursor: default;
+    }
+
+    .flashcard-hint {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-primary);
+      text-align: center;
+      padding: 5px 8px;
+      background: rgba(47, 93, 80, 0.08);
+      border-radius: var(--radius-pill);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: auto;
+      flex-shrink: 0;
+    }
+
+    .flashcard-explanation {
+      font-size: 13px;
+      color: var(--color-text-primary);
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 6;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-height: 115px;
+      margin-top: 6px;
+      margin-bottom: 8px;
+      cursor: default;
+    }
+
+    .flashcard-back-actions {
+      margin-top: auto;
+      flex-shrink: 0;
+    }
+
+    /* Completed Chapters Pool & Deck Exhaustion Badges */
+    .pool-counter-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      background: var(--color-surface-muted);
+      border: 1px solid var(--color-border-subtle);
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+    }
+
+    .deck-exhausted-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 175px;
+      text-align: center;
+      padding: 12px 10px;
+    }
+
+    .deck-exhausted-icon {
+      font-size: 26px;
+      margin-bottom: 6px;
+    }
+
+    .deck-exhausted-title {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: 4px;
+    }
+
+    .deck-exhausted-sub {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      line-height: 1.4;
+      margin-bottom: 12px;
+    }
+
+    /* 4. Full-Width Enrolled Courses Section */
+    .library-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-s);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .library-title {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .count-pill {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 2px 8px;
+      background: var(--color-surface-muted);
+      border-radius: var(--radius-pill);
+      color: var(--color-text-secondary);
+    }
+
+    .library-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .course-search-box {
+      display: flex;
+      align-items: center;
+      position: relative;
+      width: 250px;
+    }
+
+    .search-icon-inside {
+      position: absolute;
+      left: 10px;
+      color: var(--color-text-secondary);
+      pointer-events: none;
+    }
+
+    .search-input-field {
+      width: 100%;
+      height: 36px;
+      padding: 0 28px 0 32px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .search-input-field:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(47, 93, 80, 0.15);
+    }
+
+    .clear-search-btn {
+      position: absolute;
+      right: 8px;
+      background: transparent;
+      border: none;
+      color: var(--color-text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      display: none;
+      padding: 2px 4px;
+      border-radius: var(--radius-pill);
+    }
+
+    .clear-search-btn:hover {
+      color: var(--color-text-primary);
+      background: var(--color-surface-muted);
+    }
+
+    .sort-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--color-text-secondary);
+    }
+
+    .select-dropdown {
+      height: 36px;
+      padding: 0 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .select-dropdown:focus {
+      border-color: var(--color-primary);
+    }
+
+    .course-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-m);
+    }
+
+    .course-card {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      padding: var(--space-s);
+      border: 1px solid var(--color-border-subtle);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .course-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--color-border);
+    }
+
+    .course-thumb-box {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      position: relative;
+      background: #242220;
+    }
+
+    .course-thumb-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .course-card-title {
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 40px;
+    }
+
+    .course-creator {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-top: -6px;
+    }
+
+    .course-card-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+      padding-top: 8px;
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    .search-empty-state {
+      grid-column: 1 / -1;
+      padding: 40px 20px;
+      text-align: center;
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      border: 1px dashed var(--color-border);
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      display: none;
+    }
+
+    /* 5. Add Course Modal Overlay */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(20, 19, 18, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-m);
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-sheet {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 520px;
+      padding: var(--space-l);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--color-border);
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-title {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: 6px;
+    }
+
+    .modal-desc {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      margin-bottom: var(--space-m);
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 44px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(47, 93, 80, 0.2);
+    }
+
+    .validation-hint {
+      font-size: 12px;
+      margin-top: 4px;
+      color: var(--color-error);
+      display: none;
+    }
+
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .toggle-info span {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text-primary);
+    }
+
+    .toggle-info small {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--color-border);
+      transition: .2s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--color-primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: var(--space-m);
+    }
+
+    /* 6. Empty State View */
+    .empty-state-card {
+      text-align: center;
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      padding: 60px var(--space-l);
+      max-width: 640px;
+      margin: 40px auto;
+      border: 1px solid var(--color-border-subtle);
+      box-shadow: var(--shadow-sm);
+      display: none;
+    }
+
+    .empty-icon-circle {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-pill);
+      background: var(--color-surface-muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      color: var(--color-primary);
+    }
+
+    .empty-icon-circle svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .empty-state-title {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .empty-state-desc {
+      font-size: 15px;
+      color: var(--color-text-secondary);
+      max-width: 460px;
+      margin: 0 auto 24px auto;
+      line-height: 1.5;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--color-primary);
+      color: #FFFFFF;
+      padding: 12px 20px;
+      border-radius: var(--radius-pill);
+      font-size: 14px;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.25s ease;
+      z-index: 9999;
+    }
+
+    #toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Demo Controls Bar */
+    .demo-bar {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-pill);
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-md);
+      font-size: 12px;
+      z-index: 90;
+    }
+
+    
+    /* Custom Floating Tooltip for Unabridged Card Content */
+    .sd-floating-tooltip {
+      position: fixed;
+      z-index: 10000;
+      max-width: 360px;
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+      border-radius: var(--radius-sm);
+      padding: 9px 13px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      line-height: 1.45;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(4px);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      word-wrap: break-word;
+      white-space: normal;
+    }
+    [data-theme="dark"] .sd-floating-tooltip {
+      background: #252220;
+      border-color: #443F3A;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+    }
+    .sd-floating-tooltip.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .sd-floating-tooltip-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 1100px) {
+      .top-deck-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .course-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 680px) {
+      .course-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Global Top Navigation Bar (Option C) -->
+  <header class="top-nav">
+    <div class="top-nav-inner">
+      <a href="dashboard.html" class="brand-logo" title="StudyDesk Dashboard">
+        <div class="brand-logo-mark">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path><path d="M6 6h10"></path><path d="M6 10h10"></path></svg>
+        </div>
+        <span class="brand-title">StudyDesk</span>
+      </a>
+
+      <div class="top-nav-actions">
+        <!-- Habit Streak Badge -->
+        <div class="streak-badge active-today" id="streakBadge" title="5 consecutive study days. Active today!">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M12 2c0 4-4 6-4 10a6 6 0 0 0 12 0c0-4-3-7-3-7s-1 2-2 3c-1-2-1-4-3-6z"></path>
+          </svg>
+          <span id="streakCountText">5 Day Streak</span>
+        </div>
+
+        <!-- Add Course Button -->
+        <button class="btn-add-course" id="btnAddCourseModal" title="Import a new YouTube playlist">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>+ Add Course</span>
+        </button>
+
+        <!-- Profile & Utilities Dropdown (Option C) -->
+        <div class="profile-menu-container" id="profileMenuContainer">
+          <button class="avatar-btn" id="profileAvatarBtn" aria-haspopup="true" aria-expanded="false" title="Account & Utilities">
+            <svg class="icon avatar-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </button>
+          <div class="profile-dropdown-menu" id="profileDropdownMenu" role="menu">
+            <div class="dropdown-header">
+              <span class="user-name">Student Account</span>
+              <span class="user-status">Self-paced Learner</span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item" id="themeToggleItem" role="menuitem">
+              <div class="item-content">
+                <span class="item-icon" id="menuThemeIcon">🌙</span>
+                <span class="item-label" id="menuThemeLabel">Theme: Warm Paper</span>
+              </div>
+            </button>
+            <button class="dropdown-item" id="shortcutsItem" role="menuitem">
+              <div class="item-content">
+                <span class="item-icon">⌨</span>
+                <span class="item-label">Keyboard Shortcuts</span>
+              </div>
+              <kbd>?</kbd>
+            </button>
+            <button class="dropdown-item" id="backupItem" role="menuitem">
+              <div class="item-content">
+                <span class="item-icon">💾</span>
+                <span class="item-label">Export Local Backup</span>
+              </div>
+            </button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item" id="appSettingsItem" role="menuitem">
+              <div class="item-content">
+                <span class="item-icon">⚙</span>
+                <span class="item-label">App Settings</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. Main Dashboard Container -->
+  <main class="dashboard-container" id="dashboardMain">
+    
+    <!-- Greeting Header -->
+    <header class="greeting-header">
+      <h1 class="greeting-title" id="mainGreetingTitle">Welcome back. Let's pick up where you left off.</h1>
+    </header>
+
+    <!-- Empty State View (Shown when user has 0 enrolled courses) -->
+    <div class="empty-state-card" id="emptyStateView">
+      <div class="empty-icon-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+        </svg>
+      </div>
+      <h2 class="empty-state-title">Your study space is ready.</h2>
+      <p class="empty-state-desc">
+        Turn passive YouTube watching into structured, active mastery. Paste any course playlist link to track progress, take synced notes, and study with active chapter quizzes.
+      </p>
+      <button class="btn btn-primary" style="height: 48px; padding: 0 24px; font-size: 15px;" onclick="openAddCourseModal()">
+        + Add Your First Course
+      </button>
+      <div style="margin-top: 14px; font-size: 13px; color: var(--color-text-secondary);">
+        Supports public and unlisted YouTube playlists.
+      </div>
+    </div>
+
+    <!-- Active Populated View -->
+    <div id="populatedView">
+      
+      <!-- TOP DECK: 3 SIDE-BY-SIDE CARDS -->
+      <section class="top-deck-grid" id="topDeckGrid">
+        
+        <!-- CARD 1: CONTINUE STUDYING (Priority Course — Compact) -->
+        <article class="deck-card priority-card" id="priorityCourseCard">
+          <div class="priority-content-box">
+            <span class="eyebrow-tag">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+              PRIORITY COURSE
+            </span>
+
+            <div class="priority-split">
+              <!-- Compact 16:9 Thumbnail -->
+              <div class="priority-thumb">
+                <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=400&q=80" alt="Python Bootcamp">
+                <span class="chapter-count-pill">14 chapters</span>
+              </div>
+
+              <!-- Details -->
+              <div class="priority-info">
+                <h2 class="priority-title" id="priorityCourseTitle" data-tooltip-header="Priority Course Title" data-tooltip-text="Python 3: From Scratch to Production" title="Python 3: From Scratch to Production">Python 3: From Scratch to Production</h2>
+                <p class="priority-lesson" id="priorityCourseLesson" data-tooltip-header="Active Lesson" data-tooltip-text="Ch 4 • Functions & Custom Decorators" title="Ch 4 • Functions & Custom Decorators">Ch 4 • Functions & Custom Decorators</p>
+              </div>
+            </div>
+
+            <!-- Progress & Deadline -->
+            <div style="margin: 6px 0;">
+              <div class="progress-label-row">
+                <span>Course Progress</span>
+                <span><strong>6 of 14 Chapters (43%)</strong></span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: 43%;"></div>
+              </div>
+            </div>
+
+            <!-- Amber strictly for near deadline -->
+            <span class="badge-chip urgent">
+              <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              3 days left to deadline
+            </span>
+          </div>
+
+          <!-- Actions -->
+          <div class="priority-actions">
+            <a href="learning-page.html?chapter=4&t=765" class="btn btn-primary" style="flex: 1; height: 38px; font-weight: 600;" onclick="handleNavClick(event, 'learning', 'learning-page.html?chapter=4&t=765')">
+              Resume Course →
+            </a>
+            <a href="course-page.html" class="btn btn-ghost" style="height: 38px;" onclick="handleNavClick(event, 'course', 'course-page.html')">
+              Overview ↗
+            </a>
+          </div>
+        </article>
+
+        <!-- CARD 2: QUICK QUIZ (Standalone MCQ - Completed Chapters Only, Non-Repeating) -->
+        <article class="deck-card" id="quickQuizCard">
+          <div id="quickQuizContent">
+            <div class="quiz-card-header">
+              <span class="eyebrow-tag quiz-eyebrow-wrapper">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span id="quizEyebrowText" data-tooltip-header="Quiz Topic Attribution" data-tooltip-text="QUICK QUIZ • PYTHON 3 (CH 4) • FUNCTIONS" title="QUICK QUIZ • PYTHON 3 (CH 4) • FUNCTIONS">QUICK QUIZ • PYTHON 3 (CH 4) • FUNCTIONS</span>
+              </span>
+              <span class="pool-counter-tag" id="quizCounterPill" title="Drawn strictly from completed chapters across your enrolled courses">1 of 8</span>
+            </div>
+
+            <h3 class="quiz-question-title" id="quizQuestionTitle" data-tooltip-header="Complete Question" data-tooltip-text="What is the primary purpose of the @functools.wraps decorator?" title="What is the primary purpose of the @functools.wraps decorator?">What is the primary purpose of the @functools.wraps decorator?</h3>
+
+            <div class="quiz-options-group" id="quizOptionsContainer">
+              <!-- Dynamically populated from completed chapters pool without repeating -->
+              <button class="quiz-choice" type="button" onclick="handleQuizAnswer(this, false)" data-tooltip-header="Option A" data-tooltip-text="A: It compiles the function into native C bytecode." title="A: It compiles the function into native C bytecode.">
+                <strong>A</strong>
+                <span>It compiles the function into native C bytecode.</span>
+              </button>
+              <button class="quiz-choice" type="button" onclick="handleQuizAnswer(this, true)" data-tooltip-header="Option B" data-tooltip-text="B: It preserves original function name & docstrings." title="B: It preserves original function name & docstrings.">
+                <strong>B</strong>
+                <span>It preserves original function name & docstrings.</span>
+              </button>
+              <button class="quiz-choice" type="button" onclick="handleQuizAnswer(this, false)" data-tooltip-header="Option C" data-tooltip-text="C: It executes the function in a background worker." title="C: It executes the function in a background worker.">
+                <strong>C</strong>
+                <span>It executes the function in a background worker.</span>
+              </button>
+            </div>
+
+            <p class="quiz-feedback" id="quizFeedbackText" data-tooltip-header="Explanation & Feedback"></p>
+          </div>
+
+          <!-- Deck Exhausted State (Shown when all questions from completed chapters are answered) -->
+          <div id="quickQuizExhausted" style="display: none; height: 100%;"></div>
+
+          <div class="card-footer-row" id="quizFooterRow">
+            <span class="report-link" onclick="openReportModal('Question', 'Report Quick Quiz Question')">⚑ Report</span>
+            <button class="btn btn-ghost" id="nextQuizBtn" style="height: 28px; padding: 0 10px; font-size: 12px;" onclick="cycleQuizQuestion()">
+              Next Question →
+            </button>
+          </div>
+        </article>
+
+        <!-- CARD 3: RECALL FLASHCARD (Standalone 3D Rotating Card - Completed Chapters Only, Non-Repeating) -->
+        <article class="deck-card" id="recallFlashcardCard" style="padding: 0; background: transparent; border: none; box-shadow: none;">
+          <div class="flashcard-perspective" id="flashcardContainer" tabindex="0" role="button" aria-label="Flip flashcard" onclick="rotateFlashcard()" onkeydown="handleFlashcardKey(event)">
+            <div class="flashcard-inner" id="recallRotatingCard">
+              
+              <!-- Front Face -->
+              <div class="flashcard-face flashcard-front">
+                <div>
+                  <div class="flashcard-header-row">
+                    <span class="eyebrow-tag" style="margin-bottom: 0; min-width: 0; flex: 1; margin-right: 8px;">
+                      <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                      <span id="fcFrontCourseText" data-tooltip-header="Flashcard Topic" data-tooltip-text="ACTIVE RECALL • PYTHON 3 (CH 4)" title="ACTIVE RECALL • PYTHON 3 (CH 4)">ACTIVE RECALL • PYTHON 3 (CH 4)</span>
+                    </span>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                      <span class="pool-counter-tag" id="fcCounterPill" title="Drawn strictly from completed chapters">1 of 6</span>
+                      <button class="report-btn-tag" type="button" onclick="event.stopPropagation(); openReportModal('Flashcard', 'Report Flashcard')">⚑ Report</button>
+                    </div>
+                  </div>
+                  <h3 class="flashcard-prompt-title" id="fcPromptTitle" data-tooltip-header="Recall Prompt" data-tooltip-text="Can you recall this topic: Python decorators?" title="Can you recall this topic: Python decorators?">Can you recall this topic: Python decorators?</h3>
+                  <p class="flashcard-prompt-sub" id="fcPromptSub" data-tooltip-header="Prompt Details" data-tooltip-text="Can you explain what a decorator does and give a real-world scenario where you would use one?" title="Can you explain what a decorator does and give a real-world scenario where you would use one?">
+                    Can you explain what a decorator does and give a real-world scenario where you would use one?
+                  </p>
+                </div>
+
+                <div class="flashcard-hint">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>
+                  Click card to rotate & reveal answer
+                </div>
+              </div>
+
+              <!-- Back Face (Rotated 180deg) -->
+              <div class="flashcard-face flashcard-back">
+                <div>
+                  <div class="flashcard-header-row">
+                    <span style="font-size: 11px; font-weight: 700; color: var(--color-success); text-transform: uppercase; min-width: 0; flex: 1; margin-right: 8px;" id="fcBackTopicText" data-tooltip-header="Reference Topic" data-tooltip-text="✓ Reference Explanation • Python 3 (Ch 4)" title="✓ Reference Explanation • Python 3 (Ch 4)">
+                      ✓ Reference Explanation • Python 3 (Ch 4)
+                    </span>
+                    <button class="report-btn-tag" type="button" style="flex-shrink: 0;" onclick="event.stopPropagation(); openReportModal('Flashcard', 'Report Flashcard')">⚑ Report</button>
+                  </div>
+                  <p class="flashcard-explanation" id="fcExplanationText" data-tooltip-header="Reference Explanation" data-tooltip-text="A decorator wraps an existing function to extend its behavior without altering its source code. Commonly used for web route registration, authentication, logging, and timing." title="A decorator wraps an existing function to extend its behavior without altering its source code. Commonly used for web route registration, authentication, logging, and timing." style="margin-top: 8px;">
+                    A decorator wraps an existing function to extend its behavior without altering its source code. Commonly used for web route registration, authentication, logging, and timing.
+                  </p>
+                </div>
+
+                <div class="flashcard-back-actions">
+                  <div style="display: flex; gap: 8px; margin-bottom: 6px;">
+                    <button class="btn btn-primary" type="button" style="flex: 1; height: 32px; font-size: 12px;" onclick="event.stopPropagation(); handleFlashcardGotIt()">
+                      Got it ✓
+                    </button>
+                    <button class="btn btn-ghost" type="button" style="flex: 1; height: 32px; font-size: 12px; background: var(--color-surface-muted);" onclick="event.stopPropagation(); handleReviewLater()">
+                      Review Later
+                    </button>
+                  </div>
+                  <div style="text-align: center; font-size: 11px; color: var(--color-text-secondary);">
+                    Click card again to flip back
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Flashcard Exhausted State -->
+          <div id="flashcardExhaustedCard" class="flashcard-face flashcard-front" style="display: none; height: 375px; min-height: 375px; max-height: 375px; box-sizing: border-box;"></div>
+        </article>
+
+      </section>
+
+      <!-- OTHER ENROLLED COURSES SECTION (Full Width Grid) -->
+      <section>
+        <div class="library-header">
+          <h2 class="library-title">
+            <span>Other Courses</span>
+            <span class="count-pill" id="courseCountBadge">3</span>
+          </h2>
+
+          <!-- Filter & Sort Controls Group -->
+          <div class="library-controls">
+            <!-- Search Box (Left of Sort) -->
+            <div class="course-search-box">
+              <span class="search-icon-inside">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              </span>
+              <input 
+                type="text" 
+                id="courseSearchInput" 
+                class="search-input-field" 
+                placeholder="Search courses..." 
+                oninput="filterCourses(this.value)"
+              >
+              <button id="clearSearchBtn" class="clear-search-btn" onclick="clearSearch()" title="Clear search">✕</button>
+            </div>
+
+            <!-- Sort Controls (Right of Search) -->
+            <div class="sort-control">
+              <label for="sortSelect">Sort by:</label>
+              <select id="sortSelect" class="select-dropdown" onchange="sortCourses(this.value)">
+                <option value="priority">Priority (Deadline Urgency)</option>
+                <option value="recent">Recently Studied</option>
+                <option value="completion">Completion %</option>
+                <option value="alphabetical">Alphabetical (A–Z)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3-Column Course Grid -->
+        <div class="course-grid" id="courseGrid">
+
+          <!-- Card 1 -->
+          <div class="course-card" onclick="handleNavClick(event, 'course', 'course-page.html')">
+            <div class="course-thumb-box">
+              <img src="https://images.unsplash.com/photo-1579468118864-1b9ea3c0db4a?auto=format&fit=crop&w=500&q=80" alt="JS Course">
+              <span class="chapter-count-pill">20 chapters</span>
+            </div>
+            <h3 class="course-card-title">JavaScript Under The Hood: V8 Engine & Event Loops</h3>
+            <p class="course-creator">Frontend Masters Series</p>
+            
+            <div>
+              <div class="progress-label-row">
+                <span>Progress</span>
+                <span>12 of 20 (60%)</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: 60%;"></div>
+              </div>
+            </div>
+
+            <span class="badge-chip">📅 Oct 24 (8 days left)</span>
+
+            <div class="course-card-actions">
+              <button class="btn btn-primary" type="button" style="height: 34px; padding: 0 14px; font-size: 13px;" onclick="event.stopPropagation(); handleNavClick(event, 'learning', 'learning-page.html?chapter=13&t=0')">
+                Resume
+              </button>
+              <span style="font-size: 13px; color: var(--color-primary); font-weight: 500;">Details →</span>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="course-card" onclick="handleNavClick(event, 'course', 'course-page.html')">
+            <div class="course-thumb-box">
+              <img src="https://images.unsplash.com/photo-1516116211227-bbc14187053d?auto=format&fit=crop&w=500&q=80" alt="DSA Course">
+              <span class="chapter-count-pill">18 chapters</span>
+            </div>
+            <h3 class="course-card-title">Data Structures & Algorithms: Mastering Graph Traversal</h3>
+            <p class="course-creator">CS Theory Lab</p>
+
+            <div>
+              <div class="progress-label-row">
+                <span>Progress</span>
+                <span>2 of 18 (11%)</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: 11%;"></div>
+              </div>
+            </div>
+
+            <span class="badge-chip">No deadline set</span>
+
+            <div class="course-card-actions">
+              <button class="btn btn-primary" type="button" style="height: 34px; padding: 0 14px; font-size: 13px;" onclick="event.stopPropagation(); handleNavClick(event, 'learning', 'learning-page.html?chapter=3&t=0')">
+                Resume
+              </button>
+              <span style="font-size: 13px; color: var(--color-primary); font-weight: 500;">Details →</span>
+            </div>
+          </div>
+
+          <!-- Card 3 (Completed) -->
+          <div class="course-card" onclick="handleNavClick(event, 'course', 'course-page.html')">
+            <div class="course-thumb-box">
+              <img src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=500&q=80" alt="Figma Course">
+              <span class="chapter-count-pill">14 chapters</span>
+            </div>
+            <h3 class="course-card-title">Figma 2026: Design Systems, Tokens, and Auto-Layout 5</h3>
+            <p class="course-creator">Design Classroom</p>
+
+            <div>
+              <div class="progress-label-row">
+                <span>Progress</span>
+                <span style="color: var(--color-success); font-weight: 600;">14 of 14 Completed ✓</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: 100%; background: var(--color-success);"></div>
+              </div>
+            </div>
+
+            <span class="badge-chip" style="color: var(--color-success); background: var(--color-success-bg);">Course Completed</span>
+
+            <div class="course-card-actions">
+              <button class="btn btn-secondary" type="button" style="height: 34px; padding: 0 14px; font-size: 13px;" onclick="event.stopPropagation(); handleNavClick(event, 'course', 'course-page.html')">
+                Review Course
+              </button>
+              <span style="font-size: 13px; color: var(--color-primary); font-weight: 500;">Details →</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- 5. Add Course Modal Overlay -->
+  <div class="modal-backdrop" id="addCourseModal">
+    <div class="modal-sheet">
+      <h2 class="modal-title">Add YouTube Course</h2>
+      <p class="modal-desc">Paste any YouTube playlist URL. We'll automatically organize chapters, set up notes, and prepare quizzes.</p>
+
+      <form id="addCourseForm" onsubmit="handleCourseSubmit(event)">
+        <!-- URL Input -->
+        <div class="form-group">
+          <label class="form-label" for="playlistUrlInput">YouTube Playlist URL</label>
+          <input 
+            type="text" 
+            id="playlistUrlInput" 
+            class="form-input" 
+            placeholder="https://www.youtube.com/playlist?list=PL..." 
+            oninput="validatePlaylistUrl(this.value)"
+            required
+          >
+          <div class="validation-hint" id="urlValidationHint">
+            ⚠️ MVP supports YouTube playlists only. Standalone video links cannot be imported.
+          </div>
+        </div>
+
+        <!-- Course Title -->
+        <div class="form-group">
+          <label class="form-label" for="courseTitleInput">Course Name</label>
+          <input 
+            type="text" 
+            id="courseTitleInput" 
+            class="form-input" 
+            placeholder="Course name will auto-populate from YouTube..." 
+            value="Machine Learning with PyTorch & HuggingFace"
+          >
+        </div>
+
+        <!-- Target Deadline -->
+        <div class="form-group">
+          <label class="form-label" for="deadlineInput">Target Deadline (Optional)</label>
+          <input 
+            type="date" 
+            id="deadlineInput" 
+            class="form-input"
+          >
+        </div>
+
+        <!-- Toggles -->
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span>Generate Flashcards</span>
+            <small>Creates spaced revision flashcards from transcripts</small>
+          </div>
+          <label class="switch">
+            <input type="checkbox" checked id="toggleFlashcards">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span>End-of-Chapter Quizzes</span>
+            <small>Active recall MCQs after each lesson</small>
+          </div>
+          <label class="switch">
+            <input type="checkbox" checked id="toggleQuizzes">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Actions -->
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" onclick="closeAddCourseModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="confirmAddBtn">Confirm & Import Course</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts Modal -->
+  <div class="modal-backdrop" id="shortcutsModal" onclick="if(event.target === this) closeShortcutsModal()">
+    <div class="modal-sheet">
+      <h3 class="modal-title">Keyboard Shortcuts</h3>
+      <p class="modal-desc">Essential shortcuts for distraction-free study and video navigation.</p>
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border-subtle); font-size: 14px;">
+          <span>Play / Pause Lecture</span>
+          <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">Space</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border-subtle); font-size: 14px;">
+          <span>Seek Backward / Forward 10s</span>
+          <div style="display: flex; gap: 4px;">
+            <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">J</kbd>
+            <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">L</kbd>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border-subtle); font-size: 14px;">
+          <span>Capture Timestamped Note</span>
+          <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">T</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border-subtle); font-size: 14px;">
+          <span>Distraction-Free Mode</span>
+          <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">F</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--color-border-subtle); font-size: 14px;">
+          <span>Toggle Shortcuts Sheet</span>
+          <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">?</kbd>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 14px;">
+          <span>Close Modals / Dropdowns</span>
+          <kbd style="font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: 4px;">Esc</kbd>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" onclick="closeShortcutsModal()">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Question / Flashcard Modal Popover Card -->
+  <div class="report-popover-backdrop" id="reportPopoverBackdrop" onclick="if(event.target === this) closeReportPopover()">
+    <div class="report-popover-card" onclick="event.stopPropagation()">
+      <div class="report-header">
+        <div class="report-header-title">
+          <svg class="icon" viewBox="0 0 24 24" style="width: 16px; height: 16px; stroke: var(--color-primary);"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+          <span id="reportCardTitle">Report Question</span>
+        </div>
+        <button class="btn-report-close" type="button" onclick="closeReportPopover()" title="Close">✕</button>
+      </div>
+      <p class="report-subtext" id="reportCardSubtext">Help us keep study materials accurate and clear.</p>
+
+      <div class="report-category-group">
+        <label class="report-field-label">Issue Category</label>
+        <div class="report-chips-row">
+          <button type="button" class="report-chip active" onclick="selectReportCategory(this)">Incorrect Answer</button>
+          <button type="button" class="report-chip" onclick="selectReportCategory(this)">Typo / Grammar</button>
+          <button type="button" class="report-chip" onclick="selectReportCategory(this)">Unclear Phrasing</button>
+          <button type="button" class="report-chip" onclick="selectReportCategory(this)">Other</button>
+        </div>
+      </div>
+
+      <div class="report-input-group">
+        <label class="report-field-label" for="reportReasonInput">Reason / Details</label>
+        <textarea id="reportReasonInput" class="report-textarea" rows="3" placeholder="Briefly describe what needs correction..."></textarea>
+      </div>
+
+      <div class="report-actions-row">
+        <button type="button" class="btn btn-ghost" style="height: 32px; padding: 0 14px; font-size: 13px;" onclick="closeReportPopover()">Cancel</button>
+        <button type="button" class="btn btn-primary" style="height: 32px; padding: 0 16px; font-size: 13px;" onclick="submitReport()">Submit Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Bar -->
+  <div id="toast">Action logged</div>
+
+  <!-- Demo State Switcher (To test: Active Learner, Early Learner, Brand New User) -->
+  <div class="demo-bar">
+    <span style="font-weight: 600; color: var(--color-primary);">Demo Lifecycle:</span>
+    <button class="btn btn-ghost" style="height: 26px; padding: 0 10px; font-size: 12px; background: var(--color-surface-muted);" onclick="cycleDemoLifecycle()">
+      State: <strong id="demoLifecycleLabel" style="margin-left: 4px;">Active Learner</strong> ▾
+    </button>
+  </div>
+
+  <!-- Client-Side JavaScript Logic -->
+  <script>
+        // 1. Theme Management (Light vs Dark) - Bulletproof Multi-Channel Engine
+    let themeBroadcastChannel = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        themeBroadcastChannel = new BroadcastChannel('studydesk_theme_sync');
+      }
+    } catch (e) {}
+
+    function getStoredTheme() {
+      if (window.parent && window.parent !== window) {
+        try {
+          if (window.parent.document && window.parent.document.documentElement) {
+            const pTheme = window.parent.document.documentElement.getAttribute('data-theme');
+            if (pTheme === 'dark' || pTheme === 'light') return pTheme;
+          }
+        } catch (e) {}
+        try {
+          if (typeof window.parent.globalTheme === 'string' && (window.parent.globalTheme === 'dark' || window.parent.globalTheme === 'light')) {
+            return window.parent.globalTheme;
+          }
+        } catch (e) {}
+      }
+
+      try {
+        const ls = localStorage.getItem('studydesk_theme');
+        if (ls === 'dark' || ls === 'light') return ls;
+      } catch (e) {}
+
+      if (window.parent && window.parent !== window) {
+        try {
+          const pls = window.parent.localStorage.getItem('studydesk_theme');
+          if (pls === 'dark' || pls === 'light') return pls;
+        } catch (e) {}
+      }
+
+      try {
+        const dom = document.documentElement.getAttribute('data-theme');
+        if (dom === 'dark' || dom === 'light') return dom;
+      } catch (e) {}
+
+      try {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          return 'dark';
+        }
+      } catch (e) {}
+
+      return 'light';
+    }
+
+    function setStoredTheme(theme) {
+      try {
+        localStorage.setItem('studydesk_theme', theme);
+      } catch (e) {}
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.localStorage.setItem('studydesk_theme', theme);
+        } catch (e) {}
+        try {
+          window.parent.globalTheme = theme;
+          window.parent.document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      }
+    }
+
+    function applyTheme(theme, broadcast = true) {
+      const validTheme = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', validTheme);
+      setStoredTheme(validTheme);
+      updateThemeDropdownUI(validTheme);
+
+      if (broadcast) {
+        if (themeBroadcastChannel) {
+          try {
+            themeBroadcastChannel.postMessage({ type: 'SD_THEME_CHANGE', theme: validTheme });
+          } catch (e) {}
+        }
+        if (window.parent && window.parent !== window) {
+          try {
+            window.parent.postMessage({ type: 'SD_THEME_CHANGE', theme: validTheme }, '*');
+          } catch (e) {}
+        }
+      }
+    }
+
+    function syncWithStoredTheme() {
+      const savedTheme = getStoredTheme();
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      if (savedTheme && savedTheme !== currentTheme) {
+        applyTheme(savedTheme, false);
+      }
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(nextTheme, true);
+      closeProfileDropdown();
+      showToast(`Switched to ${nextTheme === 'dark' ? 'Warm Espresso Dark Mode' : 'Warm Paper Light Mode'}`);
+    }
+
+    function setupTheme() {
+      const currentDomTheme = document.documentElement.getAttribute('data-theme');
+      const preferred = currentDomTheme || getStoredTheme();
+      applyTheme(preferred, false);
+
+      const item = document.getElementById('themeToggleItem');
+      if (item && !item.dataset.bound) {
+        item.dataset.bound = 'true';
+        item.addEventListener('click', toggleTheme);
+      }
+    }
+
+    function updateThemeDropdownUI(theme) {
+      const icon = document.getElementById('menuThemeIcon');
+      const label = document.getElementById('menuThemeLabel');
+      if (icon && label) {
+        if (theme === 'dark') {
+          icon.textContent = '☀️';
+          label.textContent = 'Theme: Warm Espresso (Switch to Paper)';
+        } else {
+          icon.textContent = '🌙';
+          label.textContent = 'Theme: Warm Paper (Switch to Dark)';
+        }
+      }
+    }
+
+    // 5-Way Redundant Cross-frame and Cross-tab Synchronization:
+    // 1. BroadcastChannel (Modern cross-tab)
+    if (themeBroadcastChannel) {
+      themeBroadcastChannel.onmessage = (e) => {
+        if (e.data && e.data.theme) {
+          applyTheme(e.data.theme, false);
+        }
+      };
+    }
+
+    // 2. Storage event (Standard cross-tab)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'studydesk_theme' && e.newValue) {
+        applyTheme(e.newValue, false);
+      }
+    });
+
+    // 3. postMessage (Parent-child iframe)
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'SD_THEME_CHANGE' && e.data.theme) {
+        applyTheme(e.data.theme, false);
+      }
+    });
+
+    // 4. Focus, visibilitychange, and pageshow events
+    window.addEventListener('focus', syncWithStoredTheme);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') syncWithStoredTheme();
+    });
+    window.addEventListener('pageshow', syncWithStoredTheme);
+
+    // 5. Active polling interval
+    setInterval(syncWithStoredTheme, 300);
+
+    // Bulletproof Navigation Helper for Parent Shell vs Standalone
+    function navigateToPage(event, target, url) {
+      if (event) {
+        try { event.preventDefault(); } catch(e) {}
+        try { event.stopPropagation(); } catch(e) {}
+      }
+      if (window.parent && window.parent !== window) {
+        try {
+          window.parent.postMessage({ type: 'SD_NAVIGATE', target: target, url: url }, '*');
+          return;
+        } catch(e) {}
+      }
+      window.location.href = url;
+    }
+    const handleNavClick = navigateToPage;
+
+    // Capture-phase navigation interceptor for seamless parent shell integration
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a');
+      if (link && link.getAttribute('href')) {
+        const href = link.getAttribute('href');
+        if (href.startsWith('course-page.html')) {
+          navigateToPage(e, 'course', href);
+        } else if (href.startsWith('learning-page.html')) {
+          navigateToPage(e, 'learning', href);
+        }
+      }
+    }, true);
+
+    // Profile & Utilities Dropdown
+    function toggleProfileDropdown(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('profileDropdownMenu');
+      const btn = document.getElementById('profileAvatarBtn');
+      const isOpen = menu.classList.contains('open');
+      if (isOpen) {
+        closeProfileDropdown();
+      } else {
+        menu.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    function closeProfileDropdown() {
+      const menu = document.getElementById('profileDropdownMenu');
+      const btn = document.getElementById('profileAvatarBtn');
+      if (menu) menu.classList.remove('open');
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+
+    // Keyboard Shortcuts Modal
+    function openShortcutsModal() {
+      closeProfileDropdown();
+      document.getElementById('shortcutsModal').classList.add('open');
+    }
+
+    function closeShortcutsModal() {
+      document.getElementById('shortcutsModal').classList.remove('open');
+    }
+
+    // Export Data Backup
+    function exportDataBackup() {
+      closeProfileDropdown();
+      const backupData = {
+        app: "StudyDesk",
+        version: "1.0-mvp",
+        exportedAt: new Date().toISOString(),
+        theme: document.documentElement.getAttribute('data-theme') || 'light',
+        streak: { count: 5, activeToday: true },
+        courses: [
+          { id: "python-3", title: "Python 3: From Scratch to Production", chapters: 14, completed: 8 },
+          { id: "js-deep-dive", title: "JavaScript Deep Dive: Closures to Async", chapters: 20, completed: 12 },
+          { id: "dsa-graphs", title: "DSA: Graph Traversal & Dynamic Programming", chapters: 18, completed: 2 }
+        ]
+      };
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `studydesk-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("Local data backup exported: studydesk-backup.json ✓");
+    }
+
+    // App Settings
+    function openAppSettings() {
+      closeProfileDropdown();
+      showToast("App Settings: 20m focus interval • 5m pause • Local sync active");
+    }
+
+    // Global keyboard and click listeners
+    document.addEventListener('click', (e) => {
+      const container = document.getElementById('profileMenuContainer');
+      if (container && !container.contains(e.target)) {
+        closeProfileDropdown();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeProfileDropdown();
+        closeShortcutsModal();
+        closeAddCourseModal();
+        closeReportPopover();
+      }
+      if (e.key === '?' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        e.preventDefault();
+        openShortcutsModal();
+      }
+    });
+
+    // Report Question / Flashcard Handlers
+    let currentReportItemType = 'Question';
+    function openReportModal(type, title) {
+      currentReportItemType = type || 'Question';
+      const backdrop = document.getElementById('reportPopoverBackdrop');
+      const titleEl = document.getElementById('reportCardTitle');
+      const subtextEl = document.getElementById('reportCardSubtext');
+      const textarea = document.getElementById('reportReasonInput');
+      
+      if (titleEl) titleEl.textContent = title || `Report ${currentReportItemType}`;
+      if (subtextEl) subtextEl.textContent = `Help us keep this ${currentReportItemType.toLowerCase()} accurate and clear.`;
+      if (textarea) textarea.value = '';
+      
+      document.querySelectorAll('.report-chip').forEach((c, idx) => {
+        c.classList.toggle('active', idx === 0);
+      });
+      
+      if (backdrop) backdrop.classList.add('open');
+      if (textarea) textarea.focus();
+    }
+
+    function closeReportPopover() {
+      const backdrop = document.getElementById('reportPopoverBackdrop');
+      if (backdrop) backdrop.classList.remove('open');
+    }
+
+    function selectReportCategory(chip) {
+      document.querySelectorAll('.report-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    }
+
+    function submitReport() {
+      const textarea = document.getElementById('reportReasonInput');
+      const activeChip = document.querySelector('.report-chip.active');
+      const category = activeChip ? activeChip.textContent : 'General';
+      const reason = textarea ? textarea.value.trim() : '';
+      
+      closeReportPopover();
+      showToast(`Report submitted (${category}). Thank you for your feedback!`);
+    }
+
+    // Navigation & Dropdown Event Listeners
+    function setupNavListeners() {
+      const addBtn = document.getElementById('btnAddCourseModal');
+      if (addBtn) addBtn.addEventListener('click', openAddCourseModal);
+
+      const avatarBtn = document.getElementById('profileAvatarBtn');
+      if (avatarBtn) avatarBtn.addEventListener('click', toggleProfileDropdown);
+
+
+
+      const shortcuts = document.getElementById('shortcutsItem');
+      if (shortcuts) shortcuts.addEventListener('click', openShortcutsModal);
+
+      const backup = document.getElementById('backupItem');
+      if (backup) backup.addEventListener('click', exportDataBackup);
+
+      const settings = document.getElementById('appSettingsItem');
+      if (settings) settings.addEventListener('click', openAppSettings);
+    }
+
+    // Run on load
+    setupTheme();
+    setupNavListeners();
+
+    // 2. Add Course Modal Controls
+    function openAddCourseModal() {
+      closeProfileDropdown();
+      document.getElementById('addCourseModal').classList.add('open');
+      document.getElementById('playlistUrlInput').focus();
+    }
+
+    function closeAddCourseModal() {
+      document.getElementById('addCourseModal').classList.remove('open');
+    }
+
+    // Validate Playlist-only constraint
+    function validatePlaylistUrl(url) {
+      const hint = document.getElementById('urlValidationHint');
+      const confirmBtn = document.getElementById('confirmAddBtn');
+      
+      if (!url) {
+        hint.style.display = 'none';
+        confirmBtn.disabled = false;
+        return;
+      }
+
+      // Check for standalone video vs playlist
+      const isSingleVideo = url.includes('watch?v=') && !url.includes('list=');
+      if (isSingleVideo) {
+        hint.style.display = 'block';
+        hint.textContent = '⚠️ MVP supports YouTube playlists only. Standalone video links cannot be imported.';
+        confirmBtn.disabled = true;
+      } else {
+        hint.style.display = 'none';
+        confirmBtn.disabled = false;
+      }
+    }
+
+    function handleCourseSubmit(e) {
+      e.preventDefault();
+      const title = document.getElementById('courseTitleInput').value || 'New Enrolled Course';
+      closeAddCourseModal();
+      showToast(`Successfully imported: "${title}"!`);
+
+      // Add new card to grid
+      const grid = document.getElementById('courseGrid');
+      const newCard = document.createElement('div');
+      newCard.className = 'course-card';
+      newCard.onclick = () => showToast(`Opening ${title} Course Page`);
+      newCard.innerHTML = `
+        <div class="course-thumb-box">
+          <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=500&q=80" alt="New Course">
+          <span class="chapter-count-pill">12 chapters</span>
+        </div>
+        <h3 class="course-card-title">${escapeHtml(title)}</h3>
+        <p class="course-creator">Custom YouTube Playlist</p>
+        <div>
+          <div class="progress-label-row">
+            <span>Progress</span>
+            <span>0 of 12 (0%)</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+        <span class="badge-chip">Just enrolled</span>
+        <div class="course-card-actions">
+          <button class="btn btn-primary" type="button" style="height: 34px; padding: 0 14px; font-size: 13px;" onclick="event.stopPropagation(); showToast('Starting lesson 1...')">
+            Start Course
+          </button>
+          <span style="font-size: 13px; color: var(--color-primary); font-weight: 500;">Details →</span>
+        </div>
+      `;
+      grid.prepend(newCard);
+      const countEl = document.getElementById('courseCountBadge');
+      countEl.textContent = parseInt(countEl.textContent) + 1;
+    }
+
+    // ===================================================================
+    // DATA MODEL: ENROLLED COURSES & CHAPTER COMPLETION PROGRESS
+    // ===================================================================
+    const ENROLLED_COURSES = [
+      {
+        id: "python-3",
+        title: "Python 3: From Scratch to Production",
+        shortTitle: "Python 3",
+        chapters: [
+          { id: "py-ch-1", num: 1, title: "Environment & Modern Setup", isCompleted: true },
+          { id: "py-ch-2", num: 2, title: "Primitive Types & Memory Model", isCompleted: true },
+          { id: "py-ch-3", num: 3, title: "Control Flow & List Comprehensions", isCompleted: true },
+          { id: "py-ch-4", num: 4, title: "Functions & Custom Decorators", isCompleted: true },
+          { id: "py-ch-5", num: 5, title: "OOP Design & Dunder Methods", isCompleted: true },
+          { id: "py-ch-6", num: 6, title: "Generators & Memory Profiling", isCompleted: true },
+          // Uncompleted chapters (strictly excluded by filter):
+          { id: "py-ch-7", num: 7, title: "Asyncio Event Loops & Tasks", isCompleted: false },
+          { id: "py-ch-8", num: 8, title: "Multiprocessing & Concurrency", isCompleted: false },
+          { id: "py-ch-9", num: 9, title: "Metaclasses & C Extensions", isCompleted: false }
+        ]
+      },
+      {
+        id: "js-deep-dive",
+        title: "JavaScript Deep Dive: Closures to Async",
+        shortTitle: "JavaScript",
+        chapters: [
+          { id: "js-ch-1", num: 1, title: "Execution Context & Call Stack", isCompleted: true },
+          { id: "js-ch-2", num: 2, title: "Scope Chain & Lexical Environment", isCompleted: true },
+          { id: "js-ch-3", num: 3, title: "Closures & Memory Retention", isCompleted: true },
+          { id: "js-ch-4", num: 4, title: "Prototypes & Prototypal Inheritance", isCompleted: true },
+          { id: "js-ch-5", num: 5, title: "this Keyword & Explicit Binding", isCompleted: true },
+          { id: "js-ch-6", num: 6, title: "Event Loop & Microtask Queue", isCompleted: true },
+          { id: "js-ch-7", num: 7, title: "Promises & Async/Await Internals", isCompleted: true },
+          // Uncompleted chapters:
+          { id: "js-ch-14", num: 14, title: "V8 Optimization Internals", isCompleted: false }
+        ]
+      },
+      {
+        id: "dsa-graphs",
+        title: "DSA: Graph Traversal & Dynamic Programming",
+        shortTitle: "DSA Graphs",
+        chapters: [
+          { id: "dsa-ch-1", num: 1, title: "Adjacency List & Matrix Representations", isCompleted: true },
+          { id: "dsa-ch-2", num: 2, title: "Breadth-First Search & Shortest Path", isCompleted: true },
+          // Uncompleted chapters:
+          { id: "dsa-ch-5", num: 5, title: "Dijkstra Algorithm & Priority Queues", isCompleted: false },
+          { id: "dsa-ch-10", num: 10, title: "Dynamic Programming Knapsack", isCompleted: false }
+        ]
+      },
+      {
+        id: "typescript-prod",
+        title: "TypeScript in Production: Zero to Advanced",
+        shortTitle: "TypeScript",
+        chapters: [
+          { id: "ts-ch-1", num: 1, title: "Strict Type Narrowing & typeof", isCompleted: true },
+          { id: "ts-ch-2", num: 2, title: "Discriminated Unions & Exhaustiveness", isCompleted: true },
+          { id: "ts-ch-3", num: 3, title: "Generics & Constraint Bounds", isCompleted: true },
+          // Uncompleted chapters:
+          { id: "ts-ch-14", num: 14, title: "Compiler API & AST Transformation", isCompleted: false }
+        ]
+      }
+    ];
+
+    // ===================================================================
+    // MASTER QUESTION POOL (Strict Chapter & Course Metadata)
+    // ===================================================================
+    const QUESTION_BANK = [
+      {
+        id: "q-py-1",
+        courseId: "python-3",
+        courseTitle: "Python 3",
+        chapterId: "py-ch-4",
+        chapterNum: 4,
+        chapterTitle: "Functions & Custom Decorators",
+        topic: "Functions",
+        question: "What is the primary purpose of the @functools.wraps decorator?",
+        options: [
+          { label: "A", text: "It compiles the function into native C bytecode.", correct: false },
+          { label: "B", text: "It preserves original function name, docstrings & annotations.", correct: true },
+          { label: "C", text: "It executes the function in a background worker thread.", correct: false }
+        ],
+        explanation: "@functools.wraps copies original function identity and introspection docstrings onto the wrapper."
+      },
+      {
+        id: "q-py-2",
+        courseId: "python-3",
+        courseTitle: "Python 3",
+        chapterId: "py-ch-3",
+        chapterNum: 3,
+        chapterTitle: "Control Flow & List Comprehensions",
+        topic: "Comprehensions",
+        question: "What is the key operational advantage of a generator expression over an equivalent list comprehension?",
+        options: [
+          { label: "A", text: "It executes in parallel across multi-core CPU threads.", correct: false },
+          { label: "B", text: "It evaluates lazily on-demand, consuming O(1) constant memory.", correct: true },
+          { label: "C", text: "It automatically memoizes all previous return values in RAM.", correct: false }
+        ],
+        explanation: "Generator expressions yield items lazily on demand without building the full list in memory."
+      },
+      {
+        id: "q-py-3",
+        courseId: "python-3",
+        courseTitle: "Python 3",
+        chapterId: "py-ch-5",
+        chapterNum: 5,
+        chapterTitle: "OOP Design & Dunder Methods",
+        topic: "Dunder Methods",
+        question: "In Python OOP, what is the fundamental design difference between __repr__ and __str__?",
+        options: [
+          { label: "A", text: "__repr__ is for developers/debugging; __str__ is an informal readable display for users.", correct: true },
+          { label: "B", text: "__str__ is mandatory for garbage collection; __repr__ is optional.", correct: false },
+          { label: "C", text: "__repr__ only works on dataclasses; __str__ works on standard classes.", correct: false }
+        ],
+        explanation: "__repr__ aims to be unambiguous and evaluable code, while __str__ is for end-user readability."
+      },
+      {
+        id: "q-js-1",
+        courseId: "js-deep-dive",
+        courseTitle: "JavaScript",
+        chapterId: "js-ch-6",
+        chapterNum: 6,
+        chapterTitle: "Event Loop & Microtask Queue",
+        topic: "Event Loop",
+        question: "In the JavaScript event loop, which queue is completely drained before processing the next macrotask?",
+        options: [
+          { label: "A", text: "The setTimeout and setInterval callback timer queue.", correct: false },
+          { label: "B", text: "The Microtask Queue (e.g. Promise.then and queueMicrotask).", correct: true },
+          { label: "C", text: "The network I/O polling callback queue.", correct: false }
+        ],
+        explanation: "The microtask queue is fully drained after each macrotask and before the browser renders."
+      },
+      {
+        id: "q-js-2",
+        courseId: "js-deep-dive",
+        courseTitle: "JavaScript",
+        chapterId: "js-ch-3",
+        chapterNum: 3,
+        chapterTitle: "Closures & Memory Retention",
+        topic: "Closures",
+        question: "Why can an inner JavaScript function access variables from an outer function after the outer function has returned?",
+        options: [
+          { label: "A", text: "A closure preserves references to its surrounding lexical environment.", correct: true },
+          { label: "B", text: "Variables are copied into the window global prototype registry.", correct: false },
+          { label: "C", text: "The engine serializes scope variables into localStorage.", correct: false }
+        ],
+        explanation: "Functions retain a reference to their enclosing lexical scope, keeping referenced variables alive."
+      },
+      {
+        id: "q-js-3",
+        courseId: "js-deep-dive",
+        courseTitle: "JavaScript",
+        chapterId: "js-ch-4",
+        chapterNum: 4,
+        chapterTitle: "Prototypes & Prototypal Inheritance",
+        topic: "Prototypes",
+        question: "When a property lookup fails on an object instance, where does the JavaScript runtime look next?",
+        options: [
+          { label: "A", text: "Traverses up the [[Prototype]] chain via Object.getPrototypeOf.", correct: true },
+          { label: "B", text: "Immediately checks the parent HTML document window object.", correct: false },
+          { label: "C", text: "Reads the bytecode cache of the V8 JIT compiler.", correct: false }
+        ],
+        explanation: "Property lookups navigate up the prototype chain until the property is found or null is reached."
+      },
+      {
+        id: "q-dsa-1",
+        courseId: "dsa-graphs",
+        courseTitle: "DSA Graphs",
+        chapterId: "dsa-ch-1",
+        chapterNum: 1,
+        chapterTitle: "Adjacency List & Matrix Representations",
+        topic: "Graph Representations",
+        question: "What is the space complexity of an adjacency list for a graph with V vertices and E edges?",
+        options: [
+          { label: "A", text: "O(V²) regardless of the number of edges.", correct: false },
+          { label: "B", text: "O(V + E) for directed graphs (or O(V + 2E) for undirected).", correct: true },
+          { label: "C", text: "O(E log V) due to binary tree pointers.", correct: false }
+        ],
+        explanation: "Adjacency lists only allocate space for edges that actually exist, yielding O(V + E) memory."
+      },
+      {
+        id: "q-dsa-2",
+        courseId: "dsa-graphs",
+        courseTitle: "DSA Graphs",
+        chapterId: "dsa-ch-2",
+        chapterNum: 2,
+        chapterTitle: "Breadth-First Search & Shortest Path",
+        topic: "BFS Traversal",
+        question: "Why is Breadth-First Search (BFS) guaranteed to find the shortest path in an unweighted graph?",
+        options: [
+          { label: "A", text: "Because it uses a FIFO queue to visit vertices layer-by-layer in distance order.", correct: true },
+          { label: "B", text: "Because it backtracks whenever a visited cycle is encountered.", correct: false },
+          { label: "C", text: "Because it continually relaxes edge weights using a min-heap.", correct: false }
+        ],
+        explanation: "BFS explores all vertices at distance k before moving to k+1, ensuring the first reach is the shortest path."
+      },
+      {
+        id: "q-ts-1",
+        courseId: "typescript-prod",
+        courseTitle: "TypeScript",
+        chapterId: "ts-ch-2",
+        chapterNum: 2,
+        chapterTitle: "Discriminated Unions & Exhaustiveness",
+        topic: "Discriminated Unions",
+        question: "What is the essential requirement for TypeScript to narrow a Discriminated Union type safely?",
+        options: [
+          { label: "A", text: "A shared literal property (discriminant tag) across every member type.", correct: true },
+          { label: "B", text: "Type casting every variable with the 'as any' operator.", correct: false },
+          { label: "C", text: "All union members must extend an abstract base class.", correct: false }
+        ],
+        explanation: "A common literal discriminant property allows control flow analysis to narrow the union branches."
+      },
+      // Uncompleted chapter question in bank (strictly excluded by filter test):
+      {
+        id: "q-py-uncompleted",
+        courseId: "python-3",
+        courseTitle: "Python 3",
+        chapterId: "py-ch-7",
+        chapterNum: 7,
+        chapterTitle: "Asyncio Event Loops & Tasks",
+        topic: "Asyncio",
+        question: "Uncompleted question test",
+        options: [{ label: "A", text: "Test", correct: true }],
+        explanation: "Should never be shown."
+      }
+    ];
+
+    // ===================================================================
+    // MASTER FLASHCARD POOL (Strict Chapter & Course Metadata)
+    // ===================================================================
+    const FLASHCARD_BANK = [
+      {
+        id: "fc-py-1",
+        courseId: "python-3",
+        courseTitle: "Python 3",
+        chapterId: "py-ch-4",
+        chapterNum: 4,
+        chapterTitle: "Functions & Custom Decorators",
+        topic: "Python Decorators",
+        promptTitle: "Can you recall this topic: Python decorators?",
+        promptSub: "Can you explain what a decorator does and give a real-world scenario where you would use one?",
+        explanation: "A decorator wraps an existing function to extend its behavior without altering its source code. Commonly used for web route registration, authentication guards, structured logging, and execution timing."
+      },
+      {
+        id: "fc-py-2",
+        courseId: "python-3",
+        courseTitle: "Python 3",
+        chapterId: "py-ch-3",
+        chapterNum: 3,
+        chapterTitle: "Control Flow & List Comprehensions",
+        topic: "List Comprehensions vs Generators",
+        promptTitle: "Can you recall: List Comprehensions vs Generators?",
+        promptSub: "How do list comprehensions differ from generator expressions in memory consumption and evaluation timing?",
+        explanation: "List comprehensions [x for x in data] build the entire list immediately in RAM (O(N) memory). Generator expressions (x for x in data) evaluate lazily on-demand via the iterator protocol (O(1) memory)."
+      },
+      {
+        id: "fc-py-3",
+        courseId: "python-3",
+        courseTitle: "Python 3",
+        chapterId: "py-ch-5",
+        chapterNum: 5,
+        chapterTitle: "OOP Design & Dunder Methods",
+        topic: "Dunder __repr__ vs __str__",
+        promptTitle: "Can you recall: __repr__ vs __str__ in Python?",
+        promptSub: "When should you implement __repr__ vs __str__, and what does Python fallback to if __str__ is missing?",
+        explanation: "__repr__ is intended for developers/debugging (aiming to be unambiguous or valid code). __str__ is for end-user readable output. If __str__ is not defined, Python automatically falls back to __repr__."
+      },
+      {
+        id: "fc-js-1",
+        courseId: "js-deep-dive",
+        courseTitle: "JavaScript",
+        chapterId: "js-ch-6",
+        chapterNum: 6,
+        chapterTitle: "Event Loop & Microtask Queue",
+        topic: "Microtasks vs Macrotasks",
+        promptTitle: "Can you recall: Microtasks vs Macrotasks?",
+        promptSub: "In what exact order does the JavaScript runtime execute Promise microtasks relative to setTimeout macrotasks?",
+        explanation: "After the current synchronous execution context empties, the runtime drains the ENTIRE microtask queue (Promise.then, queueMicrotask) before picking the next macrotask (setTimeout, setInterval, I/O)."
+      },
+      {
+        id: "fc-js-2",
+        courseId: "js-deep-dive",
+        courseTitle: "JavaScript",
+        chapterId: "js-ch-3",
+        chapterNum: 3,
+        chapterTitle: "Closures & Memory Retention",
+        topic: "JavaScript Closures",
+        promptTitle: "Can you recall: JavaScript Closures?",
+        promptSub: "How does JavaScript retain access to variables in an outer function after that outer function has returned?",
+        explanation: "Functions in JS maintain a hidden [[Environment]] reference to their lexical scope. When an inner function outlives its parent, the engine keeps that lexical environment alive in heap memory rather than garbage collecting it."
+      },
+      {
+        id: "fc-dsa-1",
+        courseId: "dsa-graphs",
+        courseTitle: "DSA Graphs",
+        chapterId: "dsa-ch-2",
+        chapterNum: 2,
+        chapterTitle: "Breadth-First Search & Shortest Path",
+        topic: "BFS Shortest Path Guarantee",
+        promptTitle: "Can you recall: BFS Shortest Path Guarantee?",
+        promptSub: "Under what conditions does BFS guarantee the shortest path, and why does DFS fail to provide this guarantee?",
+        explanation: "BFS guarantees the shortest path strictly in UNWEIGHTED graphs because it explores outwards level-by-level in concentric rings using a FIFO queue. DFS wanders arbitrarily deep down one branch and may find a much longer path first."
+      },
+      {
+        id: "fc-ts-1",
+        courseId: "typescript-prod",
+        courseTitle: "TypeScript",
+        chapterId: "ts-ch-2",
+        chapterNum: 2,
+        chapterTitle: "Discriminated Unions & Exhaustiveness",
+        topic: "Discriminated Unions",
+        promptTitle: "Can you recall: Discriminated Unions in TypeScript?",
+        promptSub: "How does TypeScript perform exhaustiveness checking on a union with a discriminant tag?",
+        explanation: "By checking a common literal property (e.g. kind: 'circle' | 'square') in a switch statement and assigning the default case to type 'never' (const _exhaustiveCheck: never = shape), ensuring compile errors if a case is missed."
+      },
+      // Uncompleted chapter flashcard in bank:
+      {
+        id: "fc-py-uncompleted",
+        courseId: "python-3",
+        courseTitle: "Python 3",
+        chapterId: "py-ch-7",
+        chapterNum: 7,
+        chapterTitle: "Asyncio Event Loops & Tasks",
+        topic: "Asyncio Coroutines",
+        promptTitle: "Uncompleted Chapter Flashcard",
+        promptSub: "Should never be shown",
+        explanation: "This should be filtered out."
+      }
+    ];
+
+    // ===================================================================
+    // ELIGIBILITY FILTERS: ONLY COMPLETED CHAPTERS ACROSS ANY ENROLLED COURSE
+    // ===================================================================
+    function getEligibleQuizQuestions() {
+      return QUESTION_BANK.filter(q => {
+        const course = ENROLLED_COURSES.find(c => c.id === q.courseId);
+        if (!course) return false;
+        const chapter = course.chapters.find(ch => ch.id === q.chapterId);
+        return chapter && chapter.isCompleted === true;
+      });
+    }
+
+    function getEligibleFlashcards() {
+      return FLASHCARD_BANK.filter(fc => {
+        const course = ENROLLED_COURSES.find(c => c.id === fc.courseId);
+        if (!course) return false;
+        const chapter = course.chapters.find(ch => ch.id === fc.chapterId);
+        return chapter && chapter.isCompleted === true;
+      });
+    }
+
+    // ===================================================================
+    // 3. QUICK QUIZ ENGINE (Completed Chapters Only, Strictly Non-Repeating)
+    // ===================================================================
+    let seenQuizQuestionIds = new Set();
+    let currentQuizQuestion = null;
+    let quizStats = { correct: 0, totalAnswered: 0 };
+    let currentQuestionAnswered = false;
+
+    function initQuickQuizDeck() {
+      seenQuizQuestionIds.clear();
+      quizStats = { correct: 0, totalAnswered: 0 };
+      renderNextQuizQuestion();
+    }
+
+    function renderNextQuizQuestion() {
+      const eligible = getEligibleQuizQuestions();
+      const unvisited = eligible.filter(q => !seenQuizQuestionIds.has(q.id));
+
+      const contentBox = document.getElementById('quickQuizContent');
+      const exhaustedBox = document.getElementById('quickQuizExhausted');
+      const footerRow = document.getElementById('quizFooterRow');
+
+      if (unvisited.length === 0) {
+        // Deck exhausted - all completed questions seen without repetition!
+        if (contentBox) contentBox.style.display = 'none';
+        if (footerRow) footerRow.style.display = 'none';
+        if (exhaustedBox) {
+          exhaustedBox.style.display = 'flex';
+          exhaustedBox.innerHTML = `
+            <div class="deck-exhausted-box">
+              <div class="deck-exhausted-icon">🎉</div>
+              <h4 class="deck-exhausted-title">All Completed Questions Reviewed!</h4>
+              <p class="deck-exhausted-sub">You've answered all ${eligible.length} questions across your completed chapters without repetition (${quizStats.correct} of ${quizStats.totalAnswered} correct).</p>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-primary" type="button" style="height: 32px; font-size: 12px; padding: 0 14px;" onclick="resetQuizDeck()">
+                  Practice Deck Again ⟳
+                </button>
+              </div>
+              <span style="font-size: 11px; color: var(--color-text-secondary); margin-top: 8px;">
+                Complete more chapters in your courses to unlock new questions.
+              </span>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      if (contentBox) contentBox.style.display = 'block';
+      if (footerRow) footerRow.style.display = 'flex';
+      if (exhaustedBox) exhaustedBox.style.display = 'none';
+
+      // Pick random from unvisited to ensure no repeat
+      const nextQ = unvisited[Math.floor(Math.random() * unvisited.length)];
+      seenQuizQuestionIds.add(nextQ.id);
+      currentQuizQuestion = nextQ;
+      currentQuestionAnswered = false;
+
+      // Update Eyebrow and counter
+      const eyebrowText = document.getElementById('quizEyebrowText');
+      const counterPill = document.getElementById('quizCounterPill');
+      const questionTitle = document.getElementById('quizQuestionTitle');
+      const optionsGroup = document.getElementById('quizOptionsContainer');
+      const feedback = document.getElementById('quizFeedbackText');
+
+      if (eyebrowText) {
+        const eb = `QUICK QUIZ • ${nextQ.courseTitle.toUpperCase()} (CH ${nextQ.chapterNum}) • ${nextQ.topic.toUpperCase()}`;
+        eyebrowText.textContent = eb;
+        eyebrowText.setAttribute('data-tooltip-header', 'Quiz Topic Attribution');
+        eyebrowText.setAttribute('data-tooltip-text', eb);
+        eyebrowText.setAttribute('title', eb);
+      }
+      if (counterPill) {
+        counterPill.textContent = `${seenQuizQuestionIds.size} of ${eligible.length}`;
+        counterPill.title = `Question ${seenQuizQuestionIds.size} of ${eligible.length} from completed chapters pool`;
+      }
+      if (questionTitle) {
+        questionTitle.textContent = nextQ.question;
+        questionTitle.setAttribute('data-tooltip-header', 'Complete Question');
+        questionTitle.setAttribute('data-tooltip-text', nextQ.question);
+        questionTitle.setAttribute('title', nextQ.question);
+      }
+      if (feedback) {
+        feedback.textContent = '';
+        feedback.style.color = '';
+        feedback.removeAttribute('data-tooltip-text');
+        feedback.removeAttribute('title');
+      }
+
+      // Render options with single-line clamping and full tooltip text
+      if (optionsGroup) {
+        optionsGroup.innerHTML = '';
+        nextQ.options.forEach((opt) => {
+          const btn = document.createElement('button');
+          btn.className = 'quiz-choice';
+          btn.type = 'button';
+          const optFullText = `${opt.label}: ${opt.text}`;
+          btn.setAttribute('data-tooltip-header', `Option ${opt.label}`);
+          btn.setAttribute('data-tooltip-text', optFullText);
+          btn.setAttribute('title', optFullText);
+          btn.innerHTML = `<strong>${opt.label}</strong><span>${escapeHtml(opt.text)}</span>`;
+          btn.onclick = () => handleQuizAnswer(btn, opt.correct, nextQ);
+          optionsGroup.appendChild(btn);
+        });
+      }
+    }
+
+    function handleQuizAnswer(element, isCorrect, question) {
+      if (currentQuestionAnswered) return;
+      currentQuestionAnswered = true;
+      quizStats.totalAnswered++;
+      if (isCorrect) quizStats.correct++;
+
+      const choices = document.querySelectorAll('#quizOptionsContainer .quiz-choice');
+      choices.forEach(c => {
+        c.style.pointerEvents = 'none'; // Lock choices
+      });
+
+      const feedback = document.getElementById('quizFeedbackText');
+      if (isCorrect) {
+        element.className = 'quiz-choice correct';
+        const msg = `✓ Correct! ${question.explanation}`;
+        feedback.textContent = msg;
+        feedback.setAttribute('data-tooltip-header', 'Answer Feedback & Explanation');
+        feedback.setAttribute('data-tooltip-text', msg);
+        feedback.setAttribute('title', msg);
+        feedback.style.color = 'var(--color-success)';
+      } else {
+        element.className = 'quiz-choice incorrect';
+        // Highlight the correct one
+        choices.forEach(c => {
+          const label = c.querySelector('strong').textContent.trim();
+          const matchOpt = question.options.find(o => o.label === label);
+          if (matchOpt && matchOpt.correct) {
+            c.className = 'quiz-choice correct';
+          }
+        });
+        const msg = `✗ Not quite. ${question.explanation}`;
+        feedback.textContent = msg;
+        feedback.setAttribute('data-tooltip-header', 'Answer Feedback & Explanation');
+        feedback.setAttribute('data-tooltip-text', msg);
+        feedback.setAttribute('title', msg);
+        feedback.style.color = 'var(--color-error)';
+      }
+    }
+
+    function cycleQuizQuestion() {
+      renderNextQuizQuestion();
+      showToast('Loaded next unique question from completed chapters.');
+    }
+
+    function resetQuizDeck() {
+      seenQuizQuestionIds.clear();
+      quizStats = { correct: 0, totalAnswered: 0 };
+      renderNextQuizQuestion();
+      showToast('Quiz deck reset. Starting fresh practice cycle.');
+    }
+
+    // ===================================================================
+    // 4. RECALL FLASHCARD ENGINE (Completed Chapters Only, Non-Repeating)
+    // ===================================================================
+    let seenFlashcardIds = new Set();
+    let currentFlashcard = null;
+
+    function initFlashcardDeck() {
+      seenFlashcardIds.clear();
+      renderNextFlashcard();
+    }
+
+    function renderNextFlashcard() {
+      const eligible = getEligibleFlashcards();
+      const unvisited = eligible.filter(fc => !seenFlashcardIds.has(fc.id));
+
+      const container = document.getElementById('flashcardContainer');
+      const exhaustedCard = document.getElementById('flashcardExhaustedCard');
+
+      if (unvisited.length === 0) {
+        // All flashcards from completed chapters reviewed!
+        const rotatingCard = document.getElementById('recallRotatingCard');
+        if (rotatingCard && rotatingCard.classList.contains('flipped')) {
+          rotatingCard.classList.remove('flipped');
+        }
+        if (container) container.style.display = 'none';
+        if (exhaustedCard) {
+          exhaustedCard.style.display = 'flex';
+          exhaustedCard.innerHTML = `
+            <div class="deck-exhausted-box">
+              <div class="deck-exhausted-icon">🎯</div>
+              <h4 class="deck-exhausted-title">All Flashcards Reviewed!</h4>
+              <p class="deck-exhausted-sub">You've reviewed all ${eligible.length} flashcards from your completed chapters without repetition.</p>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-primary" type="button" style="height: 32px; font-size: 12px; padding: 0 14px;" onclick="resetFlashcardDeck()">
+                  Review Deck Again ⟳
+                </button>
+              </div>
+              <span style="font-size: 11px; color: var(--color-text-secondary); margin-top: 8px;">
+                Complete more chapters in your courses to unlock new flashcards.
+              </span>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      if (container) container.style.display = 'block';
+      if (exhaustedCard) exhaustedCard.style.display = 'none';
+
+      const nextFc = unvisited[Math.floor(Math.random() * unvisited.length)];
+      seenFlashcardIds.add(nextFc.id);
+      currentFlashcard = nextFc;
+
+      const rotatingCard = document.getElementById('recallRotatingCard');
+      const applyContent = () => {
+        const courseEyebrow = document.getElementById('fcFrontCourseText');
+        const counterPill = document.getElementById('fcCounterPill');
+        const promptTitle = document.getElementById('fcPromptTitle');
+        const promptSub = document.getElementById('fcPromptSub');
+        const backTopic = document.getElementById('fcBackTopicText');
+        const explanation = document.getElementById('fcExplanationText');
+
+        if (courseEyebrow) {
+          const eb = `ACTIVE RECALL • ${nextFc.courseTitle.toUpperCase()} (CH ${nextFc.chapterNum})`;
+          courseEyebrow.textContent = eb;
+          courseEyebrow.setAttribute('data-tooltip-header', 'Flashcard Topic');
+          courseEyebrow.setAttribute('data-tooltip-text', eb);
+          courseEyebrow.setAttribute('title', eb);
+        }
+        if (counterPill) {
+          counterPill.textContent = `${seenFlashcardIds.size} of ${eligible.length}`;
+          counterPill.title = `Flashcard ${seenFlashcardIds.size} of ${eligible.length} from completed chapters pool`;
+        }
+        if (promptTitle) {
+          promptTitle.textContent = nextFc.promptTitle;
+          promptTitle.setAttribute('data-tooltip-header', 'Recall Prompt');
+          promptTitle.setAttribute('data-tooltip-text', nextFc.promptTitle);
+          promptTitle.setAttribute('title', nextFc.promptTitle);
+        }
+        if (promptSub) {
+          promptSub.textContent = nextFc.promptSub;
+          promptSub.setAttribute('data-tooltip-header', 'Prompt Details');
+          promptSub.setAttribute('data-tooltip-text', nextFc.promptSub);
+          promptSub.setAttribute('title', nextFc.promptSub);
+        }
+        if (backTopic) {
+          const bt = `✓ Reference Explanation • ${nextFc.courseTitle} (Ch ${nextFc.chapterNum})`;
+          backTopic.textContent = bt;
+          backTopic.setAttribute('data-tooltip-header', 'Reference Topic');
+          backTopic.setAttribute('data-tooltip-text', bt);
+          backTopic.setAttribute('title', bt);
+        }
+        if (explanation) {
+          explanation.textContent = nextFc.explanation;
+          explanation.setAttribute('data-tooltip-header', 'Reference Explanation');
+          explanation.setAttribute('data-tooltip-text', nextFc.explanation);
+          explanation.setAttribute('title', nextFc.explanation);
+        }
+      };
+
+      if (rotatingCard && rotatingCard.classList.contains('flipped')) {
+        rotatingCard.classList.remove('flipped');
+        setTimeout(applyContent, 180);
+      } else {
+        applyContent();
+      }
+    }
+
+    function rotateFlashcard() {
+      const card = document.getElementById('recallRotatingCard');
+      if (card) card.classList.toggle('flipped');
+    }
+
+    function handleFlashcardKey(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        rotateFlashcard();
+      }
+    }
+
+    function handleFlashcardGotIt() {
+      if (!currentFlashcard) return;
+      showToast(`Marked "${currentFlashcard.topic}" as mastered ✓`);
+      renderNextFlashcard();
+    }
+
+    function handleReviewLater() {
+      if (!currentFlashcard) return;
+      showToast(`Saved "${currentFlashcard.topic}" to ${currentFlashcard.courseTitle} Review tab`);
+      renderNextFlashcard();
+    }
+
+    function resetFlashcardDeck() {
+      seenFlashcardIds.clear();
+      renderNextFlashcard();
+      showToast('Flashcard deck reset. Starting fresh review cycle.');
+    }
+
+    function initDashboardRecallDecks() {
+      initQuickQuizDeck();
+      initFlashcardDeck();
+    }
+
+    // 5. Search Courses Filter (Live Real-Time Search)
+    function filterCourses(query) {
+      const q = query.trim().toLowerCase();
+      const clearBtn = document.getElementById('clearSearchBtn');
+      clearBtn.style.display = q ? 'block' : 'none';
+
+      const cards = document.querySelectorAll('#courseGrid .course-card');
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const titleEl = card.querySelector('.course-card-title');
+        const creatorEl = card.querySelector('.course-creator');
+        const title = titleEl ? titleEl.textContent.toLowerCase() : '';
+        const creator = creatorEl ? creatorEl.textContent.toLowerCase() : '';
+        const isMatch = title.includes(q) || creator.includes(q);
+        
+        card.style.display = isMatch ? 'flex' : 'none';
+        if (isMatch) visibleCount++;
+      });
+
+      // Show/hide empty search state message inside grid
+      let emptyMsg = document.getElementById('searchEmptyMsg');
+      if (!emptyMsg) {
+        emptyMsg = document.createElement('div');
+        emptyMsg.id = 'searchEmptyMsg';
+        emptyMsg.className = 'search-empty-state';
+        document.getElementById('courseGrid').appendChild(emptyMsg);
+      }
+
+      if (visibleCount === 0) {
+        emptyMsg.style.display = 'block';
+        emptyMsg.innerHTML = `No courses found matching "<strong>${escapeHtml(query)}</strong>". <a href="#" onclick="clearSearch(); return false;" style="color: var(--color-primary); font-weight: 600; text-decoration: underline; margin-left: 6px;">Clear search</a>`;
+      } else {
+        emptyMsg.style.display = 'none';
+      }
+
+      // Update count badge dynamically
+      const badge = document.getElementById('courseCountBadge');
+      badge.textContent = q ? `${visibleCount} of ${cards.length}` : cards.length;
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('courseSearchInput');
+      input.value = '';
+      filterCourses('');
+      input.focus();
+    }
+
+    function sortCourses(mode) {
+      showToast(`Sorted courses by: ${mode.toUpperCase()}`);
+    }
+
+    // 6. Demo Lifecycle Switcher (Active Learner -> Early Learner -> Brand New User)
+    let currentLifecycleState = 0; // 0 = Active, 1 = Early Learner (no completed topics), 2 = New User (0 courses)
+    function cycleDemoLifecycle() {
+      currentLifecycleState = (currentLifecycleState + 1) % 3;
+      
+      const populated = document.getElementById('populatedView');
+      const empty = document.getElementById('emptyStateView');
+      const label = document.getElementById('demoLifecycleLabel');
+      const greeting = document.getElementById('mainGreetingTitle');
+      const topDeck = document.getElementById('topDeckGrid');
+      const quizCard = document.getElementById('quickQuizCard');
+      const flashcard = document.getElementById('recallFlashcardCard');
+
+      if (currentLifecycleState === 0) {
+        // Active Learner
+        label.textContent = 'Active Learner';
+        empty.style.display = 'none';
+        populated.style.display = 'block';
+        topDeck.classList.remove('single-hero');
+        quizCard.style.display = 'flex';
+        flashcard.style.display = 'block';
+        greeting.textContent = "Welcome back. Let's pick up where you left off.";
+        showToast('State: Active Learner (all cards visible)');
+      } else if (currentLifecycleState === 1) {
+        // Early Learner: courses enrolled, but 0 completed chapters -> recall cards hidden
+        label.textContent = 'Early Learner (0 quizzes completed)';
+        empty.style.display = 'none';
+        populated.style.display = 'block';
+        topDeck.classList.add('single-hero');
+        quizCard.style.display = 'none';
+        flashcard.style.display = 'none';
+        greeting.textContent = "Welcome back. Let's pick up where you left off.";
+        showToast('State: Early Learner (Recall cards hidden, hero fills space)');
+      } else {
+        // Brand New User: 0 courses
+        label.textContent = 'Brand New User (0 courses)';
+        populated.style.display = 'none';
+        empty.style.display = 'block';
+        greeting.textContent = "Welcome to your study space.";
+        showToast('State: Brand New User (clean onboarding card)');
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[tag] || tag));
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = 'show';
+      setTimeout(() => toast.className = '', 2500);
+    }
+
+    
+    // ===================================================================
+    // FLOATING TOOLTIP ENGINE FOR UNABRIDGED CARD CONTENT
+    // ===================================================================
+    function initFloatingTooltipSystem() {
+      let tooltip = document.getElementById('sdFloatingTooltip');
+      if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'sdFloatingTooltip';
+        tooltip.className = 'sd-floating-tooltip';
+        tooltip.setAttribute('role', 'tooltip');
+        tooltip.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(tooltip);
+      }
+
+      let activeTarget = null;
+
+      function showTooltip(target) {
+        const text = target.getAttribute('data-tooltip-text') || target.getAttribute('title');
+        if (!text || !text.trim()) return;
+
+        const header = target.getAttribute('data-tooltip-header') || '';
+        activeTarget = target;
+
+        let content = '';
+        if (header) {
+          content += `<div class="sd-floating-tooltip-title">${escapeHtml(header)}</div>`;
+        }
+        content += `<div>${escapeHtml(text)}</div>`;
+        tooltip.innerHTML = content;
+        tooltip.classList.add('visible');
+        tooltip.setAttribute('aria-hidden', 'false');
+        positionTooltip(target);
+      }
+
+      function hideTooltip() {
+        activeTarget = null;
+        tooltip.classList.remove('visible');
+        tooltip.setAttribute('aria-hidden', 'true');
+      }
+
+      function positionTooltip(target) {
+        if (!target) return;
+        const rect = target.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+
+        // Position above target by default
+        let top = rect.top - tooltipRect.height - 8;
+        let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+
+        // If clipped by top of viewport, flip below target
+        if (top < 10) {
+          top = rect.bottom + 8;
+        }
+
+        // Horizontal clamping within window boundaries
+        const maxLeft = window.innerWidth - tooltipRect.width - 12;
+        if (left < 12) left = 12;
+        if (left > maxLeft) left = maxLeft;
+
+        tooltip.style.top = `${Math.round(top)}px`;
+        tooltip.style.left = `${Math.round(left)}px`;
+      }
+
+      document.addEventListener('mouseover', (e) => {
+        const target = e.target.closest('[data-tooltip-text], [data-card-tooltip]');
+        if (!target) return;
+
+        const text = target.getAttribute('data-tooltip-text') || target.getAttribute('title');
+        if (!text) return;
+
+        // Show if text is clipped/truncated, or if element explicitly requests card tooltip
+        const isTruncated = target.scrollWidth > target.clientWidth + 1 || target.scrollHeight > target.clientHeight + 1;
+        const forceTooltip = target.hasAttribute('data-card-tooltip') || target.hasAttribute('data-tooltip-text');
+
+        if (isTruncated || forceTooltip) {
+          if (target.hasAttribute('title')) {
+            target.setAttribute('data-stored-title', target.getAttribute('title'));
+            target.removeAttribute('title');
+          }
+          showTooltip(target);
+        }
+      });
+
+      document.addEventListener('mouseout', (e) => {
+        const target = e.target.closest('[data-tooltip-text], [data-card-tooltip]');
+        if (target) {
+          if (target.hasAttribute('data-stored-title')) {
+            target.setAttribute('title', target.getAttribute('data-stored-title'));
+            target.removeAttribute('data-stored-title');
+          }
+          hideTooltip();
+        }
+      });
+
+      window.addEventListener('scroll', () => { if (activeTarget) hideTooltip(); }, { passive: true });
+    }
+
+    // Initialize Dashboard Practice Pools (Completed Chapters Only & Strictly Non-Repeating)
+    initDashboardRecallDecks();
+    initFloatingTooltipSystem();
+  </script>
+</body>
+</html>

@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brand UI System & Component Specimen — The Quiet Study Desk</title>
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('studydesk_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Light Theme (Warm Paper Study Desk) */
+      --color-primary: #2F5D50;
+      --color-primary-hover: #24493F;
+      --color-accent: #D9962B;
+      --color-accent-hover: #BF8223;
+      --color-bg-app: #FAF6EF;
+      --color-surface: #FFFFFF;
+      --color-surface-hover: #F8F5EE;
+      --color-surface-muted: #F0EBE0;
+      --color-text-primary: #26332E;
+      --color-text-secondary: #5F6B65;
+      --color-border: #DAD3C4;
+      --color-border-subtle: #E8E2D5;
+      --color-success: #2E7D4F;
+      --color-success-bg: #E8F5EE;
+      --color-error: #B5473A;
+      --color-error-bg: #FDF0EE;
+
+      --shadow-sm: 0 1px 3px rgba(38, 51, 46, 0.08);
+      --shadow-md: 0 4px 12px rgba(38, 51, 46, 0.08);
+      --shadow-lg: 0 8px 24px rgba(38, 51, 46, 0.12);
+
+      --font-serif: 'Source Serif 4', Georgia, serif;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-pill: 9999px;
+
+      --space-xs: 8px;
+      --space-s: 16px;
+      --space-m: 24px;
+      --space-l: 32px;
+      --space-xl: 48px;
+    }
+
+    [data-theme="dark"] {
+      --color-primary: #4E917D;
+      --color-primary-hover: #5EA893;
+      --color-accent: #E5A94E;
+      --color-accent-hover: #F0BD6B;
+      --color-bg-app: #141312;
+      --color-surface: #1E1C1A;
+      --color-surface-hover: #272422;
+      --color-surface-muted: #292623;
+      --color-text-primary: #F3EFEA;
+      --color-text-secondary: #9E968D;
+      --color-border: #383430;
+      --color-border-subtle: #2C2825;
+      --color-success: #4CAF79;
+      --color-success-bg: #1C2D24;
+      --color-error: #E06D5E;
+      --color-error-bg: #361E1C;
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-bg-app);
+      color: var(--color-text-primary);
+      line-height: 1.6;
+      padding: var(--space-xl) var(--space-m);
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+    }
+
+    /* Header & Theme Bar */
+    header.specimen-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: var(--space-m);
+      margin-bottom: var(--space-xl);
+    }
+
+    .brand-meta h1 {
+      font-family: var(--font-serif);
+      font-size: 34px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: 6px;
+    }
+
+    .brand-meta p {
+      color: var(--color-text-secondary);
+      font-size: 15px;
+    }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      border: 1px solid var(--color-border);
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theme-toggle-btn:hover {
+      background: var(--color-surface-hover);
+      border-color: var(--color-text-secondary);
+    }
+
+    /* Section Typography */
+    h2.section-title {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: var(--space-m);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-left: 4px solid var(--color-primary);
+      padding-left: 12px;
+    }
+
+    .section-desc {
+      color: var(--color-text-secondary);
+      font-size: 15px;
+      margin-top: -12px;
+      margin-bottom: var(--space-m);
+      max-width: 800px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: var(--space-m);
+      margin-bottom: var(--space-xl);
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--space-m);
+      margin-bottom: var(--space-xl);
+    }
+
+    .grid-swatches {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: var(--space-s);
+      margin-bottom: var(--space-xl);
+    }
+
+    /* Card Component */
+    .card {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      padding: var(--space-m);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border-subtle);
+    }
+
+    /* Color Swatch Card */
+    .swatch-card {
+      background: var(--color-surface);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--color-border-subtle);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .swatch-color {
+      height: 90px;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      padding: 10px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .swatch-details {
+      padding: 12px;
+    }
+
+    .swatch-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--color-text-primary);
+      margin-bottom: 2px;
+    }
+
+    .swatch-role {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+
+    .swatch-copy-hint {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .swatch-card:hover .swatch-copy-hint {
+      opacity: 1;
+    }
+
+    /* Typography Scale Table */
+    .type-specimen {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border-subtle);
+      overflow: hidden;
+      margin-bottom: var(--space-xl);
+    }
+
+    .type-row {
+      display: grid;
+      grid-template-columns: 140px 180px 1fr;
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--color-border-subtle);
+      align-items: baseline;
+    }
+
+    .type-row:last-child {
+      border-bottom: none;
+    }
+
+    .type-label {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+    }
+
+    .type-specs {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 48px;
+      padding: 0 24px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      gap: 8px;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background-color: var(--color-primary);
+      color: #FFFFFF;
+    }
+    .btn-primary:hover {
+      background-color: var(--color-primary-hover);
+    }
+
+    .btn-reward {
+      background-color: var(--color-accent);
+      color: #26332E;
+      font-weight: 600;
+    }
+    .btn-reward:hover {
+      background-color: var(--color-accent-hover);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--color-primary);
+      border: 1.5px solid var(--color-primary);
+    }
+    .btn-secondary:hover {
+      background: var(--color-surface-muted);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text-secondary);
+    }
+    .btn-ghost:hover {
+      background: var(--color-surface-muted);
+      color: var(--color-text-primary);
+    }
+
+    .btn-destructive {
+      background: var(--color-error);
+      color: #FFFFFF;
+    }
+    .btn-destructive:hover {
+      opacity: 0.9;
+    }
+
+    /* Status Badges & Chips */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 500;
+      background: var(--color-surface-muted);
+      color: var(--color-text-primary);
+    }
+
+    .chip-streak {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+    }
+
+    .chip-streak.active {
+      border-color: var(--color-accent);
+      background: rgba(217, 150, 43, 0.1);
+      color: var(--color-accent);
+    }
+
+    .chip-timestamp {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--color-surface-muted);
+      color: var(--color-primary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .chip-timestamp:hover {
+      background: var(--color-border);
+    }
+
+    /* Progress Bar */
+    .progress-bar-container {
+      width: 100%;
+      background: var(--color-surface-muted);
+      height: 8px;
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      margin: 8px 0;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--color-primary);
+      border-radius: var(--radius-pill);
+      transition: width 0.4s ease;
+    }
+
+    .progress-bar-fill.accent {
+      background: var(--color-accent);
+    }
+
+    /* Form Inputs */
+    .input-field {
+      width: 100%;
+      height: 48px;
+      padding: 0 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-text-primary);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      outline: none;
+    }
+
+    .input-field:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(47, 93, 80, 0.2);
+    }
+
+    /* Quiz Option Item */
+    .quiz-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--color-border);
+      background: var(--color-surface);
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: all 0.15s ease;
+    }
+
+    .quiz-option:hover {
+      background: var(--color-surface-muted);
+      border-color: var(--color-text-secondary);
+    }
+
+    .quiz-option.correct {
+      border-color: var(--color-success);
+      background: var(--color-success-bg);
+      color: var(--color-success);
+      font-weight: 500;
+    }
+
+    .quiz-option.incorrect {
+      border-color: var(--color-error);
+      background: var(--color-error-bg);
+      color: var(--color-error);
+    }
+
+    /* Do's and Don'ts Cards */
+    .rule-card {
+      border-left: 4px solid transparent;
+      padding: 20px;
+      background: var(--color-surface);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-sm);
+      border-top: 1px solid var(--color-border-subtle);
+      border-right: 1px solid var(--color-border-subtle);
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .rule-card.do {
+      border-left-color: var(--color-success);
+    }
+
+    .rule-card.dont {
+      border-left-color: var(--color-error);
+    }
+
+    .rule-badge {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .rule-badge.do { color: var(--color-success); }
+    .rule-badge.dont { color: var(--color-error); }
+
+    /* Interactive Notes Pad Demo */
+    .notes-pad-demo {
+      background: var(--color-surface-muted);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      min-height: 200px;
+    }
+
+    .notes-header-chip {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--color-primary);
+      margin-bottom: 12px;
+    }
+
+    .notes-textarea {
+      width: 100%;
+      min-height: 120px;
+      background: transparent;
+      border: none;
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--color-text-primary);
+      outline: none;
+      resize: vertical;
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--color-primary);
+      color: #FFFFFF;
+      padding: 12px 20px;
+      border-radius: var(--radius-pill);
+      font-size: 14px;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.25s ease;
+      z-index: 9999;
+    }
+
+    #toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Header -->
+    <header class="specimen-header">
+      <div class="brand-meta">
+        <h1>Brand UI System & Component Specimen</h1>
+        <p>Concept: "The Quiet Study Desk" — Natural, Warm, High-Retention Classroom Aesthetic</p>
+      </div>
+      <div>
+        <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()">
+          <span id="themeIcon">🌙</span> <span id="themeLabel">Dark Theme</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 1. Color Palette -->
+    <section>
+      <h2 class="section-title">1. Color Palette & Token Architecture</h2>
+      <p class="section-desc">Click any swatch to copy its hex token. Designed for low digital glare during multi-hour study sessions with strict WCAG AAA contrast ratios.</p>
+      
+      <div class="grid-swatches" id="swatchesGrid">
+        <!-- Swatches rendered via JS -->
+      </div>
+    </section>
+
+    <!-- 2. Typography Specimen -->
+    <section>
+      <h2 class="section-title">2. Typography System (The Book & The Tool)</h2>
+      <p class="section-desc">Dual-font architecture: <strong>Source Serif 4</strong> creates textbook authority for headings; <strong>Inter</strong> ensures crisp, tabular legibility for UI labels and quizzes.</p>
+      
+      <div class="type-specimen">
+        <div class="type-row">
+          <span class="type-label">Display</span>
+          <span class="type-specs">Source Serif 4 • 36px / 600</span>
+          <span style="font-family: var(--font-serif); font-size: 36px; font-weight: 600;">Chapter Complete. You've finished 6 of 14.</span>
+        </div>
+        <div class="type-row">
+          <span class="type-label">Heading 1 (H1)</span>
+          <span class="type-specs">Source Serif 4 • 28px / 600</span>
+          <span style="font-family: var(--font-serif); font-size: 28px; font-weight: 600;">Full-Stack Python Bootcamp</span>
+        </div>
+        <div class="type-row">
+          <span class="type-label">Heading 2 (H2)</span>
+          <span class="type-specs">Source Serif 4 • 22px / 600</span>
+          <span style="font-family: var(--font-serif); font-size: 22px; font-weight: 600;">Module 3: Functions & Decorators</span>
+        </div>
+        <div class="type-row">
+          <span class="type-label">Heading 3 (H3)</span>
+          <span class="type-specs">Inter • 17px / 600</span>
+          <span style="font-family: var(--font-sans); font-size: 17px; font-weight: 600;">Can you recall what a decorator does?</span>
+        </div>
+        <div class="type-row">
+          <span class="type-label">Body Text (Min 16px)</span>
+          <span class="type-specs">Inter • 16px / 400 • 1.6 lh</span>
+          <span style="font-family: var(--font-sans); font-size: 16px; line-height: 1.6; max-width: 650px;">A decorator in Python takes a function, wraps its behavior, and returns an extended function without modifying the original definition. Common in web routing and logging.</span>
+        </div>
+        <div class="type-row">
+          <span class="type-label">Tabular Figures</span>
+          <span class="type-specs">Inter (tabular-nums)</span>
+          <span style="font-family: var(--font-sans); font-variant-numeric: tabular-nums; font-weight: 500;">Focus Timer: 19:58 / 20:00 &nbsp;|&nbsp; Timestamp: [04:12]</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Interactive Components -->
+    <section>
+      <h2 class="section-title">3. Interactive UI Components</h2>
+      <p class="section-desc">Built for tactile feedback, minimum 48px touch targets, and zero-guilt interactions.</p>
+
+      <div class="grid-2">
+        <!-- Buttons Column -->
+        <div class="card">
+          <h3 style="font-family: var(--font-serif); font-size: 18px; margin-bottom: 16px;">Button Hierarchy</h3>
+          <div style="display: flex; flex-direction: column; gap: 12px; align-items: flex-start;">
+            <button class="btn btn-primary">Primary Action: Resume Course →</button>
+            <button class="btn btn-reward">Reward Action: Claim Milestone ⭐</button>
+            <button class="btn btn-secondary">Secondary Action: View Resources</button>
+            <button class="btn btn-ghost">Ghost Action: Skip Quiz to Next Chapter</button>
+            <button class="btn btn-destructive">Destructive Action: Delete Course</button>
+          </div>
+        </div>
+
+        <!-- Badges & Chips -->
+        <div class="card">
+          <h3 style="font-family: var(--font-serif); font-size: 18px; margin-bottom: 16px;">Chips, Deadlines & Progress</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+            <span class="chip chip-streak active">🔥 5 Day Streak</span>
+            <span class="chip">📅 3 Days Left</span>
+            <span class="chip chip-timestamp" onclick="copyText('[04:22]')">⏱ [04:22] (Click to seek)</span>
+          </div>
+
+          <label style="font-size: 14px; font-weight: 500; display: block; margin-bottom: 4px;">Standard Course Progress (6 of 14 Chapters)</label>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="width: 43%;"></div>
+          </div>
+
+          <label style="font-size: 14px; font-weight: 500; display: block; margin-top: 16px; margin-bottom: 4px;">Priority Course Progress (Near Deadline)</label>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill accent" style="width: 78%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quiz & Notes Demos -->
+      <div class="grid-2">
+        <!-- Quiz Interaction Demo -->
+        <div class="card">
+          <span style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--color-primary); letter-spacing: 0.5px;">Active Recall Demo</span>
+          <h3 style="font-family: var(--font-sans); font-size: 17px; margin: 8px 0 16px 0;">What is the primary benefit of Python decorators?</h3>
+
+          <div class="quiz-option" onclick="selectQuizOption(this, false)">
+            <span>A</span>
+            <span>They speed up raw bytecode compilation time.</span>
+          </div>
+          <div class="quiz-option" onclick="selectQuizOption(this, true)">
+            <span>B</span>
+            <span>They add functionality to an existing function without modifying its source code.</span>
+          </div>
+          <div class="quiz-option" onclick="selectQuizOption(this, false)">
+            <span>C</span>
+            <span>They automatically allocate asynchronous worker threads.</span>
+          </div>
+          <p id="quizFeedback" style="font-size: 14px; margin-top: 10px; min-height: 22px; font-weight: 500;"></p>
+        </div>
+
+        <!-- Notes Pad Demo -->
+        <div class="card">
+          <span style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--color-primary); letter-spacing: 0.5px;">Soft Linen Notepad Canvas (`#F0EBE0`)</span>
+          <div class="notes-pad-demo" style="margin-top: 12px;">
+            <div class="notes-header-chip">### Chapter 4 - Decorators & Wrappers</div>
+            <textarea class="notes-textarea" placeholder="Start typing study notes here... Clicking timestamps below inserts jump marks.">Remember: @functools.wraps is required to preserve the original function metadata!
+[03:45] Check the explanation of inner(*args, **kwargs).</textarea>
+            <button class="chip chip-timestamp" onclick="insertTimestamp()">+ Insert Timestamp [05:12]</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. DO's and DON'Ts -->
+    <section>
+      <h2 class="section-title">4. Brand & UI Heuristics: Do's and Don'ts</h2>
+      <p class="section-desc">Strict design rules derived from human-computer interaction (HCI) research and learner psychology.</p>
+
+      <div class="grid-2">
+        <!-- Rule 1: The Amber Rule -->
+        <div class="rule-card do">
+          <div class="rule-badge do">✓ DO</div>
+          <strong>Limit Warm Amber to ONE Focal Point</strong>
+          <p style="font-size: 14px; color: var(--color-text-secondary); margin-top: 6px;">Reserve `#D9962B` strictly for the top urgent deadline, active streak flame, or chapter completion reward. Keep everything else grounded in calming Forest Green.</p>
+        </div>
+        <div class="rule-card dont">
+          <div class="rule-badge dont">✗ DON'T</div>
+          <strong>Don't Use Amber for Body Text or Backgrounds</strong>
+          <p style="font-size: 14px; color: var(--color-text-secondary); margin-top: 6px;">Never use amber as body text on light backgrounds (it fails WCAG AA contrast under 3:1). Never use large amber splash cards that overwhelm peripheral vision.</p>
+        </div>
+
+        <!-- Rule 2: Minimum Font Size -->
+        <div class="rule-card do">
+          <div class="rule-badge do">✓ DO</div>
+          <strong>Keep Body Text at 16px with 1.6 Line Height</strong>
+          <p style="font-size: 14px; color: var(--color-text-secondary); margin-top: 6px;">Ensure long study sessions don't cause eye strain. Reading length must remain between 60–75 characters per line.</p>
+        </div>
+        <div class="rule-card dont">
+          <div class="rule-badge dont">✗ DON'T</div>
+          <strong>Don't Shrink Text Below 14px for Real Content</strong>
+          <p style="font-size: 14px; color: var(--color-text-secondary); margin-top: 6px;">Never use 11px or 12px text for essential study instructions or notes. Captions and timestamps are the only exception.</p>
+        </div>
+
+        <!-- Rule 3: Guilt-Free Copywriting -->
+        <div class="rule-card do">
+          <div class="rule-badge do">✓ DO</div>
+          <strong>Use Neutral, Encouraging Tutor Copy</strong>
+          <p style="font-size: 14px; color: var(--color-text-secondary); margin-top: 6px;">"Welcome back. Every day you study counts. Let's pick up where you left off." Treat learners like intelligent adults.</p>
+        </div>
+        <div class="rule-card dont">
+          <div class="rule-badge dont">✗ DON'T</div>
+          <strong>Never Use Guilt-Inducing or Alarmist Warnings</strong>
+          <p style="font-size: 14px; color: var(--color-text-secondary); margin-top: 6px;">Avoid toxic gamification: "You're falling behind!" or "Don't break your streak!". Genuine sick days and gaps must feel safe.</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast">Copied token to clipboard!</div>
+
+  <script>
+    // Theme Switcher Logic - Bulletproof Multi-Channel Engine
+    let themeBroadcastChannel = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        themeBroadcastChannel = new BroadcastChannel('studydesk_theme_sync');
+      }
+    } catch (e) {}
+
+    function getStoredTheme() {
+      try {
+        return localStorage.getItem('studydesk_theme') || 'light';
+      } catch (e) {
+        return 'light';
+      }
+    }
+
+    function setStoredTheme(theme) {
+      try {
+        localStorage.setItem('studydesk_theme', theme);
+      } catch (e) {}
+    }
+
+    function applyTheme(theme, broadcast = true) {
+      const validTheme = theme === 'dark' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', validTheme);
+      setStoredTheme(validTheme);
+      
+      const icon = document.getElementById('themeIcon');
+      const label = document.getElementById('themeLabel');
+      if (icon) icon.textContent = validTheme === 'dark' ? '☀️' : '🌙';
+      if (label) label.textContent = validTheme === 'dark' ? 'Theme: Warm Espresso' : 'Theme: Warm Paper';
+      
+      renderSwatches();
+
+      if (broadcast) {
+        if (themeBroadcastChannel) {
+          try {
+            themeBroadcastChannel.postMessage({ type: 'SD_THEME_CHANGE', theme: validTheme });
+          } catch (e) {}
+        }
+        if (window.parent && window.parent !== window) {
+          try {
+            window.parent.postMessage({ type: 'SD_THEME_CHANGE', theme: validTheme }, '*');
+          } catch (e) {}
+        }
+      }
+    }
+
+    function syncWithStoredTheme() {
+      const savedTheme = getStoredTheme();
+      if (savedTheme !== document.documentElement.getAttribute('data-theme')) {
+        applyTheme(savedTheme, false);
+      }
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(newTheme, true);
+    }
+
+    // 5-Way Redundant Cross-frame and Cross-tab Synchronization:
+    if (themeBroadcastChannel) {
+      themeBroadcastChannel.onmessage = (e) => {
+        if (e.data && e.data.theme) {
+          applyTheme(e.data.theme, false);
+        }
+      };
+    }
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'studydesk_theme' && e.newValue) {
+        applyTheme(e.newValue, false);
+      }
+    });
+
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'SD_THEME_CHANGE' && e.data.theme) {
+        applyTheme(e.data.theme, false);
+      }
+    });
+
+    window.addEventListener('focus', syncWithStoredTheme);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') syncWithStoredTheme();
+    });
+    window.addEventListener('pageshow', syncWithStoredTheme);
+    setInterval(syncWithStoredTheme, 300);
+
+    // Color Swatches Data
+    const lightSwatches = [
+      { name: "Primary (Forest Green)", hex: "#2F5D50", text: "#FFFFFF", role: "Primary buttons, headings, active nav" },
+      { name: "Accent (Warm Amber)", hex: "#D9962B", text: "#26332E", role: "One focal point per screen: streak, rewards" },
+      { name: "Canvas (Warm Paper)", hex: "#FAF6EF", text: "#26332E", role: "Anti-glare background canvas" },
+      { name: "Surface (Clean White)", hex: "#FFFFFF", text: "#26332E", role: "Cards, modals, input containers" },
+      { name: "Notepad (Soft Linen)", hex: "#F0EBE0", text: "#26332E", role: "Notes pad canvas & subtle chips" },
+      { name: "Text Primary (Forest Slate)", hex: "#26332E", text: "#FFFFFF", role: "All body text, titles (12.4:1 contrast)" },
+      { name: "Text Secondary (Sage Slate)", hex: "#5F6B65", text: "#FFFFFF", role: "Metadata, timestamps, captions" },
+      { name: "Border (Sandstone)", hex: "#DAD3C4", text: "#26332E", role: "Subtle dividers, inputs" }
+    ];
+
+    const darkSwatches = [
+      { name: "Background (Warm Espresso)", hex: "#141312", text: "#F3EFEA", role: "Deep warm obsidian canvas (no green)" },
+      { name: "Surface (Charcoal Stone)", hex: "#1E1C1A", text: "#F3EFEA", role: "Warm dark cards and dialogs" },
+      { name: "Notepad (Night Linen)", hex: "#292623", text: "#F3EFEA", role: "Warm tactile notes canvas" },
+      { name: "Primary (Soft Pine)", hex: "#4E917D", text: "#141312", role: "Balanced green action buttons" },
+      { name: "Accent (Luminous Amber)", hex: "#E5A94E", text: "#141312", role: "Golden reward & streak focal points" },
+      { name: "Text Primary (Cream Linen)", hex: "#F3EFEA", text: "#141312", role: "Anti-glare primary reading text" },
+      { name: "Text Secondary (Stone Slate)", hex: "#9E968D", text: "#141312", role: "Warm night metadata & captions" },
+      { name: "Border (Warm Divider)", hex: "#383430", text: "#F3EFEA", role: "Low-glare warm stone borders" }
+    ];
+
+    function renderSwatches() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const swatches = isDark ? darkSwatches : lightSwatches;
+      const grid = document.getElementById('swatchesGrid');
+      grid.innerHTML = '';
+
+      swatches.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'swatch-card';
+        card.onclick = () => copyText(s.hex);
+        card.innerHTML = `
+          <div class="swatch-color" style="background-color: ${s.hex}; color: ${s.text}; border-bottom: 1px solid var(--color-border-subtle);">
+            ${s.hex}
+            <span class="swatch-copy-hint">Click to copy</span>
+          </div>
+          <div class="swatch-details">
+            <div class="swatch-name">${s.name}</div>
+            <div class="swatch-role">${s.role}</div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Quiz Interaction Logic
+    function selectQuizOption(el, isCorrect) {
+      const parent = el.parentElement;
+      const options = parent.querySelectorAll('.quiz-option');
+      options.forEach(opt => opt.className = 'quiz-option');
+
+      const feedback = document.getElementById('quizFeedback');
+      if (isCorrect) {
+        el.className = 'quiz-option correct';
+        feedback.textContent = '✓ Correct! Decorators wrap a function without changing its internal code.';
+        feedback.style.color = 'var(--color-success)';
+      } else {
+        el.className = 'quiz-option incorrect';
+        feedback.textContent = '✗ Not quite. A decorator extends behavior, but does not affect bytecode speed or thread pools.';
+        feedback.style.color = 'var(--color-error)';
+      }
+    }
+
+    // Copy to clipboard helper
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById('toast');
+        toast.textContent = `Copied ${text} to clipboard!`;
+        toast.className = 'show';
+        setTimeout(() => toast.className = '', 2000);
+      });
+    }
+
+    function insertTimestamp() {
+      const textarea = document.querySelector('.notes-textarea');
+      textarea.value += '\n[05:12] Key takeaway on function wrapping.';
+      copyText('[05:12]');
+    }
+
+    // Initial render with theme persistence
+    applyTheme(getStoredTheme(), false);
+  </script>
+</body>
+</html>

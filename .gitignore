@@ -1,0 +1,14 @@
+# Local debugging scripts, screenshots and data backups (contain real notes/questions)
+scratch/
+
+# Secrets
+.env*
+!.env.example
+
+# Build output / dependencies (app/.gitignore covers these too)
+node_modules/
+.next/
+
+# OS / editor
+.DS_Store
+Thumbs.db
