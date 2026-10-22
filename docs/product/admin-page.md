@@ -303,6 +303,8 @@ LIMIT 10;
 
 ## 4.5 Implementation Plan (agreed 2026-10-22, to execute after login ships)
 
+**Status (2026-10-22): Phases 1–3 built** (`/admin`): users, activity, 30-day trends, AI token spend vs budget, generation health, learning stats, DB size & plan costs, reports inbox (questions + flashcards), feedback inbox, editable settings. Requires running `app/supabase/migrations/20261022_admin_page.sql` once. Phases 4 (live Supabase/hosting usage APIs) and 5 (revenue, needs payments) remain.
+
 **Prerequisites**
 - Real login (no `DEFAULT_USER_ID` guest fallback). Until then every guest is the same user, so user counts are meaningless.
 - Admin access: decide who is an admin (`ADMIN_EMAILS` env var or a `role` on `profiles`) and check it server-side in every `/api/admin/*` route. These routes use the service-role key across all users, so they must never fall back to a guest user.

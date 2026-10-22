@@ -1,22 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getEffectiveUserId, unauthorized } from "@/lib/auth-helpers";
+import { ReportSchema } from "@/lib/validations";
 
+/** Report a question or a flashcard (`itemType`); shows up in the admin page's reports inbox */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: questionId } = await params;
+    const { id: itemId } = await params;
     const userId = await getEffectiveUserId();
     if (!userId) return unauthorized();
-    const body = await req.json();
-    const { category = "Other", reason = "" } = body;
+    const parsed = ReportSchema.safeParse(await req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid report", details: parsed.error.format() }, { status: 400 });
+    }
+    const { itemType, category, reason } = parsed.data;
+    const isFlashcard = itemType === "Flashcard";
 
     const supabase = createAdminClient();
-
     const { error } = await supabase.from("question_reports").insert({
-      question_id: questionId,
+      question_id: isFlashcard ? null : itemId,
+      ...(isFlashcard ? { flashcard_id: itemId, item_type: "flashcard" } : {}),
       user_id: userId,
       category,
       reason,
@@ -24,14 +30,16 @@ export async function POST(
     });
 
     if (error) {
-      console.error("Report question error:", error);
+      // Flashcard reports need the admin-page migration (flashcard_id column)
+      console.error("Report error:", error);
+      return NextResponse.json({ error: "Could not save the report." }, { status: 500 });
     }
 
     return NextResponse.json({
       success: true,
       message: "Report submitted. Thank you for helping keep study cards accurate.",
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }

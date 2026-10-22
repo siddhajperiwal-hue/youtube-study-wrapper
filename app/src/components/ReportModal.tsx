@@ -49,11 +49,12 @@ export function ReportModal({
       return;
     }
     try {
-      await fetch(`/api/questions/${itemId}/report`, {
+      const res = await fetch(`/api/questions/${itemId}/report`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category, reason }),
+        body: JSON.stringify({ itemType: itemType === "Flashcard" ? "Flashcard" : "Question", category, reason }),
       });
+      if (!res.ok) throw new Error(`Report failed (${res.status})`);
       onClose();
       setReason("");
       showToast(successMessage(category));

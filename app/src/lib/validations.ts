@@ -25,3 +25,26 @@ export const NoteUpdateSchema = z.object({
   content: z.any().optional(), // TipTap JSON object or null
   version: z.number().int().min(1).default(1),
 });
+
+export const FeedbackSchema = z.object({
+  category: z.enum(["bug", "idea", "question", "other"]).default("other"),
+  message: z.string().trim().min(1, "Please write a message").max(4000, "Message is too long"),
+  page: z.string().max(300).optional(),
+});
+
+export const ReportSchema = z.object({
+  /** What was reported; older clients don't send it (= question) */
+  itemType: z.enum(["Question", "Flashcard"]).default("Question"),
+  category: z.string().max(80).default("Other"),
+  reason: z.string().max(2000).default(""),
+});
+
+const InboxStatusSchema = z.enum(["new", "seen", "resolved"]);
+
+export const AdminReportUpdateSchema = z.union([
+  z.object({ status: InboxStatusSchema }),
+  /** Take the reported question/flashcard out of circulation (or put it back) */
+  z.object({ itemStatus: z.enum(["removed", "active"]) }),
+]);
+
+export const AdminFeedbackUpdateSchema = z.object({ status: InboxStatusSchema });

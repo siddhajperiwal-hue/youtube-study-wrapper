@@ -145,16 +145,29 @@ async function startJob(supabase: AdminClient, videoDbId: string): Promise<strin
   return data?.id ?? null;
 }
 
+/** Gemini token usage of the call whose response was used (billed even if the run later fails) */
+interface TokenUsage {
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+}
+
 async function finishJob(
   supabase: AdminClient,
   jobId: string | null,
-  fields: { status: "completed" | "failed"; source_tried?: string; error?: string }
+  fields: { status: "completed" | "failed"; source_tried?: string; error?: string },
+  usage: TokenUsage | null
 ) {
   if (!jobId) return;
-  const { error } = await supabase
+  const update = { ...fields, finished_at: new Date().toISOString() };
+  let { error } = await supabase
     .from("generation_jobs")
-    .update({ ...fields, finished_at: new Date().toISOString() })
+    .update(usage ? { ...update, ...usage } : update)
     .eq("id", jobId);
+  // Token columns come from the admin-page migration; still record the outcome without them
+  if (error && usage && /input_tokens|output_tokens|model/.test(error.message)) {
+    ({ error } = await supabase.from("generation_jobs").update(update).eq("id", jobId));
+  }
   if (error) console.error(`Could not update generation job ${jobId}:`, error.message);
 }
 
@@ -179,6 +192,7 @@ async function runGeneration(
   let claimed = false;
   let jobId: string | null = null;
   let source: "transcript_api" | "pasted" | "gemini_url" | "none" = "none";
+  let usage: TokenUsage | null = null;
 
   try {
     if (options.maxFailedAttempts !== undefined) {
@@ -267,6 +281,8 @@ ${inputContext.slice(0, 80000)}
 
     let responseText = "";
     let usedModel = CANDIDATE_MODELS[0];
+    // Kept in the final error, so the admin page can tell quota/rate-limit failures (429) apart
+    const modelErrors: string[] = [];
     const ai = getAIClient();
 
     for (const model of CANDIDATE_MODELS) {
@@ -281,15 +297,25 @@ ${inputContext.slice(0, 80000)}
         if (response?.text) {
           responseText = response.text;
           usedModel = model;
+          const meta = response.usageMetadata;
+          usage = {
+            model,
+            input_tokens: meta?.promptTokenCount ?? 0,
+            // Thinking tokens are billed as output
+            output_tokens: (meta?.candidatesTokenCount ?? 0) + (meta?.thoughtsTokenCount ?? 0),
+          };
           break;
         }
       } catch (err: any) {
+        modelErrors.push(`${model}: ${err.status ?? ""} ${String(err.message ?? "").slice(0, 120)}`.trim());
         console.warn(`Model ${model} failed for ${youtubeVideoId} (${err.status || err.message?.slice(0, 80)}). Trying fallback...`);
       }
     }
 
     if (!responseText) {
-      throw new Error(`All candidate Gemini models failed for video ${youtubeVideoId}`);
+      throw new Error(
+        `All candidate Gemini models failed for video ${youtubeVideoId}${modelErrors.length ? ` (${modelErrors.join("; ")})` : ""}`
+      );
     }
     let parsedJson = JSON.parse(responseText);
 
@@ -351,7 +377,7 @@ ${inputContext.slice(0, 80000)}
     );
     if (contentErr) throw new Error(`Saving summary failed: ${contentErr.message}`);
 
-    await finishJob(supabase, jobId, { status: "completed", source_tried: source });
+    await finishJob(supabase, jobId, { status: "completed", source_tried: source }, usage);
     return { status: "ready", content: validated };
   } catch (error: any) {
     console.error(`Failed to generate content for video ${youtubeVideoId}:`, error);
@@ -370,7 +396,7 @@ ${inputContext.slice(0, 80000)}
       status: "failed",
       source_tried: source,
       error: String(error?.message || error).slice(0, 1000),
-    });
+    }, usage);
 
     return { status: "failed" };
   }

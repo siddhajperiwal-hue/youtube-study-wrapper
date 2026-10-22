@@ -13,6 +13,7 @@ import { PriorityCourseCard } from "@/components/dashboard/PriorityCourseCard";
 import { QuickQuizCard } from "@/components/dashboard/QuickQuizCard";
 import { RecallFlashcardCard } from "@/components/dashboard/RecallFlashcardCard";
 import { ShortcutsModal } from "@/components/dashboard/ShortcutsModal";
+import { FeedbackModal } from "@/components/dashboard/FeedbackModal";
 import type { CardsResponse, ReportItemType } from "@/components/dashboard/types";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
 import { useQuickQuiz } from "@/components/dashboard/useQuickQuiz";
@@ -35,6 +36,7 @@ export default function DashboardPage() {
   // Modals & popovers
   const [isAddCourseModalOpen, setIsAddCourseModalOpen] = useState(false);
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [fullTextView, setFullTextView] = useState<FullTextView>(null);
   const [report, setReport] = useState<{ open: boolean; type: ReportItemType; itemId: string }>({
     open: false,
@@ -50,6 +52,7 @@ export default function DashboardPage() {
       if (e.key === "Escape") {
         setIsAddCourseModalOpen(false);
         setIsShortcutsModalOpen(false);
+        setIsFeedbackOpen(false);
         setReport((r) => ({ ...r, open: false }));
         setFullTextView(null);
       }
@@ -116,6 +119,7 @@ export default function DashboardPage() {
         onShowShortcuts={() => setIsShortcutsModalOpen(true)}
         onExportBackup={handleExportBackup}
         onShowAppInfo={() => showToast("StudyDesk v1.0 • 20m focus interval • 5m rest break")}
+        onSendFeedback={() => setIsFeedbackOpen(true)}
       />
 
       {/* 2. Main Dashboard Container */}
@@ -216,6 +220,7 @@ export default function DashboardPage() {
       />
 
       <ShortcutsModal open={isShortcutsModalOpen} onClose={() => setIsShortcutsModalOpen(false)} />
+      <FeedbackModal open={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} showToast={showToast} />
 
       <FullTextModal view={fullTextView} quiz={quiz} flashcard={flashcard} onClose={() => setFullTextView(null)} />
 

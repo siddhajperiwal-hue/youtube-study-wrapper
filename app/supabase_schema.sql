@@ -89,11 +89,15 @@ CREATE TABLE IF NOT EXISTS public.flashcards (
 -- Question User Reports
 CREATE TABLE IF NOT EXISTS public.question_reports (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    question_id UUID NOT NULL REFERENCES public.questions(id) ON DELETE CASCADE,
+    question_id UUID REFERENCES public.questions(id) ON DELETE CASCADE,
+    flashcard_id UUID REFERENCES public.flashcards(id) ON DELETE CASCADE,
+    item_type TEXT CHECK (item_type IN ('question', 'flashcard')) DEFAULT 'question',
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     reason TEXT NOT NULL,
     category TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    status TEXT CHECK (status IN ('new', 'seen', 'resolved')) DEFAULT 'new',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT question_reports_one_item CHECK ((question_id IS NOT NULL) <> (flashcard_id IS NOT NULL))
 );
 
 -- Background Generation Jobs Tracker
@@ -104,6 +108,9 @@ CREATE TABLE IF NOT EXISTS public.generation_jobs (
     status TEXT CHECK (status IN ('pending', 'processing', 'completed', 'failed')) DEFAULT 'pending',
     attempts INT DEFAULT 0,
     error TEXT,
+    model TEXT,
+    input_tokens INT,
+    output_tokens INT,
     started_at TIMESTAMPTZ,
     finished_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW()
@@ -285,5 +292,56 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+-- ==============================================================================
+-- ADMIN PAGE (service role only: RLS on, no policies)
+-- ==============================================================================
+
+-- In-app feedback ("Send feedback" in the profile menu)
+CREATE TABLE IF NOT EXISTS public.feedback (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    email TEXT,
+    category TEXT CHECK (category IN ('bug', 'idea', 'question', 'other')) DEFAULT 'other',
+    message TEXT NOT NULL CHECK (char_length(message) BETWEEN 1 AND 4000),
+    page TEXT,
+    status TEXT CHECK (status IN ('new', 'seen', 'resolved')) DEFAULT 'new',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.feedback ENABLE ROW LEVEL SECURITY;
+
+-- Admin-editable settings (model prices, AI budget, plan costs)
+CREATE TABLE IF NOT EXISTS public.admin_settings (
+    key TEXT PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
+
+-- Database size and per-table sizes for the admin page
+CREATE OR REPLACE FUNCTION public.admin_database_stats()
+RETURNS JSONB
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+    SELECT jsonb_build_object(
+        'database_bytes', pg_catalog.pg_database_size(current_database()),
+        'tables', COALESCE((
+            SELECT jsonb_agg(
+                jsonb_build_object(
+                    'name', c.relname,
+                    'rows', GREATEST(c.reltuples, 0)::bigint,
+                    'bytes', pg_catalog.pg_total_relation_size(c.oid)
+                ) ORDER BY pg_catalog.pg_total_relation_size(c.oid) DESC
+            )
+            FROM pg_catalog.pg_class c
+            JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = 'public' AND c.relkind = 'r'
+        ), '[]'::jsonb)
+    );
+$$;
+REVOKE ALL ON FUNCTION public.admin_database_stats() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_database_stats() TO service_role;
 
 -- Schema generation complete!

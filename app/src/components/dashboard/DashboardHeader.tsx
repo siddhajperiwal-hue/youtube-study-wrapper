@@ -16,6 +16,7 @@ interface DashboardHeaderProps {
   onShowShortcuts: () => void;
   onExportBackup: () => void;
   onShowAppInfo: () => void;
+  onSendFeedback: () => void;
 }
 
 /** 2.1 Global Top Navigation Bar (56px) with streak badge, Add Course and the profile menu (2.2). */
@@ -28,14 +29,20 @@ export function DashboardHeader({
   onShowShortcuts,
   onExportBackup,
   onShowAppInfo,
+  onSendFeedback,
 }: DashboardHeaderProps) {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     createClient()
       .auth.getClaims()
       .then(({ data }) => setUserEmail((data?.claims?.email as string | undefined) ?? null))
+      .catch(() => {});
+    fetch("/api/admin/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => setIsAdmin(!!body?.isAdmin))
       .catch(() => {});
   }, []);
 
@@ -148,6 +155,20 @@ export function DashboardHeader({
                   <span className="item-label">App Settings</span>
                 </div>
               </button>
+              <button className="dropdown-item" id="feedbackItem" role="menuitem" onClick={menuAction(onSendFeedback)}>
+                <div className="item-content">
+                  <span className="item-icon">💬</span>
+                  <span className="item-label">Send Feedback</span>
+                </div>
+              </button>
+              {isAdmin && (
+                <Link className="dropdown-item" id="adminItem" role="menuitem" href="/admin" onClick={() => setIsProfileDropdownOpen(false)}>
+                  <div className="item-content">
+                    <span className="item-icon">📊</span>
+                    <span className="item-label">Admin Dashboard</span>
+                  </div>
+                </Link>
+              )}
               <button className="dropdown-item" id="signOutItem" role="menuitem" onClick={menuAction(signOut)}>
                 <div className="item-content">
                   <span className="item-icon">↪</span>
