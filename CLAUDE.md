@@ -9,6 +9,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `docs/production-readiness.md` — the launch checklist (auth, 3-course limit, ownership checks, rate limits, deployment). When asked to review it, verify each item against the code, not just its checkbox.
 - `scratch/` — one-off debugging scripts, screenshots and data backups (`scratch/ui-prototype/` holds the old mockup-porting scripts). Git-ignored (root `.gitignore`); never part of the app.
 
+## Git workflow
+
+The repo root is this folder (`app/`, `docs/` etc. live inside it); remote `origin` is the private GitHub repo https://github.com/siddhajperiwal-hue/youtube-study-wrapper, branch `main`.
+
+**After every code change, commit and push to GitHub** (the user's standing instruction): once a change is finished and checks pass (`npx tsc --noEmit`, `npm test`, lint on touched files), run `git add -A`, commit with a message describing what changed and why, and `git push`. One commit per finished change; don't push half-done or failing work. Before committing, check `git status` for anything that must not be pushed: `.env*` (except `app/.env.example`), `scratch/`, `node_modules/`, `.next/` are git-ignored and must stay that way.
+
 ## Commands (run in `app/`)
 
 ```bash
