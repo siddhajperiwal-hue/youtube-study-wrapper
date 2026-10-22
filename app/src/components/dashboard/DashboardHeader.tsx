@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Theme } from "@/hooks/useTheme";
 import { createClient } from "@/lib/supabase/client";
@@ -47,13 +47,24 @@ export function DashboardHeader({
     window.location.assign("/login");
   };
 
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close the profile menu on Esc, or on a click / tap anywhere outside it
   useEffect(() => {
+    if (!isProfileDropdownOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setIsProfileDropdownOpen(false);
     };
+    const handlePointerDown = (e: PointerEvent) => {
+      if (!profileMenuRef.current?.contains(e.target as Node)) setIsProfileDropdownOpen(false);
+    };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [isProfileDropdownOpen]);
 
   // Run a menu action and close the menu
   const menuAction = (action: () => void) => () => {
@@ -103,7 +114,7 @@ export function DashboardHeader({
           </button>
 
           {/* Profile & Utilities Dropdown (Section 2.2) */}
-          <div className="profile-menu-container" id="profileMenuContainer">
+          <div className="profile-menu-container" id="profileMenuContainer" ref={profileMenuRef}>
             <button
               className="avatar-btn"
               id="profileAvatarBtn"
