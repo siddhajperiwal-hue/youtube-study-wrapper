@@ -48,3 +48,21 @@ export const AdminReportUpdateSchema = z.union([
 ]);
 
 export const AdminFeedbackUpdateSchema = z.object({ status: InboxStatusSchema });
+
+export const QuizSubmitSchema = z.object({
+  videoId: z.string().uuid("Invalid video ID format"),
+  userAnswers: z
+    .array(
+      z.object({
+        questionId: z.string().uuid(),
+        selectedIndex: z.number().int().min(0).max(3),
+        timeTakenSec: z.number().min(0).max(3600).default(0),
+      })
+    )
+    .max(50)
+    .default([]),
+  /** "Skip Quiz": the chapter becomes Watched (Quiz Skipped) */
+  skipped: z.boolean().default(false),
+  /** No questions could be generated: Watched, without recording a quiz attempt */
+  noQuiz: z.boolean().default(false),
+});

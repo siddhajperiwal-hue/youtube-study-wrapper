@@ -104,8 +104,6 @@ function LearningPageContent() {
   const quiz = useChapterQuiz({
     courseId,
     videoId,
-    durationSec: chapter?.durationSec || 0,
-    currentTimeSec: player.currentTimeSec,
     onOpen: player.pause,
     onSkipped: () => {
       if (navigation.next) goToChapter(navigation.next.id);

@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import type { QuizQuestion } from "./types";
+import { invalidateCache } from "@/lib/cache";
 
 /** How often to re-check while the chapter's quiz is still being generated */
 const GENERATION_POLL_MS = 4_000;
@@ -16,8 +17,6 @@ interface QuizResponse {
 interface ChapterQuizOptions {
   courseId: string;
   videoId: string;
-  durationSec: number;
-  currentTimeSec: number;
   /** Pause the video when the quiz opens */
   onOpen: () => void;
   /** After "Skip Quiz" (chapter marked watched): continue to the next chapter */
@@ -26,7 +25,7 @@ interface ChapterQuizOptions {
 }
 
 /** End-of-chapter quiz (one MCQ card at a time). Completing it marks the chapter Mastered. */
-export function useChapterQuiz({ courseId, videoId, durationSec, currentTimeSec, onOpen, onSkipped, showToast }: ChapterQuizOptions) {
+export function useChapterQuiz({ courseId, videoId, onOpen, onSkipped, showToast }: ChapterQuizOptions) {
   const [show, setShow] = useState(false);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -67,18 +66,23 @@ export function useChapterQuiz({ courseId, videoId, durationSec, currentTimeSec,
   };
 
   // No quiz questions available: complete the chapter without a quiz (spec Rule 2)
-  const completeWithoutQuiz = () =>
-    fetch("/api/progress", {
+  /**
+   * Marks the chapter done via the quiz route: `skipped` → Watched (Quiz Skipped), `noQuiz` →
+   * Watched (no questions exist), otherwise graded. Then drops cached course/dashboard data so the
+   * course page's Mastered / Watched counts are fresh. Returns the response, or null if offline.
+   */
+  const finishChapter = async (body: Record<string, unknown>) => {
+    const res = await fetch(`/api/courses/${courseId}/quiz/submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        courseId,
-        videoId,
-        positionSec: durationSec || currentTimeSec,
-        durationSec: durationSec || currentTimeSec,
-        watchedSecondsDelta: 1,
-      }),
-    }).catch(() => {});
+      body: JSON.stringify({ videoId, ...body }),
+    }).catch(() => null);
+    invalidateCache("/api/courses");
+    invalidateCache("/api/dashboard");
+    return res;
+  };
+
+  const completeWithoutQuiz = () => finishChapter({ noQuiz: true });
 
   /** Poll until the chapter's questions have been generated, then show the quiz */
   const waitForQuestions = async (token: number) => {
@@ -149,25 +153,19 @@ export function useChapterQuiz({ courseId, videoId, durationSec, currentTimeSec,
 
   const submit = async () => {
     triggeredRef.current = true;
-    try {
-      const userAnswers = Object.entries(answers).map(([qId, sIdx]) => ({
-        questionId: qId,
-        selectedIndex: sIdx,
-        timeTakenSec: 10,
-      }));
-      const res = await fetch(`/api/courses/${courseId}/quiz/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ videoId, userAnswers, skipped: false }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setScore(data.score);
-        setSubmitted(true);
-        showToast("Chapter Mastered! Performance saved.");
-      }
-    } catch {
-      alert("Failed to submit quiz.");
+    const userAnswers = Object.entries(answers).map(([qId, sIdx]) => ({
+      questionId: qId,
+      selectedIndex: sIdx,
+      timeTakenSec: 10,
+    }));
+    const res = await finishChapter({ userAnswers, skipped: false });
+    if (res?.ok) {
+      const data = await res.json();
+      setScore(data.score);
+      setSubmitted(true);
+      showToast("Chapter Mastered! Performance saved.");
+    } else {
+      showToast("Couldn't save your quiz. Please try again.");
     }
   };
 
@@ -175,14 +173,10 @@ export function useChapterQuiz({ courseId, videoId, durationSec, currentTimeSec,
     triggeredRef.current = true;
     waitTokenRef.current++;
     setGenerating(false);
-    await fetch(`/api/courses/${courseId}/quiz/submit`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ videoId, skipped: true }),
-    });
+    const res = await finishChapter({ skipped: true });
     setShow(false);
-    showToast("Chapter marked as Watched (Quiz Skipped)");
-    onSkipped();
+    showToast(res?.ok ? "Chapter marked as Watched (Quiz Skipped)" : "Couldn't save that the quiz was skipped. Please try again.");
+    if (res?.ok) onSkipped();
   };
 
   return {
