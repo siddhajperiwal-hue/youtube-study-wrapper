@@ -67,6 +67,8 @@
 html {
   overflow-y: auto;
   scroll-behavior: smooth;
+  /* Always reserve the scrollbar's space, so short pages / tabs don't shift sideways */
+  scrollbar-gutter: stable;
 }
 
 body {

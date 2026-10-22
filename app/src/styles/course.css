@@ -313,8 +313,10 @@
       color: var(--color-text-secondary);
     }
 
-    /* Main Container */
+    /* Main Container. width: 100% is required: as a flex item with auto margins it would
+       otherwise shrink to its content, so the page width changed with every tab */
     .main-container {
+      width: 100%;
       max-width: 1320px;
       margin: 0 auto;
       padding: var(--space-m) var(--space-m) var(--space-xl);
