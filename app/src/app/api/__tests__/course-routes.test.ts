@@ -15,7 +15,8 @@ vi.mock("@/lib/auth-helpers", async (importOriginal) => ({
   getEffectiveUserId: vi.fn().mockResolvedValue("test-user-id-123"),
 }));
 
-vi.mock("@/lib/gemini", () => ({
+vi.mock("@/lib/gemini", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/gemini")>()),
   generateContentForVideo: vi.fn().mockResolvedValue({ status: "skipped" }),
 }));
 
@@ -99,7 +100,7 @@ describe("GET /api/courses/[id]", () => {
             videos: [
               video("v2", 2, { description: "Line one\n\nLine   two", video_content: [{ status: "failed" }], video_resources: [] }),
               video("v1", 1, {
-                video_content: { status: "ready" },
+                video_content: { status: "ready", prompt_version: "v2" },
                 video_resources: [
                   { id: "r1", video_id: "v1", url: "https://docs.example.com/guide", label: "Guide", domain: "docs.example.com", category: "docs" },
                 ],
@@ -141,9 +142,24 @@ describe("GET /api/courses/[id]", () => {
     await getCourse(new NextRequest("http://localhost/api/courses/course-1", { headers: { "x-prefetch": "1" } }), { params });
     expect(after).not.toHaveBeenCalled();
 
-    mockSupabase(course([video("v1", 1, { video_content: { status: "ready" }, video_resources: [] })]));
+    mockSupabase(course([video("v1", 1, { video_content: { status: "ready", prompt_version: "v2" }, video_resources: [] })]));
     await getCourse(new NextRequest("http://localhost/api/courses/course-1"), { params });
     expect(after).not.toHaveBeenCalled();
+  });
+
+  it("starts the playlist run for a ready video whose question set predates v2 (top-up)", async () => {
+    mockSupabase({
+      courses: {
+        data: {
+          id: "course-1",
+          name: "Course",
+          playlist_id: "pl-1",
+          playlists: { title: "P", videos: [video("v1", 1, { video_content: { status: "ready", prompt_version: "v1" }, video_resources: [] })] },
+        },
+      },
+    });
+    await getCourse(new NextRequest("http://localhost/api/courses/course-1"), { params });
+    expect(after).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -158,7 +174,7 @@ describe("GET /api/courses/[id]/chapters/[videoId]", () => {
     playlist_id: "pl-1",
     last_accessed_at: new Date().toISOString(),
     playlists: {
-      videos: [3, 1, 2].map((n) => video(`v${n}`, n, { video_content: { status: "ready" } })),
+      videos: [3, 1, 2].map((n) => video(`v${n}`, n, { video_content: { status: "ready", prompt_version: "v2" } })),
     },
   };
 
@@ -216,8 +232,8 @@ describe("GET /api/courses/[id]/chapters/[videoId]", () => {
       ...courseRow,
       playlists: {
         videos: [
-          video("v1", 1, { video_content: { status: "ready" } }),
-          video("v2", 2, { video_content: { status: "ready" } }),
+          video("v1", 1, { video_content: { status: "ready", prompt_version: "v2" } }),
+          video("v2", 2, { video_content: { status: "ready", prompt_version: "v2" } }),
           video("v3", 3, { video_content: null }),
         ],
       },
@@ -251,6 +267,25 @@ describe("GET /api/courses/[id]/quiz", () => {
     expect(body).toMatchObject({ contentStatus: "ready", count: 1 });
     expect(body.questions[0]).toMatchObject({ correct_index: 2, explanation: "Because" });
     expect(after).not.toHaveBeenCalled();
+  });
+
+  it("asks 5 questions, the ones this learner hasn't answered before first", async () => {
+    const qs = Array.from({ length: 8 }, (_, i) => ({
+      id: `q${i}`,
+      text: `Q${i}?`,
+      options: ["a", "b", "c", "d"],
+      correct_index: 0,
+      explanation: "E",
+      timestamp_sec: 100 - i,
+      // q0-q2 were answered in an earlier attempt
+      answers: i < 3 ? [{ answered_at: "2026-10-01T00:00:00Z" }] : [],
+    }));
+    mockSupabase({ questions: { data: qs }, video_content: { data: { status: "ready" } }, videos: { data: videoRow } });
+
+    const body = await (await request("videoId=v1")).json();
+    expect(body.count).toBe(5);
+    expect(body.questions.map((q: any) => q.id).sort()).toEqual(["q3", "q4", "q5", "q6", "q7"]);
+    expect(body.questions[0]).not.toHaveProperty("answers");
   });
 
   it("retries a failed generation when the learner reaches the quiz, but polling only checks", async () => {

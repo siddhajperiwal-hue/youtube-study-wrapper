@@ -17,7 +17,7 @@ vi.mock("../supabase/admin", () => ({
 }));
 
 import { createAdminClient } from "../supabase/admin";
-import { generateContentForVideo } from "../gemini";
+import { generateContentForVideo, questionTarget, topUpQuestionsForVideo } from "../gemini";
 
 type Call = { table: string; ops: string[]; args: unknown[][] };
 
@@ -157,5 +157,81 @@ describe("generateContentForVideo", () => {
 
     expect(result).toEqual({ status: "skipped" });
     expect(calls.some((c) => c.table === "video_content")).toBe(false);
+  });
+});
+
+describe("questionTarget", () => {
+  it("asks for at least 20 questions, about 1 per 2 minutes for long videos, at most 30", () => {
+    expect(questionTarget(300)).toBe(20);
+    expect(questionTarget(50 * 60)).toBe(25);
+    expect(questionTarget(3 * 3600)).toBe(30);
+  });
+});
+
+describe("topUpQuestionsForVideo", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    generateContent.mockRejectedValue(new Error("offline"));
+  });
+
+  const question = (text: string) => ({ topic: "T", text, options: ["a", "b", "c", "d"], correct_index: 0, explanation: "E", difficulty: "easy" });
+  const isTopUpClaim = (c: Call) => c.table === "video_content" && c.ops[0] === "update" && c.ops.includes("select");
+  const promptVersionUpdates = (calls: Call[]) =>
+    calls.filter((c) => c.table === "video_content" && c.ops[0] === "update").map((c) => (c.args[0][0] as any).prompt_version);
+
+  it("skips without calling Gemini when it can't claim the video", async () => {
+    const calls = mockSupabase(() => ({ data: [] }));
+    const result = await topUpQuestionsForVideo("vid-t1", "yt-t1", "Title", "", 600);
+    expect(result).toEqual({ status: "skipped" });
+    expect(generateContent).not.toHaveBeenCalled();
+    expect(inserts(calls, "questions")).toHaveLength(0);
+  });
+
+  it("adds only the missing questions, drops repeats of existing ones, then marks the set complete", async () => {
+    const existing = Array.from({ length: 17 }, (_, i) => ({ text: `Existing ${i}?` }));
+    generateContent.mockResolvedValue({
+      text: JSON.stringify({ questions: [question("existing 3"), question("New A?"), question("New B?"), question("New C?"), question("New D?")] }),
+    });
+    const calls = mockSupabase((call) => {
+      if (isTopUpClaim(call)) return { data: [{ video_id: "vid-t2" }] };
+      if (call.table === "questions" && call.ops[0] === "select") return { data: existing };
+      if (call.table === "generation_jobs" && call.ops[0] === "insert") return { data: { id: "job-t2" } };
+      return {};
+    });
+
+    const result = await topUpQuestionsForVideo("vid-t2", "yt-t2", "Title", "", 600);
+
+    expect(result).toEqual({ status: "ready", added: 3 });
+    const inserted = inserts(calls, "questions")[0].args[0][0] as any[];
+    expect(inserted.map((q) => q.text)).toEqual(["New A?", "New B?", "New C?"]);
+    expect(promptVersionUpdates(calls)).toEqual(["v2-topup", "v2"]);
+  });
+
+  it("marks a video that already has enough questions complete without calling Gemini", async () => {
+    const calls = mockSupabase((call) => {
+      if (isTopUpClaim(call)) return { data: [{ video_id: "vid-t3" }] };
+      if (call.table === "questions") return { data: Array.from({ length: 30 }, (_, i) => ({ text: `Q${i}` })) };
+      return {};
+    });
+    const result = await topUpQuestionsForVideo("vid-t3", "yt-t3", "Title", "", 600);
+    expect(result).toEqual({ status: "ready", added: 0 });
+    expect(generateContent).not.toHaveBeenCalled();
+    expect(promptVersionUpdates(calls)).toEqual(["v2-topup", "v2"]);
+  });
+
+  it("releases the claim back to v1 when Gemini fails, so a later run retries", async () => {
+    const calls = mockSupabase((call) => {
+      if (isTopUpClaim(call)) return { data: [{ video_id: "vid-t4" }] };
+      if (call.table === "questions") return { data: [{ text: "Q?" }] };
+      if (call.table === "generation_jobs" && call.ops[0] === "insert") return { data: { id: "job-t4" } };
+      return {};
+    });
+    const result = await topUpQuestionsForVideo("vid-t4", "yt-t4", "Title", "", 600);
+    expect(result).toEqual({ status: "failed" });
+    expect(promptVersionUpdates(calls)).toEqual(["v2-topup", "v1"]);
+    const jobUpdate = calls.find((c) => c.table === "generation_jobs" && c.ops[0] === "update");
+    expect(jobUpdate?.args[0][0]).toMatchObject({ status: "failed" });
+    // The video's content stays ready: its existing quiz keeps working
+    expect(calls.some((c) => c.table === "video_content" && (c.args[0]?.[0] as any)?.status === "failed")).toBe(false);
   });
 });

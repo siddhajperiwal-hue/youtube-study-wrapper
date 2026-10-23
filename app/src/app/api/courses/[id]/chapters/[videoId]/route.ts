@@ -25,7 +25,7 @@ export async function GET(
           .select(
             `
             id, name, quizzes_enabled, flashcards_enabled, playlist_id, last_accessed_at,
-            playlists ( videos ( id, youtube_video_id, position, title, duration_sec, description, video_content ( status ) ) )
+            playlists ( videos ( id, youtube_video_id, position, title, duration_sec, description, video_content ( status, prompt_version ) ) )
           `
           )
           .eq("id", courseId)

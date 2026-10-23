@@ -37,6 +37,10 @@ const GeneratedContentSchema = z.object({
   flashcards: z.array(FlashcardSchema),
 });
 
+const TopUpSchema = z.object({
+  questions: z.array(QuestionSchema),
+});
+
 export type GeneratedContent = z.infer<typeof GeneratedContentSchema>;
 
 /**
@@ -49,12 +53,36 @@ export type GenerationResult =
   | { status: "skipped" }
   | { status: "failed" };
 
+/** Like GenerationResult, for topUpQuestionsForVideo: `added` = questions saved by this call */
+export type TopUpResult = { status: "ready"; added: number } | { status: "skipped" } | { status: "failed" };
+
 export interface GenerationOptions {
   /** Don't try a video that already failed this many times (background runs; chapter visits omit it) */
   maxFailedAttempts?: number;
 }
 
-const PROMPT_VERSION = "v1";
+/**
+ * `video_content.prompt_version`: "v2" = the video has its full question set (questionTarget).
+ * "v1" videos were generated with 5-15 questions and are topped up by topUpQuestionsForVideo;
+ * "v2-topup" marks a top-up in progress (the claim; `generated_at` then holds the claim time).
+ */
+const PROMPT_VERSION = "v2";
+const LEGACY_PROMPT_VERSION = "v1";
+const TOPUP_PROMPT_VERSION = "v2-topup";
+
+/** Every video gets at least this many questions; the chapter quiz asks a few at a time */
+export const MIN_QUESTIONS_PER_VIDEO = 20;
+const MAX_QUESTIONS_PER_VIDEO = 30;
+
+/** About 1 question per 2 minutes of video, at least MIN_QUESTIONS_PER_VIDEO */
+export function questionTarget(durationSec: number): number {
+  return Math.max(MIN_QUESTIONS_PER_VIDEO, Math.min(MAX_QUESTIONS_PER_VIDEO, Math.floor(durationSec / 120)));
+}
+
+/** True for a ready video whose question set predates v2 (fewer questions than the target) */
+export function needsQuestionTopUp(content: { status?: string; prompt_version?: string | null } | null | undefined): boolean {
+  return content?.status === "ready" && content.prompt_version !== PROMPT_VERSION;
+}
 
 /** A pending claim older than this was abandoned (e.g. the server restarted mid-run) */
 const STALE_CLAIM_MS = 10 * 60 * 1000;
@@ -68,6 +96,7 @@ const STALE_CLAIM_MS = 10 * 60 * 1000;
 // repeatedly while pending doesn't even query the claim. The DB claim (claimVideo) is what
 // prevents duplicate generation across server processes.
 const inFlightGenerations = new Map<string, Promise<GenerationResult>>();
+const inFlightTopUps = new Map<string, Promise<TopUpResult>>();
 
 export function generateContentForVideo(
   videoDbId: string,
@@ -84,6 +113,29 @@ export function generateContentForVideo(
     () => inFlightGenerations.delete(videoDbId)
   );
   inFlightGenerations.set(videoDbId, run);
+  return run;
+}
+
+/**
+ * Adds questions to a ready video generated before v2 until it has questionTarget() of them,
+ * asking Gemini for new ones that don't repeat the existing set. Summary and flashcards are
+ * untouched. Claimed in the DB like a full generation (claimTopUp), so it never runs twice.
+ */
+export function topUpQuestionsForVideo(
+  videoDbId: string,
+  youtubeVideoId: string,
+  title: string,
+  description: string,
+  durationSec: number,
+  options: GenerationOptions = {}
+): Promise<TopUpResult> {
+  const existing = inFlightTopUps.get(videoDbId);
+  if (existing) return existing;
+
+  const run = runTopUp(videoDbId, youtubeVideoId, title, description, durationSec, options).finally(
+    () => inFlightTopUps.delete(videoDbId)
+  );
+  inFlightTopUps.set(videoDbId, run);
   return run;
 }
 
@@ -135,6 +187,26 @@ async function claimVideo(supabase: AdminClient, videoDbId: string): Promise<boo
   return !!reclaimed && reclaimed.length > 0;
 }
 
+/**
+ * Claims a ready pre-v2 video for a question top-up. `status` stays ready (its quiz keeps
+ * working); only `prompt_version` moves to TOPUP_PROMPT_VERSION. A top-up abandoned for over
+ * STALE_CLAIM_MS can be claimed again.
+ */
+async function claimTopUp(supabase: AdminClient, videoDbId: string): Promise<boolean> {
+  const staleBefore = new Date(Date.now() - STALE_CLAIM_MS).toISOString();
+  const { data, error } = await supabase
+    .from("video_content")
+    .update({ prompt_version: TOPUP_PROMPT_VERSION, generated_at: new Date().toISOString() })
+    .eq("video_id", videoDbId)
+    .eq("status", "ready")
+    .or(
+      `prompt_version.is.null,prompt_version.eq.${LEGACY_PROMPT_VERSION},and(prompt_version.eq."${TOPUP_PROMPT_VERSION}",generated_at.lt."${staleBefore}")`
+    )
+    .select("video_id");
+  if (error) throw error;
+  return !!data && data.length > 0;
+}
+
 async function startJob(supabase: AdminClient, videoDbId: string): Promise<string | null> {
   const { data, error } = await supabase
     .from("generation_jobs")
@@ -180,6 +252,120 @@ async function hasRows(supabase: AdminClient, table: "questions" | "flashcards",
   return (count ?? 0) > 0;
 }
 
+type VideoSource = "transcript_api" | "pasted" | "gemini_url" | "none";
+
+/** The video's timestamped transcript, or its title/description when there is none */
+async function loadVideoContext(
+  youtubeVideoId: string,
+  title: string,
+  description: string,
+  durationSec: number
+): Promise<{ source: VideoSource; inputContext: string }> {
+  try {
+    const transcript = await YoutubeTranscript.fetchTranscript(youtubeVideoId);
+    if (transcript && transcript.length > 0) {
+      return {
+        source: "transcript_api",
+        inputContext: transcript.map((item) => `[${Math.floor(item.offset / 1000)}s] ${item.text}`).join("\n"),
+      };
+    }
+  } catch {
+    // Transcript unavailable (disabled by creator or music only)
+  }
+  return {
+    source: "none",
+    inputContext: `Video Title: ${title}\nDuration: ${Math.floor(durationSec / 60)} minutes\nDescription:\n${description}`,
+  };
+}
+
+/** MCQ rules shared by the full-generation and top-up prompts */
+const QUESTION_RULES = `   - Each question must test comprehension, practical syntax, or problem-solving (avoid trivial trivia).
+   - Each question MUST have exactly 4 plausible options.
+   - correct_index must be the 0-based index (0, 1, 2, or 3) of the correct option.
+   - explanation must clearly explain why the correct option is right and the others are wrong.
+   - Options are shuffled after generation: never prefix options with letters ("A)", "B.") and never refer to options by letter or position in the explanation ("Option B", "the first option") — refer to them by their content instead. Do not use "All of the above" / "None of the above" options.
+   - timestamp_sec: the second mark in the video where this concept is taught (estimate from context if not exact).
+   - Every question must test something different, and together they should cover the whole video, not just its start.`;
+
+const QUESTION_JSON_EXAMPLE = `    {
+      "topic": "topic name",
+      "text": "Question text?",
+      "options": ["A", "B", "C", "D"],
+      "correct_index": 0,
+      "explanation": "...",
+      "difficulty": "medium",
+      "timestamp_sec": 120
+    }`;
+
+const CANDIDATE_MODELS = [
+  "gemini-3-flash-preview",
+  "gemini-3.5-flash",
+  "gemini-2.5-flash",
+];
+
+/** Calls Gemini with a fallback cascade over CANDIDATE_MODELS and returns the parsed JSON */
+async function callGemini(prompt: string, youtubeVideoId: string): Promise<{ json: unknown; usage: TokenUsage }> {
+  // Kept in the final error, so the admin page can tell quota/rate-limit failures (429) apart
+  const modelErrors: string[] = [];
+  const ai = getAIClient();
+
+  for (const model of CANDIDATE_MODELS) {
+    let text: string | undefined;
+    let usage: TokenUsage;
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+        },
+      });
+      text = response?.text;
+      const meta = response?.usageMetadata;
+      usage = {
+        model,
+        input_tokens: meta?.promptTokenCount ?? 0,
+        // Thinking tokens are billed as output
+        output_tokens: (meta?.candidatesTokenCount ?? 0) + (meta?.thoughtsTokenCount ?? 0),
+      };
+    } catch (err: any) {
+      modelErrors.push(`${model}: ${err.status ?? ""} ${String(err.message ?? "").slice(0, 120)}`.trim());
+      console.warn(`Model ${model} failed for ${youtubeVideoId} (${err.status || err.message?.slice(0, 80)}). Trying fallback...`);
+      continue;
+    }
+    if (!text) continue;
+
+    let json = JSON.parse(text);
+    // If Gemini wrapped it in markdown code blocks, clean it
+    if (typeof json === "string") {
+      json = JSON.parse(json);
+    }
+    return { json, usage };
+  }
+
+  throw new Error(
+    `All candidate Gemini models failed for video ${youtubeVideoId}${modelErrors.length ? ` (${modelErrors.join("; ")})` : ""}`
+  );
+}
+
+/** Rows for `questions`, with options shuffled (the model puts the correct answer first far more often than chance) */
+function questionRows(videoDbId: string, questions: z.infer<typeof QuestionSchema>[]) {
+  return questions.map((q) => shuffleQuestionOptions(q)).map((q) => ({
+    video_id: videoDbId,
+    topic: q.topic,
+    text: q.text,
+    options: q.options,
+    correct_index: q.correct_index,
+    explanation: q.explanation,
+    difficulty: q.difficulty,
+    timestamp_sec: q.timestamp_sec,
+    status: "active",
+  }));
+}
+
+/** Question text compared loosely, to drop a top-up question that repeats an existing one */
+const normalizeQuestionText = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+
 async function runGeneration(
   videoDbId: string,
   youtubeVideoId: string,
@@ -191,7 +377,7 @@ async function runGeneration(
   const supabase = createAdminClient();
   let claimed = false;
   let jobId: string | null = null;
-  let source: "transcript_api" | "pasted" | "gemini_url" | "none" = "none";
+  let source: VideoSource = "none";
   let usage: TokenUsage | null = null;
 
   try {
@@ -206,42 +392,15 @@ async function runGeneration(
     jobId = await startJob(supabase, videoDbId);
 
     // 2. Fetch transcript if available
-    let inputContext = "";
-
-    try {
-      const transcript = await YoutubeTranscript.fetchTranscript(youtubeVideoId);
-      if (transcript && transcript.length > 0) {
-        source = "transcript_api";
-        // Convert transcript items into timestamped text (sample every 15-30s to keep it compact and readable)
-        inputContext = transcript
-          .map((item) => `[${Math.floor(item.offset / 1000)}s] ${item.text}`)
-          .join("\n");
-      }
-    } catch {
-      // Transcript unavailable (disabled by creator or music only)
-    }
-
-    if (!inputContext) {
-      source = "none";
-      inputContext = `Video Title: ${title}\nDuration: ${Math.floor(
-        durationSec / 60
-      )} minutes\nDescription:\n${description}`;
-    }
-
-    // Determine how many questions to generate (about 1 per 2 minutes of video, capped at 15 for fast MVP)
-    const targetQuestionCount = Math.max(5, Math.min(15, Math.floor(durationSec / 120)));
+    const context = await loadVideoContext(youtubeVideoId, title, description, durationSec);
+    source = context.source;
 
     const prompt = `You are an expert curriculum designer and educator creating an active recall study system for students.
 Analyze this video content and generate:
 1. A concise, structured 2-3 paragraph study summary of the video.
 2. A list of 3-6 core topics/concepts covered.
-3. Exactly ${targetQuestionCount} high quality, challenging Multiple Choice Questions (MCQs) for end-of-chapter active recall:
-   - Each question must test comprehension, practical syntax, or problem-solving (avoid trivial trivia).
-   - Each question MUST have exactly 4 plausible options.
-   - correct_index must be the 0-based index (0, 1, 2, or 3) of the correct option.
-   - explanation must clearly explain why the correct option is right and the others are wrong.
-   - Options are shuffled after generation: never prefix options with letters ("A)", "B.") and never refer to options by letter or position in the explanation ("Option B", "the first option") — refer to them by their content instead. Do not use "All of the above" / "None of the above" options.
-   - timestamp_sec: the second mark in the video where this concept is taught (estimate from context if not exact).
+3. Exactly ${questionTarget(durationSec)} high quality, challenging Multiple Choice Questions (MCQs) for end-of-chapter active recall:
+${QUESTION_RULES}
 4. Exactly 5 flashcards (front: conceptual prompt or question, back: concise, clear answer).
 
 Return ONLY valid JSON matching this exact structure:
@@ -249,15 +408,7 @@ Return ONLY valid JSON matching this exact structure:
   "summary": "...",
   "topics": ["topic 1", "topic 2"],
   "questions": [
-    {
-      "topic": "topic name",
-      "text": "Question text?",
-      "options": ["A", "B", "C", "D"],
-      "correct_index": 0,
-      "explanation": "...",
-      "difficulty": "medium",
-      "timestamp_sec": 120
-    }
+${QUESTION_JSON_EXAMPLE}
   ],
   "flashcards": [
     {
@@ -269,62 +420,13 @@ Return ONLY valid JSON matching this exact structure:
 }
 
 Content Input:
-${inputContext.slice(0, 80000)}
+${context.inputContext.slice(0, 80000)}
 `;
 
     // 3. Call Gemini with cascade fallback across active models
-    const CANDIDATE_MODELS = [
-      "gemini-3-flash-preview",
-      "gemini-3.5-flash",
-      "gemini-2.5-flash",
-    ];
-
-    let responseText = "";
-    let usedModel = CANDIDATE_MODELS[0];
-    // Kept in the final error, so the admin page can tell quota/rate-limit failures (429) apart
-    const modelErrors: string[] = [];
-    const ai = getAIClient();
-
-    for (const model of CANDIDATE_MODELS) {
-      try {
-        const response = await ai.models.generateContent({
-          model,
-          contents: prompt,
-          config: {
-            responseMimeType: "application/json",
-          },
-        });
-        if (response?.text) {
-          responseText = response.text;
-          usedModel = model;
-          const meta = response.usageMetadata;
-          usage = {
-            model,
-            input_tokens: meta?.promptTokenCount ?? 0,
-            // Thinking tokens are billed as output
-            output_tokens: (meta?.candidatesTokenCount ?? 0) + (meta?.thoughtsTokenCount ?? 0),
-          };
-          break;
-        }
-      } catch (err: any) {
-        modelErrors.push(`${model}: ${err.status ?? ""} ${String(err.message ?? "").slice(0, 120)}`.trim());
-        console.warn(`Model ${model} failed for ${youtubeVideoId} (${err.status || err.message?.slice(0, 80)}). Trying fallback...`);
-      }
-    }
-
-    if (!responseText) {
-      throw new Error(
-        `All candidate Gemini models failed for video ${youtubeVideoId}${modelErrors.length ? ` (${modelErrors.join("; ")})` : ""}`
-      );
-    }
-    let parsedJson = JSON.parse(responseText);
-
-    // If Gemini wrapped it in markdown code blocks, clean it
-    if (typeof parsedJson === "string") {
-      parsedJson = JSON.parse(parsedJson);
-    }
-
-    const validated = GeneratedContentSchema.parse(parsedJson);
+    const gemini = await callGemini(prompt, youtubeVideoId);
+    usage = gemini.usage;
+    const validated = GeneratedContentSchema.parse(gemini.json);
 
     // 4. Save questions and flashcards, then mark the content ready. A video only ever gets one
     //    set: if an earlier, interrupted run already saved questions or flashcards, keep those.
@@ -334,19 +436,7 @@ ${inputContext.slice(0, 80000)}
     ]);
 
     if (!hasQuestions && validated.questions.length > 0) {
-      // Randomize option order: the model puts the correct answer first far more often than chance
-      const questionsToInsert = validated.questions.map((q) => shuffleQuestionOptions(q)).map((q) => ({
-        video_id: videoDbId,
-        topic: q.topic,
-        text: q.text,
-        options: q.options,
-        correct_index: q.correct_index,
-        explanation: q.explanation,
-        difficulty: q.difficulty,
-        timestamp_sec: q.timestamp_sec,
-        status: "active",
-      }));
-      const { error: qErr } = await supabase.from("questions").insert(questionsToInsert);
+      const { error: qErr } = await supabase.from("questions").insert(questionRows(videoDbId, validated.questions));
       if (qErr) throw new Error(`Saving questions failed: ${qErr.message}`);
     }
 
@@ -369,8 +459,9 @@ ${inputContext.slice(0, 80000)}
         topics: validated.topics,
         source,
         status: "ready",
-        model: usedModel,
-        prompt_version: PROMPT_VERSION,
+        model: usage.model,
+        // Questions kept from an interrupted earlier run may be fewer than the target: top them up later
+        prompt_version: hasQuestions ? LEGACY_PROMPT_VERSION : PROMPT_VERSION,
         generated_at: new Date().toISOString(),
       },
       { onConflict: "video_id" }
@@ -395,6 +486,111 @@ ${inputContext.slice(0, 80000)}
     await finishJob(supabase, jobId, {
       status: "failed",
       source_tried: source,
+      error: String(error?.message || error).slice(0, 1000),
+    }, usage);
+
+    return { status: "failed" };
+  }
+}
+
+async function runTopUp(
+  videoDbId: string,
+  youtubeVideoId: string,
+  title: string,
+  description: string,
+  durationSec: number,
+  options: GenerationOptions
+): Promise<TopUpResult> {
+  const supabase = createAdminClient();
+  let claimed = false;
+  let jobId: string | null = null;
+  let source: VideoSource = "none";
+  let usage: TokenUsage | null = null;
+
+  /** Ends the claim: v2 once the set is complete, back to v1 (retry later) on failure */
+  const release = async (promptVersion: string) => {
+    const { error } = await supabase
+      .from("video_content")
+      .update({ prompt_version: promptVersion, generated_at: new Date().toISOString() })
+      .eq("video_id", videoDbId);
+    if (error) throw new Error(`Saving top-up state failed: ${error.message}`);
+  };
+
+  try {
+    if (options.maxFailedAttempts !== undefined) {
+      const failed = (await countFailedAttempts(supabase, [videoDbId])).get(videoDbId) ?? 0;
+      if (failed >= options.maxFailedAttempts) return { status: "skipped" };
+    }
+
+    claimed = await claimTopUp(supabase, videoDbId);
+    if (!claimed) return { status: "skipped" };
+
+    const { data: existingRows, error: existingErr } = await supabase
+      .from("questions")
+      .select("text")
+      .eq("video_id", videoDbId)
+      .eq("status", "active");
+    if (existingErr) throw existingErr;
+    const existingTexts = (existingRows || []).map((q) => q.text as string);
+    const missing = questionTarget(durationSec) - existingTexts.length;
+    if (missing <= 0) {
+      await release(PROMPT_VERSION);
+      return { status: "ready", added: 0 };
+    }
+
+    jobId = await startJob(supabase, videoDbId);
+    const context = await loadVideoContext(youtubeVideoId, title, description, durationSec);
+    source = context.source;
+
+    const prompt = `You are an expert curriculum designer and educator creating an active recall study system for students.
+This video already has these quiz questions:
+${existingTexts.map((t, i) => `${i + 1}. ${t}`).join("\n")}
+
+Write exactly ${missing} NEW high quality, challenging Multiple Choice Questions (MCQs) for end-of-chapter active recall about this video:
+   - Do not repeat or rephrase any existing question above: test other concepts, or other aspects of the same concepts.
+${QUESTION_RULES}
+
+Return ONLY valid JSON matching this exact structure:
+{
+  "questions": [
+${QUESTION_JSON_EXAMPLE}
+  ]
+}
+
+Content Input:
+${context.inputContext.slice(0, 80000)}
+`;
+
+    const gemini = await callGemini(prompt, youtubeVideoId);
+    usage = gemini.usage;
+    const validated = TopUpSchema.parse(gemini.json);
+
+    const seen = new Set(existingTexts.map(normalizeQuestionText));
+    const fresh = validated.questions
+      .filter((q) => {
+        const key = normalizeQuestionText(q.text);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, missing);
+    if (fresh.length === 0) throw new Error("Top-up returned no new questions");
+
+    const { error: qErr } = await supabase.from("questions").insert(questionRows(videoDbId, fresh));
+    if (qErr) throw new Error(`Saving questions failed: ${qErr.message}`);
+    // A short answer (fewer new questions than asked for) still counts: the set is close enough
+    await release(PROMPT_VERSION);
+
+    await finishJob(supabase, jobId, { status: "completed", source_tried: `topup:${source}` }, usage);
+    return { status: "ready", added: fresh.length };
+  } catch (error: any) {
+    console.error(`Failed to top up questions for video ${youtubeVideoId}:`, error);
+    if (!claimed) return { status: "failed" };
+
+    await release(LEGACY_PROMPT_VERSION).catch((err) => console.error(err));
+    await finishJob(supabase, jobId, {
+      status: "failed",
+      source_tried: `topup:${source}`,
       error: String(error?.message || error).slice(0, 1000),
     }, usage);
 

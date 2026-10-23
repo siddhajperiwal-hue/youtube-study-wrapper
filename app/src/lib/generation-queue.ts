@@ -1,5 +1,5 @@
 import { createAdminClient } from "./supabase/admin";
-import { countFailedAttempts, generateContentForVideo } from "./gemini";
+import { countFailedAttempts, generateContentForVideo, needsQuestionTopUp, topUpQuestionsForVideo } from "./gemini";
 
 /** Background runs give up on a video after this many failed attempts (a chapter visit still retries it) */
 export const MAX_BACKGROUND_ATTEMPTS = 3;
@@ -19,8 +19,9 @@ const runningPlaylists = new Map<string, Promise<void>>();
 /**
  * Generates content for every video in a playlist that doesn't have it yet, one video at a time,
  * so each chapter's quiz exists before the learner reaches it. Starts at `startPosition` (the
- * chapter being watched) and wraps around to the earlier chapters. Content is shared by every
- * user enrolled in the playlist.
+ * chapter being watched) and wraps around to the earlier chapters. Ready videos generated
+ * before the 20-question set (prompt v1) get their questions topped up in the same walk.
+ * Content is shared by every user enrolled in the playlist.
  */
 export function generatePlaylistContent(playlistDbId: string, startPosition = 1): Promise<void> {
   const existing = runningPlaylists.get(playlistDbId);
@@ -37,12 +38,12 @@ async function runPlaylist(playlistDbId: string, startPosition: number) {
   const supabase = createAdminClient();
   const { data: videos, error } = await supabase
     .from("videos")
-    .select("id, youtube_video_id, title, description, duration_sec, position, video_content ( status )")
+    .select("id, youtube_video_id, title, description, duration_sec, position, video_content ( status, prompt_version )")
     .eq("playlist_id", playlistDbId)
     .order("position", { ascending: true });
   if (error) throw error;
 
-  const todo = (videos || []).filter((v) => contentStatus(v) !== "ready");
+  const todo = (videos || []).filter(videoNeedsWork);
   if (todo.length === 0) return;
 
   const failedAttempts = await countFailedAttempts(supabase, todo.map((v) => v.id));
@@ -52,7 +53,8 @@ async function runPlaylist(playlistDbId: string, startPosition: number) {
     .sort((a, b) => Number(a.position < startPosition) - Number(b.position < startPosition) || a.position - b.position);
 
   for (const [i, v] of queue.entries()) {
-    const result = await generateContentForVideo(
+    const generate = contentOf(v)?.status === "ready" ? topUpQuestionsForVideo : generateContentForVideo;
+    const result = await generate(
       v.id,
       v.youtube_video_id,
       v.title,
@@ -66,13 +68,21 @@ async function runPlaylist(playlistDbId: string, startPosition: number) {
   }
 }
 
-/** `video_content.status` from a nested `videos ( video_content ( status ) )` select */
-function contentStatus(video: { video_content?: unknown }): string | undefined {
+type ContentRow = { status?: string; prompt_version?: string | null };
+
+/** `video_content` from a nested `videos ( video_content ( status, prompt_version ) )` select */
+function contentOf(video: { video_content?: unknown }): ContentRow | null | undefined {
   const content = Array.isArray(video.video_content) ? video.video_content[0] : video.video_content;
-  return (content as { status?: string } | null | undefined)?.status;
+  return content as ContentRow | null | undefined;
 }
 
-/** True when any video from a nested `videos ( video_content ( status ) )` select still needs content */
+/** Content missing or not ready, or ready with a pre-v2 question set that needs topping up */
+function videoNeedsWork(video: { video_content?: unknown }): boolean {
+  const content = contentOf(video);
+  return content?.status !== "ready" || needsQuestionTopUp(content);
+}
+
+/** True when any video from a nested `videos ( video_content ( status, prompt_version ) )` select still needs work */
 export function playlistNeedsContent(videos: { video_content?: unknown }[]): boolean {
-  return videos.some((v) => contentStatus(v) !== "ready");
+  return videos.some(videoNeedsWork);
 }

@@ -43,7 +43,7 @@ export async function GET(
               duration_sec,
               description,
               status,
-              video_content ( status ),
+              video_content ( status, prompt_version ),
               video_resources ( id, video_id, url, label, domain, category )
             )
           )
