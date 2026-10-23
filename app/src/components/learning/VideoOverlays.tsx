@@ -9,9 +9,13 @@ const clampLines = (lines: number) => ({ "--clamp-lines": lines }) as CSSPropert
 
 /**
  * Click layer over the video whenever no other overlay is open: shows a big play button while
- * paused and is invisible while playing. It always covers the iframe because a click that reaches
- * YouTube's player pauses it there and YouTube draws its own paused screen (play button, title,
- * "More videos") under ours; clicks here go through the IFrame API instead, which draws nothing.
+ * paused and is invisible while playing. It always covers the iframe so clicks go through the
+ * IFrame API instead of YouTube's own player.
+ *
+ * Once a video has been resumed, YouTube draws its own paused screen on every later pause (a 56px
+ * play button at the exact centre of the video, a title bar, "More videos"); no embed parameter
+ * turns it off. Our button is opaque, larger, and centred on the whole video (the 50px top padding
+ * balances the control bar this layer leaves uncovered) so it hides YouTube's button completely.
  */
 export function PlayOverlay({ paused, onToggle }: { paused: boolean; onToggle: () => void }) {
   return (
@@ -28,6 +32,8 @@ export function PlayOverlay({ paused, onToggle }: { paused: boolean; onToggle: (
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        paddingTop: "50px",
+        boxSizing: "border-box",
         cursor: "pointer",
         zIndex: 20,
         background: paused ? "rgba(0, 0, 0, 0.15)" : "transparent",
@@ -36,17 +42,16 @@ export function PlayOverlay({ paused, onToggle }: { paused: boolean; onToggle: (
       {paused && (
         <div
           style={{
-            width: "68px",
-            height: "68px",
+            width: "72px",
+            height: "72px",
             borderRadius: "50%",
-            backgroundColor: "rgba(18, 17, 16, 0.75)",
-            backdropFilter: "blur(4px)",
+            backgroundColor: "#121110",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             color: "#FFFFFF",
             boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
-            border: "1.5px solid rgba(255,255,255,0.2)",
+            border: "1.5px solid #3d3c3a",
             transition: "transform 0.15s ease",
           }}
         >
