@@ -877,6 +877,63 @@
       margin: 8px 0;
     }
 
+    /* "Seeing ads?" link + note under the chapter controls (AdsHelpNote) */
+    .ads-help {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .ads-help-link {
+      background: none;
+      border: none;
+      padding: 0 2px;
+      color: var(--color-text-secondary);
+      font-size: 12px;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      cursor: pointer;
+    }
+
+    .ads-help-link:hover {
+      color: var(--color-primary);
+    }
+
+    .ads-help-note {
+      width: 100%;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background-color: var(--color-surface);
+      color: var(--color-text-secondary);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .ads-help-note strong {
+      color: var(--color-text-primary);
+    }
+
+    .ads-help-dismiss {
+      flex-shrink: 0;
+      height: 28px;
+      padding: 0 12px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--color-border);
+      background-color: var(--color-surface-muted);
+      color: var(--color-text-primary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .ads-help-dismiss:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
     /* Chapter Controls Bar */
     .chapter-nav-bar {
       display: flex;
@@ -1446,6 +1503,7 @@
     }
 
     body.focus-mode .chapter-nav-bar,
+    body.focus-mode .ads-help,
     body.focus-mode .description-collapsible {
       display: none;
     }

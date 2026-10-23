@@ -11,6 +11,7 @@ import { ChapterNavBar } from "@/components/learning/ChapterNavBar";
 import { DescriptionPanel } from "@/components/learning/DescriptionPanel";
 import { GuardedNavModal, PrototypeStrip } from "@/components/learning/LearningModals";
 import { NotesPanel } from "@/components/learning/NotesPanel";
+import { AdsHelpNote } from "@/components/learning/AdsHelpNote";
 import { PlayerControls } from "@/components/learning/PlayerControls";
 import { StudyTopBar } from "@/components/learning/StudyTopBar";
 import { BreakOverlay, PlayOverlay, QuizOverlay, RecallOverlay } from "@/components/learning/VideoOverlays";
@@ -468,6 +469,8 @@ function LearningPageContent() {
             onGoToChapter={goToChapter}
             onPrefetchChapter={prefetchChapter}
           />
+
+          <AdsHelpNote />
 
           <DescriptionPanel key={chapter.id} description={chapter.description} resources={chapterResources} onSeek={player.seekTo} />
         </section>
