@@ -7,13 +7,18 @@ import { formatClock, padChapterNumber, type NavChapter, type QuizQuestion } fro
 /** Inline `--clamp-lines` for `.clamp-text` */
 const clampLines = (lines: number) => ({ "--clamp-lines": lines }) as CSSProperties;
 
-/** Big centered play trigger shown while paused and no overlay is open */
-export function PlayOverlay({ onPlay }: { onPlay: () => void }) {
+/**
+ * Click layer over the video whenever no other overlay is open: shows a big play button while
+ * paused and is invisible while playing. It always covers the iframe because a click that reaches
+ * YouTube's player pauses it there and YouTube draws its own paused screen (play button, title,
+ * "More videos") under ours; clicks here go through the IFrame API instead, which draws nothing.
+ */
+export function PlayOverlay({ paused, onToggle }: { paused: boolean; onToggle: () => void }) {
   return (
     <div
       className="video-click-play-overlay"
-      onClick={onPlay}
-      title="Click to play video (Space / K)"
+      onClick={onToggle}
+      title={paused ? "Click to play video (Space / K)" : "Click to pause video (Space / K)"}
       style={{
         position: "absolute",
         top: 0,
@@ -25,29 +30,31 @@ export function PlayOverlay({ onPlay }: { onPlay: () => void }) {
         justifyContent: "center",
         cursor: "pointer",
         zIndex: 20,
-        background: "rgba(0, 0, 0, 0.15)",
+        background: paused ? "rgba(0, 0, 0, 0.15)" : "transparent",
       }}
     >
-      <div
-        style={{
-          width: "68px",
-          height: "68px",
-          borderRadius: "50%",
-          backgroundColor: "rgba(18, 17, 16, 0.75)",
-          backdropFilter: "blur(4px)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#FFFFFF",
-          boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
-          border: "1.5px solid rgba(255,255,255,0.2)",
-          transition: "transform 0.15s ease",
-        }}
-      >
-        <svg className="icon" style={{ width: "28px", height: "28px", fill: "#FFFFFF", stroke: "none" }} viewBox="0 0 24 24">
-          <polygon points="5 3 19 12 5 21 5 3"></polygon>
-        </svg>
-      </div>
+      {paused && (
+        <div
+          style={{
+            width: "68px",
+            height: "68px",
+            borderRadius: "50%",
+            backgroundColor: "rgba(18, 17, 16, 0.75)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#FFFFFF",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+            border: "1.5px solid rgba(255,255,255,0.2)",
+            transition: "transform 0.15s ease",
+          }}
+        >
+          <svg className="icon" style={{ width: "28px", height: "28px", fill: "#FFFFFF", stroke: "none" }} viewBox="0 0 24 24">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+        </div>
+      )}
     </div>
   );
 }

@@ -412,8 +412,8 @@ function LearningPageContent() {
               />
             )}
 
-            {!player.isPlaying && !showRecallOverlay && !quiz.show && !timer.showBreakOverlay && (
-              <PlayOverlay onPlay={player.togglePlayPause} />
+            {!showRecallOverlay && !quiz.show && !timer.showBreakOverlay && (
+              <PlayOverlay paused={!player.isPlaying} onToggle={player.togglePlayPause} />
             )}
 
             <RecallOverlay
