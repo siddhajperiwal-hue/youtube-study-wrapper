@@ -203,7 +203,7 @@ describe("GET /api/courses/[id]/chapters/[videoId]", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
 
-    expect(body.chapter).toMatchObject({ id: "v2", position: 2, totalChapters: 3, lastPositionSec: 42, quizReady: true });
+    expect(body.chapter).toMatchObject({ id: "v2", position: 2, totalChapters: 3, lastPositionSec: 42, quizReady: true, contentStatus: "ready", summary: "Summary" });
     expect(body.navigation.prev).toMatchObject({ id: "v1", position: 1 });
     expect(body.navigation.next).toMatchObject({ id: "v3", position: 3 });
     expect(body.notes).toEqual({ content: "b", version: 3 });

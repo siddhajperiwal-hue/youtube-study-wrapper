@@ -20,6 +20,9 @@ export interface ChapterDetail {
   lastPositionSec: number;
   watchedSeconds: number;
   quizReady: boolean;
+  /** AI content status (`video_content.status`): pending / ready / failed / unavailable, null if never started */
+  contentStatus: string | null;
+  /** AI-generated chapter notes ("StudyDesk Notes"): paragraphs separated by blank lines */
   summary: string | null;
   topics: string[];
 }

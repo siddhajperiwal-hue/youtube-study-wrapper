@@ -190,6 +190,7 @@ export async function GET(
         lastPositionSec: progress?.last_position_sec || 0,
         watchedSeconds: progress?.watched_seconds || 0,
         quizReady: content?.status === "ready",
+        contentStatus: content?.status ?? null,
         summary: content?.summary || null,
         topics: content?.topics || [],
       },

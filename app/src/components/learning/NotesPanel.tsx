@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { EditorContent, type Editor } from "@tiptap/react";
 import { notesToPlainText } from "@/lib/notes-format";
 import { formatClock, padChapterNumber, type ChapterDetail, type ChapterSummary } from "./types";
 import type { SaveStatus } from "./useNotesEditor";
+import { StudyDeskNotes } from "./StudyDeskNotes";
+
+type NotesTab = "mine" | "studydesk";
 
 interface NotesPanelProps {
   editor: Editor | null;
@@ -24,8 +27,9 @@ interface NotesPanelProps {
 }
 
 /**
- * Right column: one "page" per chapter. Only the active chapter's page holds the editor; the others
- * show read-only previews. In Focus Mode it becomes a resizable drawer.
+ * Right column with two tabs: "My Notes" (one "page" per chapter; only the active chapter's page holds
+ * the editor, the others show read-only previews) and "StudyDesk Notes" (the AI notes for the current
+ * chapter). The editor stays mounted while the AI tab is shown. In Focus Mode it becomes a resizable drawer.
  */
 export function NotesPanel({
   editor,
@@ -42,17 +46,19 @@ export function NotesPanel({
   onWidthChange,
   columnRef,
 }: NotesPanelProps) {
+  const [tab, setTab] = useState<NotesTab>("mine");
+
   // Each page is at least a screen tall, so bring the active chapter's page (with the editor) to the
   // top whenever the chapter changes — otherwise chapter 1's page is what's visible
   useEffect(() => {
     const canvas = document.getElementById("notesScrollCanvas");
     const page = document.getElementById(`chapter-page-${chapter.position}`);
-    if (!canvas || !page) return;
+    if (tab !== "mine" || !canvas || !page) return;
     canvas.scrollTo({
       top: canvas.scrollTop + page.getBoundingClientRect().top - canvas.getBoundingClientRect().top,
       behavior: "instant",
     });
-  }, [chapter.id, chaptersList.length]);
+  }, [chapter.id, chaptersList.length, tab]);
 
   // Stretchable notepad width (drag the left edge in Focus Mode)
   const handleResizeMouseDown = (e: React.MouseEvent) => {
@@ -84,45 +90,71 @@ export function NotesPanel({
         <div className="resize-handle-bar"></div>
       </div>
 
+      {/* My Notes / StudyDesk Notes switch */}
+      <div className="notes-tab-bar" role="tablist" aria-label="Notes">
+        <button
+          role="tab"
+          id="notesTabMine"
+          aria-selected={tab === "mine"}
+          className={`notes-tab ${tab === "mine" ? "active" : ""}`}
+          onClick={() => setTab("mine")}
+        >
+          My Notes
+        </button>
+        <button
+          role="tab"
+          id="notesTabStudyDesk"
+          aria-selected={tab === "studydesk"}
+          className={`notes-tab ${tab === "studydesk" ? "active" : ""}`}
+          onClick={() => setTab("studydesk")}
+        >
+          ✦ StudyDesk Notes
+        </button>
+      </div>
+
       {/* Notes Action Toolbar */}
       <div className="notes-fixed-toolbar">
-        <div className="notes-tools-left">
-          <button className="btn-insert-timestamp" id="btnToolbarInsertTimestamp" onClick={onInsertTimestamp} title="Insert clickable timestamp badge (Alt + T)">
-            <svg className="icon" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span id="insertTimestampLabel">Insert [{formatClock(currentTimeSec)}]</span>
-          </button>
-          <div className="tool-divider"></div>
-          <button
-            className={`btn-format-tool ${editor?.isActive("bold") ? "active" : ""}`}
-            id="btnBold"
-            onClick={() => editor?.chain().focus().toggleBold().run()}
-            title="Bold"
-          >
-            <strong>B</strong>
-          </button>
-          <button
-            className={`btn-format-tool ${editor?.isActive("italic") ? "active" : ""}`}
-            id="btnItalic"
-            onClick={() => editor?.chain().focus().toggleItalic().run()}
-            title="Italic"
-          >
-            <i>I</i>
-          </button>
-          <button
-            className={`btn-format-tool ${editor?.isActive("bulletList") ? "active" : ""}`}
-            id="btnList"
-            onClick={() => editor?.chain().focus().toggleBulletList().run()}
-            title="Bulleted List"
-          >
-            • List
-          </button>
-        </div>
+        {tab === "studydesk" ? (
+          <div className="notes-tools-left notes-readonly-label">Read-only · switch to My Notes to write</div>
+        ) : (
+          <div className="notes-tools-left">
+            <button className="btn-insert-timestamp" id="btnToolbarInsertTimestamp" onClick={onInsertTimestamp} title="Insert clickable timestamp badge (Alt + T)">
+              <svg className="icon" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span id="insertTimestampLabel">Insert [{formatClock(currentTimeSec)}]</span>
+            </button>
+            <div className="tool-divider"></div>
+            <button
+              className={`btn-format-tool ${editor?.isActive("bold") ? "active" : ""}`}
+              id="btnBold"
+              onClick={() => editor?.chain().focus().toggleBold().run()}
+              title="Bold"
+            >
+              <strong>B</strong>
+            </button>
+            <button
+              className={`btn-format-tool ${editor?.isActive("italic") ? "active" : ""}`}
+              id="btnItalic"
+              onClick={() => editor?.chain().focus().toggleItalic().run()}
+              title="Italic"
+            >
+              <i>I</i>
+            </button>
+            <button
+              className={`btn-format-tool ${editor?.isActive("bulletList") ? "active" : ""}`}
+              id="btnList"
+              onClick={() => editor?.chain().focus().toggleBulletList().run()}
+              title="Bulleted List"
+            >
+              • List
+            </button>
+          </div>
+        )}
 
         <div className="notes-tools-right" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div className="notes-save-badge">
+          <div className="notes-save-badge" hidden={tab !== "mine"}>
             <span className="save-indicator-dot"></span>
             <span>{saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved locally" : "Unsaved"}</span>
           </div>
@@ -137,7 +169,12 @@ export function NotesPanel({
       </div>
 
       {/* Scrollable Continuous Notes Area (one page per chapter) */}
-      <div className="notes-scroll-canvas" id="notesScrollCanvas" onClick={onCanvasClick}>
+      {tab === "studydesk" && (
+        <div className="notes-scroll-canvas" id="studyDeskNotesCanvas">
+          <StudyDeskNotes chapter={chapter} />
+        </div>
+      )}
+      <div className="notes-scroll-canvas" id="notesScrollCanvas" onClick={onCanvasClick} hidden={tab !== "mine"}>
         {chaptersList.map((ch) => {
           const num = padChapterNumber(ch.position);
 
