@@ -88,3 +88,13 @@ body {
 .font-mono {
   font-family: var(--font-mono), monospace;
 }
+
+/* Theme switch splash (useTheme): the new theme grows as a circle from the centre over the old one */
+:root.theme-splash::view-transition-old(root),
+:root.theme-splash::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+:root.theme-splash::view-transition-new(root) {
+  z-index: 1;
+}
