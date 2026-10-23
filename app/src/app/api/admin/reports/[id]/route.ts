@@ -27,15 +27,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const { data: report, error: findErr } = await supabase
     .from("question_reports")
-    .select("question_id, flashcard_id")
+    // "*": flashcard_id only exists after the admin migration
+    .select("*")
     .eq("id", id)
-    .maybeSingle();
+    .maybeSingle<{ question_id: string | null; flashcard_id?: string | null }>();
   if (findErr) return NextResponse.json({ error: findErr.message }, { status: 500 });
   if (!report) return NextResponse.json({ error: "Report not found." }, { status: 404 });
 
   const [table, itemId, column] = report.question_id
     ? (["questions", report.question_id, "question_id"] as const)
-    : (["flashcards", report.flashcard_id, "flashcard_id"] as const);
+    : (["flashcards", report.flashcard_id ?? null, "flashcard_id"] as const);
   if (!itemId) return NextResponse.json({ error: "The reported item no longer exists." }, { status: 404 });
 
   const { itemStatus } = parsed.data;
