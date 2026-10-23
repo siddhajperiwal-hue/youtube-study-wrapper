@@ -21,7 +21,6 @@ export function StudyDeskNotes({ chapter }: { chapter: ChapterDetail }) {
     <article className="chapter-note-page studydesk-notes-page">
       <div className="page-sheet-header">
         <span>StudyDesk Notes · Chapter {num}</span>
-        <span className="page-sheet-badge">AI-generated</span>
       </div>
       <h3 className="page-sheet-title">
         Chapter {num}: {chapter.title}
@@ -43,7 +42,7 @@ export function StudyDeskNotes({ chapter }: { chapter: ChapterDetail }) {
           {paragraphs.map((p, i) => (
             <p key={i}>{renderInline(p)}</p>
           ))}
-          <p className="studydesk-disclaimer">Written by AI from the video&apos;s transcript, so it can contain mistakes.</p>
+          <p className="studydesk-disclaimer">Written from the video&apos;s transcript, so it can contain mistakes.</p>
         </div>
       ) : (
         <div className="page-sheet-body">
