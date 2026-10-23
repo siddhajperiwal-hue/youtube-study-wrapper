@@ -17,7 +17,7 @@ vi.mock("../supabase/admin", () => ({
 }));
 
 import { createAdminClient } from "../supabase/admin";
-import { generateContentForVideo, questionTarget, topUpQuestionsForVideo } from "../gemini";
+import { countFailedAttempts, generateContentForVideo, questionTarget, topUpQuestionsForVideo } from "../gemini";
 
 type Call = { table: string; ops: string[]; args: unknown[][] };
 
@@ -148,6 +148,21 @@ describe("generateContentForVideo", () => {
     expect(jobUpdate?.args[0][0]).toMatchObject({ status: "failed", error: expect.stringContaining("All candidate Gemini models failed") });
   });
 
+  it("reports a quota / rate-limit failure as rate_limited, still logging it", async () => {
+    generateContent.mockRejectedValue(Object.assign(new Error("You exceeded your current quota"), { status: 429 }));
+    const calls = mockSupabase((call) => {
+      if (isClaimInsert(call)) return { data: [{ video_id: "vid-rl" }] };
+      if (call.table === "generation_jobs" && call.ops[0] === "insert") return { data: { id: "job-rl" } };
+      return {};
+    });
+
+    const result = await generateContentForVideo("vid-rl", "yt-rl", "Title", "", 600);
+
+    expect(result).toEqual({ status: "rate_limited" });
+    const jobUpdate = calls.find((c) => c.table === "generation_jobs" && c.ops[0] === "update");
+    expect(jobUpdate?.args[0][0]).toMatchObject({ status: "failed", error: expect.stringContaining("429") });
+  });
+
   it("doesn't retry a video that has used up its background attempts", async () => {
     const calls = mockSupabase((call) =>
       call.table === "generation_jobs" ? { data: [{ video_id: "vid-6" }, { video_id: "vid-6" }, { video_id: "vid-6" }] } : {}
@@ -233,5 +248,20 @@ describe("topUpQuestionsForVideo", () => {
     expect(jobUpdate?.args[0][0]).toMatchObject({ status: "failed" });
     // The video's content stays ready: its existing quiz keeps working
     expect(calls.some((c) => c.table === "video_content" && (c.args[0]?.[0] as any)?.status === "failed")).toBe(false);
+  });
+});
+
+describe("countFailedAttempts", () => {
+  it("doesn't count quota / rate-limit failures against a video", async () => {
+    mockSupabase(() => ({
+      data: [
+        { video_id: "v1", error: "All candidate Gemini models failed for video yt (gemini-3-flash-preview: 429 You exceeded your current quota)" },
+        { video_id: "v1", error: "Saving questions failed: boom" },
+        { video_id: "v2", error: "All candidate Gemini models failed for video yt (gemini-2.5-flash: 429 RESOURCE_EXHAUSTED)" },
+      ],
+    }));
+    const counts = await countFailedAttempts(createAdminClient(), ["v1", "v2"]);
+    expect(counts.get("v1")).toBe(1);
+    expect(counts.get("v2")).toBeUndefined();
   });
 });

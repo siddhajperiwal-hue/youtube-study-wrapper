@@ -1,3 +1,4 @@
+import { isQuotaError } from "../ai-errors";
 import { tokenCostUsd, type AdminSettings } from "./settings";
 import type { AdminFeedbackRow, AdminOverview, AdminReportRow, AdminUserRow, InboxStatus } from "./types";
 
@@ -70,8 +71,6 @@ const STUDYING_NOW_MS = 2 * 60_000;
 const isoDate = (d: Date) => d.toISOString().slice(0, 10);
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const inboxStatus = (s: string | null | undefined): InboxStatus => (s === "seen" || s === "resolved" ? s : "new");
-const isQuotaError = (error: string | null | undefined) =>
-  !!error && /\b429\b|RESOURCE_EXHAUSTED|quota|rate.?limit/i.test(error);
 
 export function buildOverview(input: OverviewInput): AdminOverview {
   const { now, settings } = input;

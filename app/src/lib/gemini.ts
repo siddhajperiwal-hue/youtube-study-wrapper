@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { YoutubeTranscript } from "youtube-transcript";
 import { z } from "zod";
 import { createAdminClient } from "./supabase/admin";
+import { isQuotaError, RateLimitError } from "./ai-errors";
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 import { shuffleQuestionOptions } from "./quiz-shuffle";
@@ -47,14 +48,21 @@ export type GeneratedContent = z.infer<typeof GeneratedContentSchema>;
  * - `ready`: generated and saved by this call
  * - `skipped`: nothing to do (already ready, being generated elsewhere, or out of attempts)
  * - `failed`: this attempt failed (the error is logged in `generation_jobs`)
+ * - `rate_limited`: every model was out of quota / rate limited (HTTP 429). Logged too, but not
+ *   counted by countFailedAttempts: it says nothing about the video, so retry it later.
  */
 export type GenerationResult =
   | { status: "ready"; content: GeneratedContent }
   | { status: "skipped" }
-  | { status: "failed" };
+  | { status: "failed" }
+  | { status: "rate_limited" };
 
 /** Like GenerationResult, for topUpQuestionsForVideo: `added` = questions saved by this call */
-export type TopUpResult = { status: "ready"; added: number } | { status: "skipped" } | { status: "failed" };
+export type TopUpResult =
+  | { status: "ready"; added: number }
+  | { status: "skipped" }
+  | { status: "failed" }
+  | { status: "rate_limited" };
 
 export interface GenerationOptions {
   /** Don't try a video that already failed this many times (background runs; chapter visits omit it) */
@@ -139,17 +147,23 @@ export function topUpQuestionsForVideo(
   return run;
 }
 
-/** Failed generation attempts per video, from the `generation_jobs` log */
+/**
+ * Failed generation attempts per video, from the `generation_jobs` log. Quota / rate-limit
+ * failures (429) don't count: they're the provider's limit, not a problem with the video.
+ */
 export async function countFailedAttempts(supabase: AdminClient, videoIds: string[]): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   if (videoIds.length === 0) return counts;
   const { data, error } = await supabase
     .from("generation_jobs")
-    .select("video_id")
+    .select("video_id, error")
     .in("video_id", videoIds)
     .eq("status", "failed");
   if (error) throw error;
-  for (const row of data || []) counts.set(row.video_id, (counts.get(row.video_id) ?? 0) + 1);
+  for (const row of data || []) {
+    if (isQuotaError(row.error)) continue;
+    counts.set(row.video_id, (counts.get(row.video_id) ?? 0) + 1);
+  }
   return counts;
 }
 
@@ -303,10 +317,15 @@ const CANDIDATE_MODELS = [
   "gemini-2.5-flash",
 ];
 
-/** Calls Gemini with a fallback cascade over CANDIDATE_MODELS and returns the parsed JSON */
+/**
+ * Calls Gemini with a fallback cascade over CANDIDATE_MODELS and returns the parsed JSON.
+ * Throws RateLimitError when no model answered and at least one was out of quota (429): the
+ * others failing too (e.g. a retired model) doesn't make it the video's fault.
+ */
 async function callGemini(prompt: string, youtubeVideoId: string): Promise<{ json: unknown; usage: TokenUsage }> {
   // Kept in the final error, so the admin page can tell quota/rate-limit failures (429) apart
   const modelErrors: string[] = [];
+  let rateLimited = false;
   const ai = getAIClient();
 
   for (const model of CANDIDATE_MODELS) {
@@ -329,6 +348,7 @@ async function callGemini(prompt: string, youtubeVideoId: string): Promise<{ jso
         output_tokens: (meta?.candidatesTokenCount ?? 0) + (meta?.thoughtsTokenCount ?? 0),
       };
     } catch (err: any) {
+      if (err.status === 429 || isQuotaError(String(err.message ?? ""))) rateLimited = true;
       modelErrors.push(`${model}: ${err.status ?? ""} ${String(err.message ?? "").slice(0, 120)}`.trim());
       console.warn(`Model ${model} failed for ${youtubeVideoId} (${err.status || err.message?.slice(0, 80)}). Trying fallback...`);
       continue;
@@ -343,9 +363,8 @@ async function callGemini(prompt: string, youtubeVideoId: string): Promise<{ jso
     return { json, usage };
   }
 
-  throw new Error(
-    `All candidate Gemini models failed for video ${youtubeVideoId}${modelErrors.length ? ` (${modelErrors.join("; ")})` : ""}`
-  );
+  const message = `All candidate Gemini models failed for video ${youtubeVideoId}${modelErrors.length ? ` (${modelErrors.join("; ")})` : ""}`;
+  throw rateLimited ? new RateLimitError(message) : new Error(message);
 }
 
 /** Rows for `questions`, with options shuffled (the model puts the correct answer first far more often than chance) */
@@ -489,7 +508,7 @@ ${context.inputContext.slice(0, 80000)}
       error: String(error?.message || error).slice(0, 1000),
     }, usage);
 
-    return { status: "failed" };
+    return { status: error instanceof RateLimitError ? "rate_limited" : "failed" };
   }
 }
 
@@ -594,6 +613,6 @@ ${context.inputContext.slice(0, 80000)}
       error: String(error?.message || error).slice(0, 1000),
     }, usage);
 
-    return { status: "failed" };
+    return { status: error instanceof RateLimitError ? "rate_limited" : "failed" };
   }
 }

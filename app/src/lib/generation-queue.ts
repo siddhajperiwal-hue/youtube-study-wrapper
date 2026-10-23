@@ -1,14 +1,26 @@
 import { createAdminClient } from "./supabase/admin";
 import { countFailedAttempts, generateContentForVideo, needsQuestionTopUp, topUpQuestionsForVideo } from "./gemini";
 
-/** Background runs give up on a video after this many failed attempts (a chapter visit still retries it) */
+/**
+ * Background runs give up on a video after this many failed attempts (a chapter visit still
+ * retries it). Quota / rate-limit failures don't count (countFailedAttempts skips them).
+ */
 export const MAX_BACKGROUND_ATTEMPTS = 3;
 
 /** Pause between videos so a whole playlist doesn't run into Gemini's per-minute rate limits */
 const DELAY_BETWEEN_VIDEOS_MS = 5_000;
 
-/** Longer pause after a failed video: failures are often rate limits */
+/** Longer pause after a failed video */
 const DELAY_AFTER_FAILURE_MS = 60_000;
+
+/**
+ * Out of quota / rate limited (429): wait, then retry the same video (moving on would only hit
+ * the same limit). The wait doubles each time up to the cap; after MAX_RATE_LIMIT_WAITS in a row
+ * (~45 min, likely a daily quota) the run stops. The next course or chapter visit starts a new one.
+ */
+export const RATE_LIMIT_WAIT_MS = 60_000;
+const RATE_LIMIT_MAX_WAIT_MS = 15 * 60_000;
+export const MAX_RATE_LIMIT_WAITS = 6;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -52,7 +64,9 @@ async function runPlaylist(playlistDbId: string, startPosition: number) {
     // From the current chapter onward first, then the chapters before it
     .sort((a, b) => Number(a.position < startPosition) - Number(b.position < startPosition) || a.position - b.position);
 
-  for (const [i, v] of queue.entries()) {
+  let rateLimitWaits = 0;
+  for (let i = 0; i < queue.length; ) {
+    const v = queue[i];
     const generate = contentOf(v)?.status === "ready" ? topUpQuestionsForVideo : generateContentForVideo;
     const result = await generate(
       v.id,
@@ -62,7 +76,18 @@ async function runPlaylist(playlistDbId: string, startPosition: number) {
       v.duration_sec,
       { maxFailedAttempts: MAX_BACKGROUND_ATTEMPTS }
     );
-    if (i < queue.length - 1 && result.status !== "skipped") {
+    if (result.status === "rate_limited") {
+      if (rateLimitWaits >= MAX_RATE_LIMIT_WAITS) {
+        console.warn(`Playlist ${playlistDbId}: still rate limited after ${rateLimitWaits} waits, stopping for now`);
+        return;
+      }
+      await sleep(Math.min(RATE_LIMIT_WAIT_MS * 2 ** rateLimitWaits, RATE_LIMIT_MAX_WAIT_MS));
+      rateLimitWaits++;
+      continue;
+    }
+    rateLimitWaits = 0;
+    i++;
+    if (i < queue.length && result.status !== "skipped") {
       await sleep(result.status === "failed" ? DELAY_AFTER_FAILURE_MS : DELAY_BETWEEN_VIDEOS_MS);
     }
   }
