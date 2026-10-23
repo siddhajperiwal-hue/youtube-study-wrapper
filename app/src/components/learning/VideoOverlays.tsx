@@ -333,16 +333,6 @@ export function QuizOverlay({ quiz, chapterPosition, nextChapter, onReport, onNe
                           {currentQ.explanation}
                         </div>
                       )}
-                      {!!currentQ.timestamp_sec && currentQ.timestamp_sec > 0 && (
-                        <button
-                          type="button"
-                          className="overlay-taught-at"
-                          title="Close the quiz for now and replay this part of the video"
-                          onClick={() => onRewatch(currentQ.timestamp_sec!)}
-                        >
-                          ▶ Taught at {formatClock(currentQ.timestamp_sec)} — rewatch
-                        </button>
-                      )}
                     </div>
                   )}
                 </div>
@@ -361,6 +351,17 @@ export function QuizOverlay({ quiz, chapterPosition, nextChapter, onReport, onNe
                   </button>
 
                   <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    {/* In the action row (always visible), not under the explanation, which can scroll out of view */}
+                    {selectedIdx !== undefined && !!currentQ.timestamp_sec && currentQ.timestamp_sec > 0 && (
+                      <button
+                        type="button"
+                        className="overlay-taught-at"
+                        title={`Taught at ${formatClock(currentQ.timestamp_sec)}: close the quiz for now and replay this part of the video`}
+                        onClick={() => onRewatch(currentQ.timestamp_sec!)}
+                      >
+                        ▶ Rewatch {formatClock(currentQ.timestamp_sec)}
+                      </button>
+                    )}
                     {currentIdx > 0 && (
                       <button
                         type="button"
