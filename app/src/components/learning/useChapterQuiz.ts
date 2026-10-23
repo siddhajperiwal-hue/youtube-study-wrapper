@@ -36,6 +36,8 @@ export function useChapterQuiz({ courseId, videoId, onOpen, onSkipped, showToast
   const [generating, setGenerating] = useState(false);
   /** Generation failed or timed out: the overlay offers to continue without a quiz */
   const [unavailable, setUnavailable] = useState(false);
+  /** Quiz set aside to rewatch where a question's topic was taught; answers are kept */
+  const [rewatching, setRewatching] = useState(false);
   // Set once the quiz has fired for this viewing, so it doesn't re-trigger on every time update
   const triggeredRef = useRef(false);
   // Bumped to cancel a running wait for generated questions (chapter change, skip, close)
@@ -49,6 +51,7 @@ export function useChapterQuiz({ courseId, videoId, onOpen, onSkipped, showToast
     setScore(null);
     setGenerating(false);
     setUnavailable(false);
+    setRewatching(false);
     setShow(true);
   };
 
@@ -62,6 +65,7 @@ export function useChapterQuiz({ courseId, videoId, onOpen, onSkipped, showToast
     setScore(null);
     setGenerating(false);
     setUnavailable(false);
+    setRewatching(false);
     setShow(false);
   };
 
@@ -109,8 +113,26 @@ export function useChapterQuiz({ courseId, videoId, onOpen, onSkipped, showToast
     setUnavailable(true);
   };
 
+  /** Hide the quiz (keeping progress) while the learner rewatches part of the video */
+  const rewatch = () => {
+    setShow(false);
+    setRewatching(true);
+  };
+
+  /** Back to the quiz after rewatching, at the same question with the same answers */
+  const resume = () => {
+    triggeredRef.current = true;
+    setRewatching(false);
+    onOpen();
+    setShow(true);
+  };
+
   const trigger = async () => {
     if (triggeredRef.current && show) return;
+    if (rewatching && questions.length > 0 && !submitted) {
+      resume();
+      return;
+    }
     triggeredRef.current = true;
     try {
       const res = await fetch(`/api/courses/${courseId}/quiz?videoId=${videoId}`);
@@ -190,6 +212,7 @@ export function useChapterQuiz({ courseId, videoId, onOpen, onSkipped, showToast
     score,
     generating,
     unavailable,
+    rewatching,
     /** Has the quiz already fired for this viewing? */
     hasTriggered: () => triggeredRef.current,
     /** Let the quiz fire again (the user rewound away from the end) */
@@ -198,6 +221,8 @@ export function useChapterQuiz({ courseId, videoId, onOpen, onSkipped, showToast
     },
     reset,
     trigger,
+    rewatch,
+    resume,
     selectAnswer,
     submit,
     skip,

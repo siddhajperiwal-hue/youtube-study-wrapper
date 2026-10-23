@@ -162,12 +162,14 @@ interface QuizOverlayProps {
   onReport: (questionId: string | null) => void;
   onNextChapterHover: (chapterId: string) => void;
   onGoToChapter: (chapterId: string) => void;
+  /** Jump the video to where a question's topic was taught */
+  onRewatch: (seconds: number) => void;
 }
 
 const OPTION_LETTERS = ["A", "B", "C", "D", "E"];
 
 /** Overlay 2: end-of-chapter quiz, one MCQ card at a time. */
-export function QuizOverlay({ quiz, chapterPosition, nextChapter, onReport, onNextChapterHover, onGoToChapter }: QuizOverlayProps) {
+export function QuizOverlay({ quiz, chapterPosition, nextChapter, onReport, onNextChapterHover, onGoToChapter, onRewatch }: QuizOverlayProps) {
   const { show, questions, currentIdx, answers, submitted, score } = quiz;
   const currentQ = questions[currentIdx];
   const selectedIdx = currentQ ? answers[currentQ.id] : undefined;
@@ -330,6 +332,16 @@ export function QuizOverlay({ quiz, chapterPosition, nextChapter, onReport, onNe
                         <div className="clamp-text" style={{ ...clampLines(3), marginTop: "6px", lineHeight: 1.45 }}>
                           {currentQ.explanation}
                         </div>
+                      )}
+                      {!!currentQ.timestamp_sec && currentQ.timestamp_sec > 0 && (
+                        <button
+                          type="button"
+                          className="overlay-taught-at"
+                          title="Close the quiz for now and replay this part of the video"
+                          onClick={() => onRewatch(currentQ.timestamp_sec!)}
+                        >
+                          ▶ Taught at {formatClock(currentQ.timestamp_sec)} — rewatch
+                        </button>
                       )}
                     </div>
                   )}

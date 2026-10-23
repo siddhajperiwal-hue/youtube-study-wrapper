@@ -430,7 +430,19 @@ function LearningPageContent() {
               onReport={(id) => openReport("Quiz Question", id)}
               onNextChapterHover={prefetchChapter}
               onGoToChapter={goToChapter}
+              onRewatch={(seconds) => {
+                quiz.rewatch();
+                player.seekTo(seconds);
+                player.play();
+                showToast(`Replaying from ${formatClock(seconds)}. The quiz reopens when the video ends.`);
+              }}
             />
+
+            {quiz.rewatching && !quiz.show && (
+              <button type="button" className="btn-back-to-quiz" onClick={quiz.resume}>
+                Back to quiz ↩
+              </button>
+            )}
 
             <BreakOverlay
               visible={timer.showBreakOverlay}

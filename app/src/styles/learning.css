@@ -736,6 +736,37 @@
       display: none;
     }
 
+    /* "Taught at 02:05" under a quiz explanation: replays that part of the video */
+    .overlay-taught-at {
+      margin-top: 8px;
+      padding: 3px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      background: var(--color-surface);
+      color: var(--color-primary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .overlay-taught-at:hover { border-color: var(--color-primary); }
+
+    /* Shown over the video while the quiz is set aside to rewatch a topic */
+    .btn-back-to-quiz {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 25;
+      padding: 6px 14px;
+      border: none;
+      border-radius: 16px;
+      background: var(--color-primary);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+    }
+
     /* Quiz / recall cards keep one size: long text is clamped (full text in the title tooltip) */
     .overlay-card.overlay-card-fixed {
       height: min(460px, 100%);

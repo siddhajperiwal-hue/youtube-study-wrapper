@@ -57,6 +57,8 @@ export interface QuizQuestion {
   options: string[];
   correct_index?: number;
   explanation?: string;
+  /** Second in the chapter's video where the concept is taught (0/null: unknown) */
+  timestamp_sec?: number | null;
 }
 
 /** Response of GET /api/courses/[id]/chapters/[videoId] */
