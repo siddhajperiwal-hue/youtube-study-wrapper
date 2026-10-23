@@ -7,7 +7,8 @@ import { AdminReportUpdateSchema } from "@/lib/validations";
  * Reports inbox actions: `{ status }` marks the report new / seen / resolved;
  * `{ itemStatus: "removed" | "active" }` takes the reported question or flashcard out of every
  * quiz, review and recall (they only serve `status = 'active'`) or puts it back. Removing also
- * resolves every report about that item.
+ * resolves every report about that item (skipped, not failed, before the admin migration adds
+ * `question_reports.status`).
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const guard = await requireAdmin();
@@ -44,7 +45,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       ? supabase.from("question_reports").update({ status: "resolved" }).eq(column, itemId)
       : Promise.resolve({ error: null }),
   ]);
-  const error = itemRes.error ?? reportsRes.error;
+  const missingStatusColumn = !!reportsRes.error && /status/.test(reportsRes.error.message);
+  const error = itemRes.error ?? (missingStatusColumn ? null : reportsRes.error);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

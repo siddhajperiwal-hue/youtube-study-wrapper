@@ -11,6 +11,8 @@ interface AdminTablesProps {
   onReportStatus: (id: string, status: InboxStatus) => void;
   onReportItemStatus: (id: string, itemStatus: "removed" | "active") => void;
   onFeedbackStatus: (id: string, status: InboxStatus) => void;
+  /** False until the admin migration adds `question_reports.status`: status changes can't be saved */
+  canSetReportStatus: boolean;
 }
 
 const STATUS_CHIP: Record<InboxStatus, string> = { new: "red", seen: "amber", resolved: "green" };
@@ -90,7 +92,7 @@ function UsersTab({ data }: { data: AdminOverview }) {
   );
 }
 
-function ReportsTab({ data, onReportStatus, onReportItemStatus }: Omit<AdminTablesProps, "onFeedbackStatus">) {
+function ReportsTab({ data, onReportStatus, onReportItemStatus, canSetReportStatus }: Omit<AdminTablesProps, "onFeedbackStatus">) {
   const { matches, controls } = useInboxFilter();
   const rows = data.reports.filter((r) =>
     matches(r.status, `${r.itemText} ${r.reason} ${r.category} ${r.videoTitle} ${r.reporterEmail}`)
@@ -138,13 +140,21 @@ function ReportsTab({ data, onReportStatus, onReportItemStatus }: Omit<AdminTabl
                 </td>
                 <td>
                   <div className="cell-actions">
-                    {r.status === "new" && (
-                      <button className="admin-btn small" onClick={() => onReportStatus(r.id, "seen")}>Mark seen</button>
-                    )}
-                    {r.status !== "resolved" ? (
-                      <button className="admin-btn small" onClick={() => onReportStatus(r.id, "resolved")}>Resolve</button>
+                    {!canSetReportStatus ? (
+                      <span className="cell-sub" title="Run the admin migration in the Supabase SQL editor (see the banner above)">
+                        Resolve needs the one-time setup
+                      </span>
                     ) : (
-                      <button className="admin-btn small" onClick={() => onReportStatus(r.id, "new")}>Reopen</button>
+                      <>
+                        {r.status === "new" && (
+                          <button className="admin-btn small" onClick={() => onReportStatus(r.id, "seen")}>Mark seen</button>
+                        )}
+                        {r.status !== "resolved" ? (
+                          <button className="admin-btn small" onClick={() => onReportStatus(r.id, "resolved")}>Resolve</button>
+                        ) : (
+                          <button className="admin-btn small" onClick={() => onReportStatus(r.id, "new")}>Reopen</button>
+                        )}
+                      </>
                     )}
                     {r.itemId &&
                       (r.itemStatus === "removed" ? (

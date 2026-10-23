@@ -115,6 +115,7 @@ export default function AdminPage() {
               onReportStatus={admin.setReportStatus}
               onReportItemStatus={admin.setReportItemStatus}
               onFeedbackStatus={admin.setFeedbackStatus}
+              canSetReportStatus={!data.setupNeeded.includes("Flashcard reports and report status")}
             />
           </Section>
 
