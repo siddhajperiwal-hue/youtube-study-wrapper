@@ -278,6 +278,14 @@ export async function GET() {
 
       const thumbnailUrl = thumbMap.get(c.playlists?.id) || null;
 
+      // Chapter "Resume" opens: the first not-started chapter, else chapter 1 (same rule as the
+      // course page's resume button)
+      const byPosition = [...progress].sort(
+        (a, b) => (a.videos?.position ?? 0) - (b.videos?.position ?? 0)
+      );
+      const resumeChapterId =
+        (byPosition.find((p) => p.status === "not_started") || byPosition[0])?.video_id || null;
+
       return {
         id: c.id,
         name: c.name,
@@ -294,6 +302,7 @@ export async function GET() {
         progressPercent,
         totalDurationMinutes: Math.round(totalDurationSec / 60),
         remainingMinutes: Math.round(remainingDurationSec / 60),
+        resumeChapterId,
       };
     });
 

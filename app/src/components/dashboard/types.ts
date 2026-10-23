@@ -14,6 +14,8 @@ export interface Course {
   progressPercent: number;
   totalDurationMinutes: number;
   remainingMinutes: number;
+  /** Chapter (videos.id) the Resume buttons open: first not-started chapter, else chapter 1 */
+  resumeChapterId: string | null;
 }
 
 export interface QuickQuiz {

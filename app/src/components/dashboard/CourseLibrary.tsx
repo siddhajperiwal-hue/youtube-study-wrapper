@@ -104,6 +104,10 @@ export function CourseLibrary({ courses, excludeCourseId }: { courses: Course[];
               router.prefetch(`/course/${c.id}`);
               prefetchData(`/api/courses/${c.id}`);
               prefetchData(`/api/courses/${c.id}/review`);
+              if (c.resumeChapterId && c.progressPercent < 100) {
+                router.prefetch(`/course/${c.id}/learn/${c.resumeChapterId}`);
+                prefetchData(`/api/courses/${c.id}/chapters/${c.resumeChapterId}`);
+              }
             }}
             onClick={() => router.push(`/course/${c.id}`)}
           >
@@ -149,14 +153,26 @@ export function CourseLibrary({ courses, excludeCourseId }: { courses: Course[];
 
             <div className="course-card-actions">
               <Link
-                href={c.progressPercent === 100 ? `/course/${c.id}?tab=review` : `/course/${c.id}`}
+                href={
+                  c.progressPercent === 100
+                    ? `/course/${c.id}?tab=review`
+                    : c.resumeChapterId
+                      ? `/course/${c.id}/learn/${c.resumeChapterId}`
+                      : `/course/${c.id}`
+                }
                 className="btn btn-primary"
                 style={{ height: "34px", padding: "0 14px", fontSize: "13px", display: "inline-flex", alignItems: "center", textDecoration: "none" }}
                 onClick={(e) => e.stopPropagation()}
               >
                 {c.progressPercent === 100 ? "Review Course" : "Resume"}
               </Link>
-              <span style={{ fontSize: "13px", color: "var(--color-primary)", fontWeight: 500 }}>Details →</span>
+              <Link
+                href={`/course/${c.id}`}
+                style={{ fontSize: "13px", color: "var(--color-primary)", fontWeight: 500, textDecoration: "none" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                Details →
+              </Link>
             </div>
           </article>
         ))}

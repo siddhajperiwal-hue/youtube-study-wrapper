@@ -66,7 +66,7 @@ export function PriorityCourseCard({ course }: { course: Course }) {
 
       <div className="priority-actions">
         <Link
-          href={`/course/${course.id}`}
+          href={course.resumeChapterId ? `/course/${course.id}/learn/${course.resumeChapterId}` : `/course/${course.id}`}
           className="btn btn-primary"
           style={{ flex: 1, height: "40px", fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
