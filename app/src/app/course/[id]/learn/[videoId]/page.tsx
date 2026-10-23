@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { fetchWithCache, prefetchData } from "@/lib/cache";
 import { usePageVisible } from "@/hooks/usePageVisible";
+import { useDocumentVisible } from "@/hooks/useDocumentVisible";
 import { useToast } from "@/hooks/useToast";
 import { ReportModal } from "@/components/ReportModal";
 import { ChapterNavBar } from "@/components/learning/ChapterNavBar";
@@ -132,6 +133,11 @@ function LearningPageContent() {
 
   // The YouTube player only exists while this page is on screen (see usePageVisible)
   const isPageVisible = usePageVisible(player.silence);
+  // ...and is only created once the browser tab is in front: a background tab that reloads (dev server
+  // restart/hot reload, browser restoring tabs) would otherwise autoplay a video nobody is looking at.
+  // Once started, it keeps playing if the user switches tabs.
+  const isTabVisible = useDocumentVisible();
+  const [playerStarted, setPlayerStarted] = useState(false);
 
   useStudyTracking({
     courseId,
@@ -397,7 +403,7 @@ function LearningPageContent() {
         <section className="video-column" id="videoColumn">
           {/* 16:9 Video Player Container */}
           <div className="video-player-wrapper" id="videoPlayerWrapper">
-            {isPageVisible && (
+            {isPageVisible && (isTabVisible || playerStarted) && (
               <iframe
                 key={`${chapter.id}-${chapter.youtubeVideoId}`}
                 ref={playerIframeRef}
@@ -408,7 +414,10 @@ function LearningPageContent() {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 style={{ width: "100%", height: "100%", border: "none", position: "absolute", top: 0, left: 0 }}
-                onLoad={() => player.handleIframeLoad(initialStartSec)}
+                onLoad={() => {
+                  setPlayerStarted(true);
+                  player.handleIframeLoad(initialStartSec);
+                }}
               />
             )}
 
