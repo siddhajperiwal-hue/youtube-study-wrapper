@@ -47,11 +47,12 @@ export function FullTextModal({ view, quiz: q, flashcard: f, onClose }: FullText
                   if (idx === quiz.correct_index) stateClass = "correct";
                   else if (idx === selectedAnswer) stateClass = "incorrect";
                 }
+                // Answering here is the same as answering on the card (shared useQuickQuiz state)
                 return (
-                  <div key={idx} className={`quiz-choice ${stateClass}`}>
+                  <button key={idx} type="button" className={`quiz-choice ${stateClass}`} onClick={() => q.answer(idx)}>
                     <strong>{String.fromCharCode(65 + idx)}</strong>
                     <span>{opt}</span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -88,10 +89,25 @@ export function FullTextModal({ view, quiz: q, flashcard: f, onClose }: FullText
           </>
         )}
 
+        {view === "quiz" && !quiz && (
+          <p className="modal-desc" style={{ marginBottom: 0 }}>No more questions right now.</p>
+        )}
+
         <div className="modal-actions">
-          <button type="button" className="btn btn-primary" onClick={onClose}>
-            Close
-          </button>
+          {view === "quiz" && quiz ? (
+            <>
+              <button type="button" className="btn btn-ghost" onClick={onClose}>
+                Close
+              </button>
+              <button type="button" className="btn btn-primary" disabled={q.isCycling} onClick={() => q.next()}>
+                {q.isCycling ? "Loading..." : "Next Question →"}
+              </button>
+            </>
+          ) : (
+            <button type="button" className="btn btn-primary" onClick={onClose}>
+              Close
+            </button>
+          )}
         </div>
       </div>
     </div>
