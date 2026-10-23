@@ -31,6 +31,8 @@ Priority levels:
 3. **Prototype test buttons** still on the learning page (Section 5).
 4. **Deployment hygiene:** rotate all keys, restrict them, set Google Cloud spend caps, production URLs in Supabase/Google, SMTP (Sections 1 and 7).
 
+5. **External limits:** transcripts may be blocked from cloud servers; YouTube quota, Gemini rate limits and Supabase plan limits (Section 12, which also has the recommended launch order).
+
 **Still open (P1):** security headers, exact YouTube `postMessage` origin check, generic error messages, zod on the last few routes (Section 4); privacy policy and account deletion (Section 9); error tracking (Section 8).
 
 ---
@@ -173,6 +175,32 @@ take 0.5–1.7 s, dominated by Supabase round trips (~0.4 s each).
 - [ ] **Test for the 3-course limit** (server-side 403 with no external calls).
 - [ ] **End-to-end smoke test** of the main flow (sign up → import playlist → watch chapter → notes → quiz → dashboard), e.g. with Playwright. UI behaviour is checked manually with headless Chrome.
 - [ ] **Run `npm audit` and `npm run lint`** (lint reports ~100 pre-existing `no-explicit-any` errors; decide whether to fix them or relax the rule).
+
+## 12. Traffic & external-service limits — P0/P1
+
+What breaks first once real users (or lots of them) arrive. Added 2026-10-23. Heavy traffic mostly
+turns into **cost and third-party limits**, not a crashed site. AI content is shared per playlist, so
+1,000 users importing the same playlist cost one generation, but every *new* playlist costs one Gemini
+call per video (Section 2 covers the limits that cap this).
+
+- [ ] **Test transcripts from the production server right after the first deploy.** `youtube-transcript` works from a home connection, but YouTube often blocks transcript requests from cloud/datacenter IPs (Railway, Render, AWS). Then every video fails generation and quizzes stay on "Generating your quiz…". *Likely the first thing to break, even with no traffic.* If it's blocked: use a residential proxy or a paid transcript API.
+- [ ] **YouTube Data API quota:** 10,000 units/day by default. Once it's used up, "Add course" and validation fail until midnight Pacific time. Watch usage in Google Cloud; request a quota increase if needed. Rate limits on `validate`/import (Section 2) protect it.
+- [ ] **Gemini rate limits** (requests per minute/day, by billing tier): bursts of imports cause failures and retries. The `CANDIDATE_MODELS` fallback helps only up to a point; check the tier's limits and the quota errors on the admin page.
+- [ ] **Supabase plan limits:** the free plan has a 500 MB database and pauses the project after a week of inactivity (site errors until you un-pause it). Its built-in email sender only sends a few emails per hour (custom SMTP, Section 1). Move to a paid plan before real launch.
+- [ ] **Background generation shares the web server.** `generatePlaylistContent()` runs inside the same process that serves pages, one video at a time per playlist. Many simultaneous imports slow pages and make new courses wait a long time for quizzes. A restart or redeploy stops in-progress runs (stale `pending` claims are retried later, so content is only delayed). If load grows, move generation to a separate worker/queue.
+- [ ] **Write load from active learners:** every open chapter sends `/api/study/heartbeat` and progress saves. Fine for hundreds of users; at thousands concurrent, check Supabase connection/CPU usage and consider batching heartbeats.
+- [ ] **Single server = single point of failure.** The host restarts a crashed process, but you won't know about outages without error tracking and an uptime check (Section 8).
+
+### Recommended launch order
+
+1. **Google Cloud spend cap + budget alerts** on the Gemini/YouTube project (5 minutes; protects against the worst case).
+2. **Limits (Section 2):** 3-course limit, playlist size cap, rate limits, per-user AI budget, `AI_GENERATION_ENABLED` kill switch.
+3. **Ownership fixes (Section 3):** notes, progress, review.
+4. **Remove prototype leftovers (Section 5)** and **rotate keys (Section 7)**.
+5. **Deploy** to Railway/Render in the same region as Supabase, then immediately **test transcript fetching from the server** (above).
+6. **Production auth setup (Section 1):** custom SMTP, Site URL/redirect URLs, Google OAuth consent screen → "In production".
+7. **Monitoring (Section 8):** Sentry + uptime check.
+8. **Privacy policy and account deletion (Section 9)** before inviting people beyond friends/testers.
 
 ---
 
