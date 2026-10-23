@@ -311,11 +311,17 @@ const QUESTION_JSON_EXAMPLE = `    {
       "timestamp_sec": 120
     }`;
 
-const CANDIDATE_MODELS = [
+// Cheapest first, by measured cost per video hour (generation_jobs, Oct 2026): 3-flash-preview
+// ~$0.02, 2.5-flash ~$0.05 (writes far more thinking output), 3.5-flash ~$0.10.
+export const CANDIDATE_MODELS = [
   "gemini-3-flash-preview",
-  "gemini-3.5-flash",
   "gemini-2.5-flash",
+  "gemini-3.5-flash",
 ];
+
+/** Server-side / overloaded errors worth one retry on the same model before paying for a pricier one */
+const TRANSIENT_STATUSES = new Set([500, 502, 503, 504]);
+export const TRANSIENT_RETRY_DELAY_MS = 3_000;
 
 /**
  * Calls Gemini with a fallback cascade over CANDIDATE_MODELS and returns the parsed JSON.
@@ -328,7 +334,8 @@ async function callGemini(prompt: string, youtubeVideoId: string): Promise<{ jso
   let rateLimited = false;
   const ai = getAIClient();
 
-  for (const model of CANDIDATE_MODELS) {
+  for (let i = 0, retried = false; i < CANDIDATE_MODELS.length; ) {
+    const model = CANDIDATE_MODELS[i];
     let text: string | undefined;
     let usage: TokenUsage;
     try {
@@ -350,10 +357,22 @@ async function callGemini(prompt: string, youtubeVideoId: string): Promise<{ jso
     } catch (err: any) {
       if (err.status === 429 || isQuotaError(String(err.message ?? ""))) rateLimited = true;
       modelErrors.push(`${model}: ${err.status ?? ""} ${String(err.message ?? "").slice(0, 120)}`.trim());
+      if (!retried && TRANSIENT_STATUSES.has(err.status)) {
+        console.warn(`Model ${model} failed for ${youtubeVideoId} (${err.status}). Retrying once...`);
+        retried = true;
+        await new Promise((resolve) => setTimeout(resolve, TRANSIENT_RETRY_DELAY_MS));
+        continue;
+      }
       console.warn(`Model ${model} failed for ${youtubeVideoId} (${err.status || err.message?.slice(0, 80)}). Trying fallback...`);
+      i++;
+      retried = false;
       continue;
     }
-    if (!text) continue;
+    if (!text) {
+      i++;
+      retried = false;
+      continue;
+    }
 
     let json = JSON.parse(text);
     // If Gemini wrapped it in markdown code blocks, clean it

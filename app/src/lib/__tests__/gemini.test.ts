@@ -17,7 +17,7 @@ vi.mock("../supabase/admin", () => ({
 }));
 
 import { createAdminClient } from "../supabase/admin";
-import { countFailedAttempts, generateContentForVideo, questionTarget, topUpQuestionsForVideo } from "../gemini";
+import { CANDIDATE_MODELS, countFailedAttempts, generateContentForVideo, questionTarget, topUpQuestionsForVideo } from "../gemini";
 
 type Call = { table: string; ops: string[]; args: unknown[][] };
 
@@ -146,6 +146,47 @@ describe("generateContentForVideo", () => {
     expect(failedUpsert).toBeDefined();
     const jobUpdate = calls.find((c) => c.table === "generation_jobs" && c.ops[0] === "update");
     expect(jobUpdate?.args[0][0]).toMatchObject({ status: "failed", error: expect.stringContaining("All candidate Gemini models failed") });
+  });
+
+  it("retries the cheapest model once on a server error before paying for a fallback", async () => {
+    vi.useFakeTimers();
+    try {
+      generateContent
+        .mockRejectedValueOnce(Object.assign(new Error("Service Unavailable"), { status: 503 }))
+        .mockResolvedValueOnce({ text: validResponse });
+      mockSupabase((call) => {
+        if (isClaimInsert(call)) return { data: [{ video_id: "vid-retry" }] };
+        if (call.table === "generation_jobs" && call.ops[0] === "insert") return { data: { id: "job-retry" } };
+        if (call.ops[0] === "select" && (call.table === "questions" || call.table === "flashcards")) return { count: 0 };
+        return {};
+      });
+
+      const run = generateContentForVideo("vid-retry", "yt-retry", "Title", "", 600);
+      await vi.runAllTimersAsync();
+
+      expect((await run).status).toBe("ready");
+      const models = generateContent.mock.calls.map((c) => c[0].model);
+      expect(models).toEqual([CANDIDATE_MODELS[0], CANDIDATE_MODELS[0]]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("falls back to the next model straight away on a quota error, without a retry", async () => {
+    generateContent
+      .mockRejectedValueOnce(Object.assign(new Error("You exceeded your current quota"), { status: 429 }))
+      .mockResolvedValueOnce({ text: validResponse });
+    mockSupabase((call) => {
+      if (isClaimInsert(call)) return { data: [{ video_id: "vid-fb" }] };
+      if (call.table === "generation_jobs" && call.ops[0] === "insert") return { data: { id: "job-fb" } };
+      if (call.ops[0] === "select" && (call.table === "questions" || call.table === "flashcards")) return { count: 0 };
+      return {};
+    });
+
+    const result = await generateContentForVideo("vid-fb", "yt-fb", "Title", "", 600);
+
+    expect(result.status).toBe("ready");
+    expect(generateContent.mock.calls.map((c) => c[0].model)).toEqual(CANDIDATE_MODELS.slice(0, 2));
   });
 
   it("reports a quota / rate-limit failure as rate_limited, still logging it", async () => {
